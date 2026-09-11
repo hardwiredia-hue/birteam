@@ -24,8 +24,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
+      # El build genera next-env.d.ts; los tipos se revisan después.
       - run: npm run build
+      - run: npx tsc --noEmit
 
   publicar:
     name: Publicar en ${{ github.ref_name == 'produccion' && 'birteam.com' || 'staging.birteam.com' }}
