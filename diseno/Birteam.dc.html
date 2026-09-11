@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@1,800;1,900&family=Instrument+Sans:ital,wght@0,400;0,600;1,600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0A0B08;color:#F4F6EA;font-family:'Instrument Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  a{color:#A8E617}
+  a:hover{color:#C4F94A}
+  ::selection{background:#A8E617;color:#0B0D03}
+</style>
+</helmet>
+
+<div style="--bg:#0A0B08;--panel:#12140D;--b1:#272B19;--b2:#383E22;--tx:#F4F6EA;--tx2:#BBC1A8;--tx3:#818872;--green:#A8E617;--ink:#0B0D03;--orange:#F59E1E;--blue:#5A79FF;--gray:#767D67;--red:#F0563C;--f-display:'Archivo',system-ui,sans-serif;--f-body:'Instrument Sans',system-ui,sans-serif;--f-mono:'Spline Sans Mono',ui-monospace,monospace; background:var(--bg); min-height:100vh; padding:48px 32px 96px; display:flex; flex-direction:column; gap:64px; align-items:center;">
+
+  <!-- ============ PAGE HEADER ============ -->
+  <div style="max-width:920px; width:100%; display:flex; flex-direction:column; gap:14px;">
+    <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.14em; color:var(--green); text-transform:uppercase;">SISTEMA DE DISEÑO</div>
+    <div style="display:flex; align-items:center; gap:20px;">
+      <img src="assets/birteam-iso.png" alt="Isotipo birteam" style="height:56px; width:auto;"/>
+      <img src="assets/birteam-blanco.png" alt="birteam.com" style="height:40px; width:auto;"/>
+    </div>
+    <p style="margin:0; max-width:640px; font-size:15px; line-height:1.6; color:var(--tx2);">Organizá partidos, sumate a los de otros. El sistema nace del isotipo — la "b" verde lima sobre negro — así que el verde queda como único acento y se reserva para la marca, la acción principal de cada pantalla y el estado "Voy". Base tipográfica: Archivo Black Italic para títulos y cifras, Instrument Sans para lectura, Spline Sans Mono para horarios y datos tabulares. Un solo radio por escala (6px controles, 12px tarjetas) — nada de píldoras.</p>
+  </div>
+
+  <!-- ============ FUNDAMENTOS ============ -->
+  <div style="max-width:920px; width:100%; display:flex; flex-direction:column; gap:40px;">
+
+    <!-- Marca -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Marca</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+        <div style="background:#0A0B08; border:1px solid var(--b1); border-radius:12px; padding:32px; display:flex; align-items:center; justify-content:center;"><img src="assets/birteam-blanco.png" alt="Logotipo sobre oscuro" style="width:100%; max-width:220px;"/></div>
+        <div style="background:#F4F5EC; border:1px solid #DFE2D0; border-radius:12px; padding:32px; display:flex; align-items:center; justify-content:center;"><img src="assets/birteam-negro.png" alt="Logotipo sobre claro" style="width:100%; max-width:220px;"/></div>
+        <div style="background:#0A0B08; border:1px solid var(--b1); border-radius:12px; padding:32px; display:flex; align-items:center; justify-content:center;"><img src="assets/birteam-iso.png" alt="Isotipo" style="height:72px;"/></div>
+      </div>
+      <div style="font-family:var(--f-mono); font-size:11px; color:var(--tx3); letter-spacing:0.06em;">LOGOTIPO BLANCO EN TEMA OSCURO · NEGRO EN TEMA CLARO · ISOTIPO PARA APP, FAVICON Y AVATAR</div>
+    </div>
+
+    <!-- Paleta -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Paleta</h2>
+      <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase;">Tema oscuro — principal</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#0A0B08; border:1px solid var(--b1);"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">FONDO<br/>#0A0B08</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#12140D; border:1px solid var(--b1);"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">PANEL<br/>#12140D</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#272B19; border:1px solid var(--b2);"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">BORDE 1<br/>#272B19</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#383E22; border:1px solid var(--b2);"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">BORDE 2<br/>#383E22</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#A8E617;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">VERDE<br/>#A8E617</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#F4F6EA;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">TEXTO<br/>#F4F6EA</div></div>
+      </div>
+      <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase; margin-top:6px;">Tema claro — opcional</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#F4F5EC; border:1px solid #DFE2D0;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">FONDO<br/>#F4F5EC</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#FDFDF9; border:1px solid #DFE2D0;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">PANEL<br/>#FDFDF9</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#DFE2D0;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">BORDE<br/>#DFE2D0</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#63970A;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">VERDE TXT<br/>#63970A</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#15180D;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">TEXTO<br/>#15180D</div></div>
+      </div>
+      <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase; margin-top:6px;">Estados — organizá · jugá · compartí</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#A8E617;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">VOY<br/>#A8E617</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#F59E1E;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">TAL VEZ<br/>#F59E1E</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#5A79FF;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">EN ESPERA<br/>#5A79FF</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#767D67;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">NO VOY<br/>#767D67</div></div>
+        <div style="width:120px;"><div style="height:64px; border-radius:8px; background:#F0563C;"></div><div style="margin-top:6px; font-family:var(--f-mono); font-size:10px; color:var(--tx2);">ERROR<br/>#F0563C</div></div>
+      </div>
+    </div>
+
+    <!-- Tipografía -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Tipografía</h2>
+      <div style="display:flex; flex-direction:column; gap:18px; background:var(--panel); border:1px solid var(--b1); border-radius:12px; padding:24px;">
+        <div>
+          <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:36px; color:var(--tx); line-height:1;">JUEVES 21:00</div>
+          <div style="font-family:var(--f-mono); font-size:11px; color:var(--tx3); margin-top:6px;">ARCHIVO BLACK ITALIC · TÍTULOS, HORARIOS, CIFRAS</div>
+        </div>
+        <div style="height:1px; background:var(--b1);"></div>
+        <div>
+          <div style="font-family:var(--f-body); font-weight:400; font-size:16px; color:var(--tx); line-height:1.5;">Sumate a jugar al fútbol 5 de los jueves en El Potrero. Somos un grupo fijo, buena onda, y siempre nos falta uno.</div>
+          <div style="font-family:var(--f-mono); font-size:11px; color:var(--tx3); margin-top:6px;">INSTRUMENT SANS · TEXTO DE LECTURA Y BOTONES</div>
+        </div>
+        <div style="height:1px; background:var(--b1);"></div>
+        <div>
+          <div style="font-family:var(--f-mono); font-weight:500; font-size:14px; letter-spacing:0.08em; color:var(--tx); text-transform:uppercase;">CUPO 8/10 · $2.500 · 21:00HS</div>
+          <div style="font-family:var(--f-mono); font-size:11px; color:var(--tx3); margin-top:6px;">SPLINE SANS MONO · RÓTULOS, CUPOS, DATOS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Botones</h2>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <button style="font-family:var(--f-body); font-weight:600; font-size:15px; background:var(--green); color:var(--ink); border:none; border-radius:6px; padding:14px 24px; cursor:pointer;">Creá el partido</button>
+        <button style="font-family:var(--f-body); font-weight:600; font-size:15px; background:transparent; color:var(--tx); border:1.5px solid var(--b2); border-radius:6px; padding:12.5px 22.5px; cursor:pointer;">Ver detalles</button>
+        <button style="font-family:var(--f-body); font-weight:600; font-size:15px; background:transparent; color:var(--tx2); border:none; border-radius:6px; padding:14px 8px; cursor:pointer;">Cancelar</button>
+        <button style="font-family:var(--f-body); font-weight:600; font-size:15px; background:transparent; color:var(--red); border:1.5px solid var(--red); border-radius:6px; padding:12.5px 22.5px; cursor:pointer;">Borrar partido</button>
+      </div>
+    </div>
+
+    <!-- Chips de estado -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Chips de estado</h2>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:6px; border:1px solid var(--b1); background:var(--panel); font-family:var(--f-body); font-weight:600; font-size:13px; color:var(--tx);"><div style="width:8px; height:8px; border-radius:50%; background:var(--green);"></div>Voy</div>
+        <div style="display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:6px; border:1px solid var(--b1); background:var(--panel); font-family:var(--f-body); font-weight:600; font-size:13px; color:var(--tx);"><div style="width:8px; height:8px; border-radius:50%; background:var(--orange);"></div>Tal vez</div>
+        <div style="display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:6px; border:1px solid var(--b1); background:var(--panel); font-family:var(--f-body); font-weight:600; font-size:13px; color:var(--tx);"><div style="width:8px; height:8px; border-radius:50%; background:var(--gray);"></div>No voy</div>
+        <div style="display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:6px; border:1px solid var(--b1); background:var(--panel); font-family:var(--f-body); font-weight:600; font-size:13px; color:var(--tx);"><div style="width:8px; height:8px; border-radius:50%; background:var(--blue);"></div>En espera · 2º</div>
+      </div>
+    </div>
+
+    <!-- Campos y switch -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Campos y controles</h2>
+      <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; gap:6px; width:260px;">
+          <label style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">Lugar</label>
+          <input type="text" value="Cancha El Potrero, Palermo" style="font-family:var(--f-body); font-size:14px; color:var(--tx); background:var(--bg); border:1px solid var(--b1); border-radius:6px; padding:12px 14px; outline:none;" style-focus="border-color:#A8E617;"/>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:22px; border-radius:6px; background:var(--green); position:relative; flex-shrink:0;"><div style="position:absolute; top:2px; left:20px; width:18px; height:18px; border-radius:4px; background:var(--ink);"></div></div>
+          <span style="font-family:var(--f-body); font-size:14px; color:var(--tx);">Se repite todas las semanas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta de partido -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Tarjeta de partido</h2>
+      <div style="max-width:380px; background:var(--panel); border:1px solid var(--b1); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--green); text-transform:uppercase;">FÚTBOL 5 · SE REPITE</div>
+        <div>
+          <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:26px; color:var(--tx); line-height:1;">JUEVES 21:00</div>
+          <div style="font-family:var(--f-body); font-size:14px; color:var(--tx2); margin-top:4px;">Cancha El Potrero, Palermo</div>
+        </div>
+        <div style="display:flex; align-items:center; padding-left:10px;">
+          <div style="width:32px; height:32px; border-radius:50%; background:var(--b2); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:12px; color:var(--tx); margin-left:-10px;">N</div>
+          <div style="width:32px; height:32px; border-radius:50%; background:var(--b2); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:12px; color:var(--tx); margin-left:-10px;">F</div>
+          <div style="width:32px; height:32px; border-radius:50%; background:var(--b2); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:12px; color:var(--tx); margin-left:-10px;">T</div>
+          <div style="width:32px; height:32px; border-radius:50%; background:var(--b2); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:12px; color:var(--tx); margin-left:-10px;">L</div>
+          <div style="width:32px; height:32px; border-radius:50%; background:var(--b1); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:11px; color:var(--tx2); margin-left:-10px;">+4</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:12px; color:var(--tx2);"><span>CUPO</span><span style="color:var(--tx);">8/10</span></div>
+          <div style="height:4px; border-radius:2px; background:var(--b1);"><div style="height:4px; border-radius:2px; background:var(--green); width:80%;"></div></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; background:var(--green); color:var(--ink); border:none; border-radius:6px; padding:10px;">Voy</button>
+          <button style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; background:transparent; color:var(--tx); border:1.5px solid var(--b2); border-radius:6px; padding:8.5px;">Tal vez</button>
+          <button style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; background:transparent; color:var(--tx2); border:1.5px solid var(--b1); border-radius:6px; padding:8.5px;">No voy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PANTALLAS ============ -->
+  <div style="max-width:1400px; width:100%; display:flex; flex-direction:column; gap:24px;">
+    <h2 style="margin:0; font-family:var(--f-display); font-style:italic; font-weight:800; text-transform:uppercase; font-size:20px; color:var(--tx);">Pantallas — tema oscuro</h2>
+    <div style="display:flex; gap:28px; flex-wrap:wrap; justify-content:flex-start;">
+
+      <!-- SCREEN 1: INICIO -->
+      <div data-screen-label="01 · Inicio" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase;">01 · Inicio</div>
+        <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="390" height="844" hint-size="390,844">
+          <div style="height:100%; overflow:auto; background:var(--bg); display:flex; flex-direction:column;">
+            <div style="padding:20px 20px 8px; display:flex; flex-direction:column; gap:2px;">
+              <img src="assets/birteam-iso.png" alt="birteam" style="height:22px; width:auto; align-self:flex-start; margin-bottom:12px;"/>
+              <div style="font-family:var(--f-body); font-weight:400; font-size:14px; color:var(--tx2);">Hola, Nacho</div>
+              <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:22px; color:var(--tx);">MIÉRCOLES 11 SEP</div>
+            </div>
+            <div style="padding:16px 20px; display:flex; flex-direction:column; gap:12px;">
+              <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">TU PRÓXIMO PARTIDO</div>
+              <div style="background:var(--panel); border:1px solid var(--b1); border-radius:12px; padding:18px; display:flex; flex-direction:column; gap:12px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--green); text-transform:uppercase;">FÚTBOL 5 · SE REPITE</div>
+                <div>
+                  <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:26px; color:var(--tx); line-height:1;">JUEVES 21:00</div>
+                  <div style="font-family:var(--f-body); font-size:13px; color:var(--tx2); margin-top:4px;">Cancha El Potrero, Palermo</div>
+                </div>
+                <div style="display:flex; align-items:center; padding-left:10px;">
+                  <sc-for list="{{ homeAvatars }}" as="a" hint-placeholder-count="5">
+                    <div style="width:28px; height:28px; border-radius:50%; background:var(--b2); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:11px; color:var(--tx); margin-left:-10px;">{{ a.i }}</div>
+                  </sc-for>
+                  <div style="width:28px; height:28px; border-radius:50%; background:var(--b1); border:2px solid var(--panel); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:10px; color:var(--tx2); margin-left:-10px;">+3</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                  <div style="display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:11px; color:var(--tx2);"><span>CUPO</span><span style="color:var(--tx);">8/10</span></div>
+                  <div style="height:4px; border-radius:2px; background:var(--b1);"><div style="height:4px; border-radius:2px; background:var(--green); width:80%;"></div></div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button onClick="{{ () => setRsvpHome('voy') }}" style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; border:1.5px solid {{ homeVoyBorder }}; border-radius:6px; padding:9px; cursor:pointer; background:{{ homeVoyBg }}; color:{{ homeVoyColor }};">Voy</button>
+                  <button onClick="{{ () => setRsvpHome('talvez') }}" style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; border:1.5px solid {{ homeTalvezBorder }}; border-radius:6px; padding:9px; cursor:pointer; background:{{ homeTalvezBg }}; color:{{ homeTalvezColor }};">Tal vez</button>
+                  <button onClick="{{ () => setRsvpHome('no') }}" style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; border:1.5px solid {{ homeNoBorder }}; border-radius:6px; padding:9px; cursor:pointer; background:{{ homeNoBg }}; color:{{ homeNoColor }};">No voy</button>
+                </div>
+              </div>
+            </div>
+            <div style="padding:4px 20px; display:flex; flex-direction:column; gap:12px;">
+              <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">INVITACIONES</div>
+              <div style="background:var(--panel); border:1px solid var(--b1); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-body); font-size:14px; color:var(--tx); line-height:1.4;">Martín te invitó a <b>Vóley playero</b> — Sábado 18:00, Costanera</div>
+                <div style="display:flex; gap:8px;">
+                  <button style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; background:transparent; color:var(--tx); border:1.5px solid var(--b2); border-radius:6px; padding:9px; cursor:pointer;">Aceptar</button>
+                  <button style="flex:1; font-family:var(--f-body); font-weight:600; font-size:13px; background:transparent; color:var(--tx2); border:none; border-radius:6px; padding:9px; cursor:pointer;">Rechazar</button>
+                </div>
+              </div>
+              <div style="background:var(--panel); border:1px solid var(--blue); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-body); font-size:14px; color:var(--tx); line-height:1.4;">Fútbol Los Pibes: se liberó un lugar para el jueves. Sos <b>1º en la lista</b>, tenés 2 h para confirmar.</div>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span style="font-family:var(--f-mono); font-size:13px; color:var(--blue); letter-spacing:0.05em;">01:58:32</span>
+                  <button style="font-family:var(--f-body); font-weight:600; font-size:13px; background:var(--green); color:var(--ink); border:none; border-radius:6px; padding:8px 14px; cursor:pointer;">Confirmar lugar</button>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;"></div>
+          </div>
+          <div style="height:64px; border-top:1px solid var(--b1); background:var(--panel); display:flex; align-items:center; justify-content:space-around; padding:0 12px; flex-shrink:0;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17 16.5 17.5 16 17.5H4C3.5 17.5 3 17 3 16.5V9Z" stroke="#A8E617" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--green);">INICIO</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#818872" stroke-width="1.8"/><line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">EXPLORAR</span></div>
+            <div style="width:44px; height:44px; border-radius:6px; background:var(--green); display:flex; align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 4px 14px rgba(168,230,23,0.35);"><svg width="20" height="20" viewBox="0 0 20 20"><line x1="10" y1="3" x2="10" y2="17" stroke="#0B0D03" stroke-width="2"/><line x1="3" y1="10" x2="17" y2="10" stroke="#0B0D03" stroke-width="2"/></svg></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="#818872" stroke-width="1.8"/><circle cx="14" cy="8" r="2.4" stroke="#818872" stroke-width="1.8"/><path d="M2.5 17C2.5 13.5 4.5 11.5 7 11.5C9.5 11.5 11.2 13 11.5 15.5" stroke="#818872" stroke-width="1.8"/><path d="M12 12.5C14.8 12.5 16.5 14 17 17" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">GRUPOS</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.3" stroke="#818872" stroke-width="1.8"/><path d="M3.5 17C3.5 13 6.3 11 10 11C13.7 11 16.5 13 16.5 17" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">PERFIL</span></div>
+          </div>
+        </x-import>
+      </div>
+
+      <!-- SCREEN 2: PARTIDO -->
+      <div data-screen-label="02 · Partido" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase;">02 · Partido</div>
+        <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="390" height="844" hint-size="390,844">
+          <div style="height:100%; display:flex; flex-direction:column; background:var(--bg);">
+            <div style="flex:1; overflow:auto;">
+              <div style="padding:20px 20px 0; display:flex; align-items:center; gap:12px;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10L12 16" stroke="#F4F6EA" stroke-width="1.8"/></svg>
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--green); text-transform:uppercase;">FÚTBOL 5 · SE REPITE</div>
+              </div>
+              <div style="padding:12px 20px 0;">
+                <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:30px; color:var(--tx); line-height:1;">JUEVES 21:00</div>
+                <div style="font-family:var(--f-body); font-size:14px; color:var(--tx2); margin-top:6px;">Cancha El Potrero, Palermo</div>
+                <div style="font-family:var(--f-body); font-size:13px; color:var(--tx3); margin-top:2px;">Organiza Nacho Bellini</div>
+              </div>
+              <div style="padding:18px 20px 0; display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:11px; color:var(--tx2);"><span>8/10 CONFIRMADOS · MÍNIMO 8 ✓</span></div>
+                <div style="height:4px; border-radius:2px; background:var(--b1);"><div style="height:4px; border-radius:2px; background:var(--green); width:80%;"></div></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; background:var(--panel); margin:14px 20px 0; border:1px solid var(--b1); border-radius:12px; padding:14px 16px;">
+                <span style="font-family:var(--f-body); font-size:14px; color:var(--tx); white-space:nowrap;">$2.500 por jugador</span>
+                <span style="font-family:var(--f-mono); font-size:12px; color:var(--tx2); white-space:nowrap;">PAGARON 6/8</span>
+              </div>
+              <div style="padding:20px 20px 0; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">CONFIRMADOS · 8</div>
+                <sc-for list="{{ matchConfirmedList }}" as="p" hint-placeholder-count="4">
+                  <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:var(--b2); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:11px; color:var(--tx); flex-shrink:0;">{{ p.i }}</div>
+                    <span style="font-family:var(--f-body); font-size:14px; color:var(--tx); flex:1;">{{ p.name }}</span>
+                    <div style="width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0;"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding:16px 20px 0; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">TAL VEZ · 2</div>
+                <sc-for list="{{ matchTalvezList }}" as="p" hint-placeholder-count="2">
+                  <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:var(--b2); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:11px; color:var(--tx); flex-shrink:0;">{{ p.i }}</div>
+                    <span style="font-family:var(--f-body); font-size:14px; color:var(--tx); flex:1;">{{ p.name }}</span>
+                    <div style="width:8px; height:8px; border-radius:50%; background:var(--orange); flex-shrink:0;"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding:16px 20px 20px; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">EN ESPERA · 1</div>
+                <sc-for list="{{ matchEsperaList }}" as="p" hint-placeholder-count="1">
+                  <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:var(--b2); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:11px; color:var(--tx); flex-shrink:0;">{{ p.i }}</div>
+                    <span style="font-family:var(--f-body); font-size:14px; color:var(--tx); flex:1;">{{ p.name }}</span>
+                    <span style="font-family:var(--f-mono); font-size:10px; color:var(--blue);">1º</span>
+                    <div style="width:8px; height:8px; border-radius:50%; background:var(--blue); flex-shrink:0;"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="padding:14px 20px; border-top:1px solid var(--b1); background:var(--panel); display:flex; flex-direction:column; gap:10px; flex-shrink:0;">
+              <button style="display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--f-body); font-weight:600; font-size:14px; background:transparent; color:var(--tx); border:1.5px solid var(--b2); border-radius:6px; padding:11px; cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 14L3 10.5C1.3 7.6 2.3 4 5.3 2.5C8.3 1 12 2 13.5 5C15 8 14 11.7 11 13.2C9 14.2 6.7 14.1 5 13L2 14Z" stroke="#F4F6EA" stroke-width="1.5"/></svg>
+                Compartir por WhatsApp
+              </button>
+              <button onClick="{{ () => setRsvpMatch('voy') }}" style="font-family:var(--f-body); font-weight:600; font-size:16px; border:none; border-radius:6px; padding:14px; cursor:pointer; background:{{ matchVoyBg }}; color:{{ matchVoyColor }}; border:1.5px solid {{ matchVoyBorder }};">VOY</button>
+            </div>
+          </div>
+        </x-import>
+      </div>
+
+      <!-- SCREEN 3: CREAR PARTIDO -->
+      <div data-screen-label="03 · Crear partido" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase;">03 · Crear partido</div>
+        <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="390" height="844" hint-size="390,844">
+          <div style="height:100%; display:flex; flex-direction:column; background:var(--bg);">
+            <div style="padding:20px 20px 0; display:flex; align-items:center; gap:16px;">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10L12 16" stroke="#F4F6EA" stroke-width="1.8"/></svg>
+              <div style="display:flex; gap:4px; flex:1;">
+                <div style="height:3px; flex:1; border-radius:2px; background:var(--green);"></div>
+                <div style="height:3px; flex:1; border-radius:2px; background:var(--green);"></div>
+                <div style="height:3px; flex:1; border-radius:2px; background:var(--b1);"></div>
+                <div style="height:3px; flex:1; border-radius:2px; background:var(--b1);"></div>
+                <div style="height:3px; flex:1; border-radius:2px; background:var(--b1);"></div>
+                <div style="height:3px; flex:1; border-radius:2px; background:var(--b1);"></div>
+              </div>
+            </div>
+            <div style="padding:8px 20px 0; font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3);">PASO 2 DE 6</div>
+            <div style="flex:1; padding:24px 20px; display:flex; flex-direction:column; gap:28px;">
+              <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:32px; color:var(--tx); line-height:1.1;">¿CUÁNDO<br/>JUEGAN?</div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">DÍA</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <sc-for list="{{ quickDates }}" as="d" hint-placeholder-count="4">
+                    <div style="font-family:var(--f-mono); font-size:12px; letter-spacing:0.05em; padding:10px 14px; border-radius:6px; background:{{ d.bg }}; color:{{ d.color }}; border:1.5px solid {{ d.border }};">{{ d.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">HORA</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <sc-for list="{{ quickHours }}" as="h" hint-placeholder-count="4">
+                    <div style="font-family:var(--f-mono); font-size:12px; letter-spacing:0.05em; padding:10px 14px; border-radius:6px; background:{{ h.bg }}; color:{{ h.color }}; border:1.5px solid {{ h.border }};">{{ h.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; padding-top:8px; border-top:1px solid var(--b1);">
+                <div onClick="{{ toggleRepeat }}" style="width:40px; height:22px; border-radius:6px; background:{{ repeatTrack }}; position:relative; flex-shrink:0; cursor:pointer;"><div style="position:absolute; top:2px; left:{{ repeatKnobX }}px; width:18px; height:18px; border-radius:4px; background:{{ repeatKnobBg }}; transition:left 0.15s;"></div></div>
+                <span style="font-family:var(--f-body); font-size:14px; color:var(--tx);">Se repite todas las semanas</span>
+              </div>
+            </div>
+            <div style="padding:16px 20px; border-top:1px solid var(--b1); background:var(--panel); display:flex; gap:10px; flex-shrink:0;">
+              <button style="flex:1; font-family:var(--f-body); font-weight:600; font-size:14px; background:transparent; color:var(--tx2); border:none; padding:12px; cursor:pointer;">Atrás</button>
+              <button style="flex:2; font-family:var(--f-body); font-weight:600; font-size:15px; background:var(--green); color:var(--ink); border:none; border-radius:6px; padding:13px; cursor:pointer;">Continuar</button>
+            </div>
+          </div>
+        </x-import>
+      </div>
+
+      <!-- SCREEN 4: EXPLORAR -->
+      <div data-screen-label="04 · Explorar" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase;">04 · Explorar</div>
+        <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="390" height="844" hint-size="390,844">
+          <div style="height:100%; display:flex; flex-direction:column; background:var(--bg);">
+            <div style="flex:1; overflow:auto;">
+              <div style="padding:20px 20px 0; font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:22px; color:var(--tx);">EXPLORAR</div>
+              <div style="padding:14px 20px 0;">
+                <div style="display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--b1); border-radius:6px; padding:10px 12px;">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#818872" stroke-width="1.6"/><line x1="10.8" y1="10.8" x2="14" y2="14" stroke="#818872" stroke-width="1.6"/></svg>
+                  <span style="font-family:var(--f-body); font-size:14px; color:var(--tx3);">Buscar partidos, jugadores o grupos</span>
+                </div>
+              </div>
+              <div style="padding:16px 20px 0; display:flex; gap:20px; border-bottom:1px solid var(--b1);">
+                <div onClick="{{ () => setExploreTab('Partidos') }}" style="font-family:var(--f-body); font-weight:600; font-size:14px; color:{{ tabPartidosColor }}; padding-bottom:10px; border-bottom:2px solid {{ tabPartidosBorder }}; cursor:pointer;">Partidos</div>
+                <div onClick="{{ () => setExploreTab('Jugadores') }}" style="font-family:var(--f-body); font-weight:600; font-size:14px; color:{{ tabJugadoresColor }}; padding-bottom:10px; border-bottom:2px solid {{ tabJugadoresBorder }}; cursor:pointer;">Jugadores</div>
+                <div onClick="{{ () => setExploreTab('Grupos') }}" style="font-family:var(--f-body); font-weight:600; font-size:14px; color:{{ tabGruposColor }}; padding-bottom:10px; border-bottom:2px solid {{ tabGruposBorder }}; cursor:pointer;">Grupos</div>
+              </div>
+              <div style="padding:14px 20px 0; display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.05em; padding:8px 12px; border-radius:6px; background:var(--green); color:var(--ink);">FÚTBOL 5</div>
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.05em; padding:8px 12px; border-radius:6px; border:1.5px solid var(--b2); color:var(--tx);">ESTA SEMANA</div>
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.05em; padding:8px 12px; border-radius:6px; border:1.5px solid var(--b2); color:var(--tx);">&lt; 5 KM</div>
+              </div>
+              <div style="padding:16px 20px 20px; display:flex; flex-direction:column; gap:12px;">
+                <sc-for list="{{ exploreResults }}" as="r" hint-placeholder-count="3">
+                  <div style="background:var(--panel); border:1px solid var(--b1); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                      <span style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--green);">{{ r.sport }}</span>
+                      <span style="font-family:var(--f-mono); font-size:11px; color:var(--tx3);">{{ r.distance }}</span>
+                    </div>
+                    <div style="font-family:var(--f-display); font-style:italic; font-weight:900; text-transform:uppercase; font-size:20px; color:var(--tx);">{{ r.time }}</div>
+                    <div style="font-family:var(--f-body); font-size:13px; color:var(--tx2);">{{ r.place }}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                      <span style="font-family:var(--f-mono); font-size:12px; color:{{ r.statusColor }};">{{ r.status }}</span>
+                      <span style="font-family:var(--f-body); font-weight:600; font-size:13px; color:var(--tx);">{{ r.price }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="height:64px; border-top:1px solid var(--b1); background:var(--panel); display:flex; align-items:center; justify-content:space-around; padding:0 12px; flex-shrink:0;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17 16.5 17.5 16 17.5H4C3.5 17.5 3 17 3 16.5V9Z" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">INICIO</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#A8E617" stroke-width="1.8"/><line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="#A8E617" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--green);">EXPLORAR</span></div>
+            <div style="width:44px; height:44px; border-radius:6px; background:var(--green); display:flex; align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 4px 14px rgba(168,230,23,0.35);"><svg width="20" height="20" viewBox="0 0 20 20"><line x1="10" y1="3" x2="10" y2="17" stroke="#0B0D03" stroke-width="2"/><line x1="3" y1="10" x2="17" y2="10" stroke="#0B0D03" stroke-width="2"/></svg></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="#818872" stroke-width="1.8"/><circle cx="14" cy="8" r="2.4" stroke="#818872" stroke-width="1.8"/><path d="M2.5 17C2.5 13.5 4.5 11.5 7 11.5C9.5 11.5 11.2 13 11.5 15.5" stroke="#818872" stroke-width="1.8"/><path d="M12 12.5C14.8 12.5 16.5 14 17 17" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">GRUPOS</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.3" stroke="#818872" stroke-width="1.8"/><path d="M3.5 17C3.5 13 6.3 11 10 11C13.7 11 16.5 13 16.5 17" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">PERFIL</span></div>
+          </div>
+        </x-import>
+      </div>
+
+      <!-- SCREEN 5: PERFIL -->
+      <div data-screen-label="05 · Perfil" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--tx3); text-transform:uppercase;">05 · Perfil</div>
+        <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="390" height="844" hint-size="390,844">
+          <div style="height:100%; display:flex; flex-direction:column; background:var(--bg);">
+            <div style="flex:1; overflow:auto;">
+              <div style="padding:24px 20px 0; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <div style="width:76px; height:76px; border-radius:50%; background:var(--b2); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:24px; color:var(--tx);">NB</div>
+                <div style="font-family:var(--f-display); font-style:italic; font-weight:800; font-size:18px; color:var(--tx); text-transform:uppercase;">Nacho Bellini</div>
+                <div style="font-family:var(--f-mono); font-size:12px; color:var(--tx3);">@nachobellini · Buenos Aires</div>
+              </div>
+              <div style="padding:22px 20px 0; display:flex; justify-content:space-around; text-align:center;">
+                <div><div style="font-family:var(--f-display); font-style:italic; font-weight:900; font-size:22px; color:var(--tx);">92%</div><div style="font-family:var(--f-mono); font-size:10px; color:var(--tx3); margin-top:2px;">ASISTENCIA</div></div>
+                <div><div style="font-family:var(--f-display); font-style:italic; font-weight:900; font-size:22px; color:var(--tx);">47</div><div style="font-family:var(--f-mono); font-size:10px; color:var(--tx3); margin-top:2px;">JUGADOS</div></div>
+                <div><div style="font-family:var(--f-display); font-style:italic; font-weight:900; font-size:22px; color:var(--tx);">3</div><div style="font-family:var(--f-mono); font-size:10px; color:var(--tx3); margin-top:2px;">GRUPOS</div></div>
+              </div>
+              <div style="padding:22px 20px 0; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">DEPORTES</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <sc-for list="{{ profileSports }}" as="sp" hint-placeholder-count="3">
+                    <div style="font-family:var(--f-body); font-weight:600; font-size:13px; padding:7px 12px; border-radius:6px; border:1.5px solid var(--b2); color:var(--tx);">{{ sp }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="padding:22px 20px 24px; display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.08em; color:var(--tx3); text-transform:uppercase;">HISTORIAL</div>
+                <sc-for list="{{ profileHistory }}" as="h" hint-placeholder-count="4">
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--b1);">
+                    <div style="display:flex; flex-direction:column;">
+                      <span style="font-family:var(--f-body); font-size:14px; color:var(--tx);">{{ h.sport }}</span>
+                      <span style="font-family:var(--f-mono); font-size:11px; color:var(--tx3); margin-top:2px;">{{ h.date }} · {{ h.place }}</span>
+                    </div>
+                    <span style="font-family:var(--f-mono); font-size:11px; color:var(--green);">{{ h.status }}</span>
+                  </div>
+                </sc-for>
+                <div style="display:flex; flex-direction:column; gap:2px; margin-top:10px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0;">
+                    <span style="font-family:var(--f-body); font-size:14px; color:var(--tx);">Tema claro</span>
+                    <div style="width:40px; height:22px; border-radius:6px; background:var(--b2); position:relative; flex-shrink:0;"><div style="position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:4px; background:var(--tx2);"></div></div>
+                  </div>
+                  <div style="padding:8px 0; font-family:var(--f-body); font-weight:600; font-size:14px; color:var(--red);">Cerrar sesión</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:64px; border-top:1px solid var(--b1); background:var(--panel); display:flex; align-items:center; justify-content:space-around; padding:0 12px; flex-shrink:0;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17 16.5 17.5 16 17.5H4C3.5 17.5 3 17 3 16.5V9Z" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">INICIO</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#818872" stroke-width="1.8"/><line x1="13.5" y1="13.5" x2="17.5" y2="17.5" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">EXPLORAR</span></div>
+            <div style="width:44px; height:44px; border-radius:6px; background:var(--green); display:flex; align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 4px 14px rgba(168,230,23,0.35);"><svg width="20" height="20" viewBox="0 0 20 20"><line x1="10" y1="3" x2="10" y2="17" stroke="#0B0D03" stroke-width="2"/><line x1="3" y1="10" x2="17" y2="10" stroke="#0B0D03" stroke-width="2"/></svg></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="#818872" stroke-width="1.8"/><circle cx="14" cy="8" r="2.4" stroke="#818872" stroke-width="1.8"/><path d="M2.5 17C2.5 13.5 4.5 11.5 7 11.5C9.5 11.5 11.2 13 11.5 15.5" stroke="#818872" stroke-width="1.8"/><path d="M12 12.5C14.8 12.5 16.5 14 17 17" stroke="#818872" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--tx3);">GRUPOS</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.3" stroke="#A8E617" stroke-width="1.8"/><path d="M3.5 17C3.5 13 6.3 11 10 11C13.7 11 16.5 13 16.5 17" stroke="#A8E617" stroke-width="1.8"/></svg><span style="font-family:var(--f-mono); font-size:9px; color:var(--green);">PERFIL</span></div>
+          </div>
+        </x-import>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    rsvpHome: 'voy',
+    rsvpMatch: 'voy',
+    repeat: true,
+    exploreTab: 'Partidos',
+    selectedDate: 'JUEVES',
+    selectedHour: '21:00',
+  };
+
+  toggleRepeat = () => this.setState(s => ({ repeat: !s.repeat }));
+
+  renderVals() {
+    const s = this.state;
+    const chip = (val, current) => ({
+      bg: val === current ? '#A8E617' : 'transparent',
+      color: val === current ? '#0B0D03' : '#F4F6EA',
+      border: val === current ? '#A8E617' : '#383E22',
+    });
+    const homeVoy = chip('voy', s.rsvpHome), homeTalvez = chip('talvez', s.rsvpHome), homeNo = chip('no', s.rsvpHome);
+    const matchVoy = chip('voy', s.rsvpMatch), matchTalvez = chip('talvez', s.rsvpMatch), matchNo = chip('no', s.rsvpMatch);
+
+    const dateChip = (label) => {
+      const c = chip(label, s.selectedDate);
+      return { label, bg: c.bg, color: c.color, border: c.border };
+    };
+    const hourChip = (label) => {
+      const c = chip(label, s.selectedHour);
+      return { label, bg: c.bg, color: c.color, border: c.border };
+    };
+
+    return {
+      setRsvpHome: (v) => this.setState({ rsvpHome: v }),
+      setRsvpMatch: (v) => this.setState({ rsvpMatch: v }),
+      setExploreTab: (t) => this.setState({ exploreTab: t }),
+      toggleRepeat: this.toggleRepeat,
+      repeat: s.repeat,
+      repeatTrack: s.repeat ? '#A8E617' : '#383E22',
+      repeatKnobX: s.repeat ? 20 : 2,
+      repeatKnobBg: s.repeat ? '#0B0D03' : '#BBC1A8',
+
+      exploreTab: s.exploreTab,
+      tabPartidosColor: s.exploreTab === 'Partidos' ? '#F4F6EA' : '#818872',
+      tabJugadoresColor: s.exploreTab === 'Jugadores' ? '#F4F6EA' : '#818872',
+      tabGruposColor: s.exploreTab === 'Grupos' ? '#F4F6EA' : '#818872',
+      tabPartidosBorder: s.exploreTab === 'Partidos' ? '#A8E617' : 'transparent',
+      tabJugadoresBorder: s.exploreTab === 'Jugadores' ? '#A8E617' : 'transparent',
+      tabGruposBorder: s.exploreTab === 'Grupos' ? '#A8E617' : 'transparent',
+
+      homeVoyBg: homeVoy.bg, homeVoyColor: homeVoy.color, homeVoyBorder: homeVoy.border,
+      homeTalvezBg: homeTalvez.bg, homeTalvezColor: homeTalvez.color, homeTalvezBorder: homeTalvez.border,
+      homeNoBg: homeNo.bg, homeNoColor: homeNo.color, homeNoBorder: homeNo.border,
+      matchVoyBg: matchVoy.bg, matchVoyColor: matchVoy.color, matchVoyBorder: matchVoy.border,
+      matchTalvezBg: matchTalvez.bg, matchTalvezColor: matchTalvez.color, matchTalvezBorder: matchTalvez.border,
+      matchNoBg: matchNo.bg, matchNoColor: matchNo.color, matchNoBorder: matchNo.border,
+
+      homeAvatars: [{i:'N'},{i:'F'},{i:'T'},{i:'L'}],
+
+      matchConfirmedList: [
+        {i:'N', name:'Nacho Bellini'}, {i:'F', name:'Facu Martínez'}, {i:'T', name:'Tomi Guzmán'},
+        {i:'L', name:'Lucas Ferro'}, {i:'M', name:'Mati Sosa'}, {i:'J', name:'Juan Cruz Peña'},
+        {i:'S', name:'Santi Roldán'}, {i:'E', name:'Emi Duarte'},
+      ],
+      matchTalvezList: [{i:'R', name:'Rodri Acosta'}, {i:'G', name:'Gonza Ibáñez'}],
+      matchEsperaList: [{i:'D', name:'Diego Paredes'}],
+
+      quickDates: ['HOY','MAÑANA','JUEVES','VIERNES'].map(dateChip),
+      quickHours: ['19:00','20:00','21:00','22:00'].map(hourChip),
+
+      exploreResults: [
+        {sport:'FÚTBOL 5', time:'JUEVES 21:00', place:'Cancha El Potrero, Palermo', distance:'2.1 KM', status:'Faltan 2', statusColor:'#A8E617', price:'$2.500'},
+        {sport:'PÁDEL', time:'VIERNES 20:00', place:'Play Padel, Chacarita', distance:'3.4 KM', status:'Falta 1', statusColor:'#F59E1E', price:'$3.000'},
+        {sport:'VÓLEY PLAYERO', time:'SÁBADO 18:00', place:'Costanera Sur', distance:'4.8 KM', status:'Completo · anotate en espera', statusColor:'#5A79FF', price:'$1.800'},
+      ],
+
+      profileSports: ['Fútbol 5', 'Pádel', 'Vóley'],
+      profileHistory: [
+        {sport:'Fútbol 5', date:'Jue 4 sep', place:'El Potrero', status:'Jugado'},
+        {sport:'Pádel', date:'Dom 31 ago', place:'Play Padel', status:'Jugado'},
+        {sport:'Fútbol 5', date:'Jue 28 ago', place:'El Potrero', status:'Jugado'},
+        {sport:'Vóley', date:'Sáb 23 ago', place:'Costanera', status:'Jugado'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
