@@ -1,0 +1,276 @@
+// birteam — modelo de datos de la fase 1 (ver ESQUEMA.md §4).
+//
+// Desarrollo: SQLite. Staging y producción: PostgreSQL (deploy/publicar.sh
+// cambia el proveedor antes de generar el cliente). Por eso no usamos enums:
+// los valores válidos viven en src/lib/constantes.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id            String   @id @default(cuid())
+  nombre        String
+  usuario       String   @unique
+  email         String   @unique
+  hashClave     String
+  telefono      String?
+  bio           String?
+  avatarUrl     String?
+  // Ubicación: ciudad elegida con autocompletado + coordenadas.
+  ciudad        String?
+  provincia     String?
+  pais          String   @default("AR")
+  latitud       Float?
+  longitud      Float?
+  radioKm       Int      @default(15)
+  // 'oscuro' (por defecto) | 'claro'
+  tema          String   @default("oscuro")
+  // 'USUARIO' | 'ADMIN'
+  rol           String   @default("USUARIO")
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  sesiones         Sesion[]
+  deportes         UsuarioDeporte[]
+  gruposCreados    Grupo[]           @relation("creadorGrupo")
+  membresias       MiembroGrupo[]
+  partidosOrg      Partido[]         @relation("organizador")
+  partidosCoOrg    Partido[]         @relation("coOrganizador")
+  participaciones  Participacion[]
+  mensajes         Mensaje[]
+  notificaciones   Notificacion[]
+  denunciasHechas  Denuncia[]        @relation("denunciante")
+  denunciasContra  Denuncia[]        @relation("denunciado")
+  bloqueosHechos   Bloqueo[]         @relation("bloqueador")
+  bloqueosContra   Bloqueo[]         @relation("bloqueado")
+}
+
+model Sesion {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEn  DateTime
+  creadoEn  DateTime @default(now())
+
+  @@index([usuarioId])
+}
+
+model Deporte {
+  id     String @id @default(cuid())
+  nombre String @unique
+  slug   String @unique
+  orden  Int    @default(0)
+
+  usuarios UsuarioDeporte[]
+  grupos   Grupo[]
+  partidos Partido[]
+}
+
+model UsuarioDeporte {
+  usuarioId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  deporteId String
+  deporte   Deporte @relation(fields: [deporteId], references: [id], onDelete: Cascade)
+  principal Boolean @default(false)
+  posicion  String?
+
+  @@id([usuarioId, deporteId])
+}
+
+model Grupo {
+  id              String   @id @default(cuid())
+  nombre          String
+  slug            String   @unique
+  descripcion     String?
+  fotoUrl         String?
+  deporteId       String
+  deporte         Deporte  @relation(fields: [deporteId], references: [id])
+  ciudad          String?
+  provincia       String?
+  pais            String   @default("AR")
+  latitud         Float?
+  longitud        Float?
+  // Token del link de invitación (compartir por WhatsApp).
+  tokenInvitacion String   @unique @default(cuid())
+  creadorId       String
+  creador         Usuario  @relation("creadorGrupo", fields: [creadorId], references: [id])
+  creadoEn        DateTime @default(now())
+
+  miembros MiembroGrupo[]
+  partidos Partido[]
+  mensajes Mensaje[]
+}
+
+model MiembroGrupo {
+  grupoId   String
+  grupo     Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  // 'ADMIN' | 'MIEMBRO'
+  rol       String   @default("MIEMBRO")
+  unidoEn   DateTime @default(now())
+
+  @@id([grupoId, usuarioId])
+}
+
+model Partido {
+  id                String    @id @default(cuid())
+  deporteId         String
+  deporte           Deporte   @relation(fields: [deporteId], references: [id])
+  grupoId           String?
+  grupo             Grupo?    @relation(fields: [grupoId], references: [id])
+  organizadorId     String
+  organizador       Usuario   @relation("organizador", fields: [organizadorId], references: [id])
+  coOrganizadorId   String?
+  coOrganizador     Usuario?  @relation("coOrganizador", fields: [coOrganizadorId], references: [id])
+  fecha             DateTime
+  duracionMin       Int       @default(60)
+  recurrenteSemanal Boolean   @default(false)
+  lugarNombre       String
+  direccion         String?
+  ciudad            String?
+  provincia         String?
+  pais              String    @default("AR")
+  latitud           Float?
+  longitud          Float?
+  cupo              Int
+  minimo            Int       @default(2)
+  costoPorJugador   Float?
+  moneda            String    @default("ARS")
+  // 'GRUPO' (solo mi grupo) | 'ABIERTO' (visible a cercanos)
+  visibilidad       String    @default("GRUPO")
+  // 'ARMANDOSE' | 'CONFIRMADO' | 'JUGADO' | 'CANCELADO' (ver reglas en ESQUEMA.md §3.5)
+  estado            String    @default("ARMANDOSE")
+  resultado         String?
+  notas             String?
+  // Token de la vista pública (link de WhatsApp).
+  tokenPublico      String    @unique @default(cuid())
+  creadoEn          DateTime  @default(now())
+  actualizadoEn     DateTime  @updatedAt
+
+  participaciones Participacion[]
+  mensajes        Mensaje[]
+
+  @@index([fecha])
+  @@index([grupoId])
+  @@index([visibilidad, estado, fecha])
+}
+
+model Participacion {
+  id                 String    @id @default(cuid())
+  partidoId          String
+  partido            Partido   @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  usuarioId          String
+  usuario            Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  // 'VOY' | 'TALVEZ' | 'NOVOY' | 'ESPERA' | 'INVITADO'
+  estado             String
+  // Posición en la lista de espera (1 = primero).
+  ordenEspera        Int?
+  // Cuando se libera un lugar: vencimiento de la invitación (2 h).
+  invitacionExpiraEn DateTime?
+  pago               Boolean   @default(false)
+  // Pasar lista post-partido: null = sin registrar.
+  asistio            Boolean?
+  creadoEn           DateTime  @default(now())
+  actualizadoEn      DateTime  @updatedAt
+
+  @@unique([partidoId, usuarioId])
+  @@index([usuarioId])
+}
+
+model Mensaje {
+  id        String   @id @default(cuid())
+  partidoId String?
+  partido   Partido? @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  grupoId   String?
+  grupo     Grupo?   @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  autorId   String
+  autor     Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  texto     String
+  creadoEn  DateTime @default(now())
+
+  @@index([partidoId, creadoEn])
+  @@index([grupoId, creadoEn])
+}
+
+model Notificacion {
+  id        String    @id @default(cuid())
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  // 'INVITACION' | 'LUGAR_LIBERADO' | 'RECORDATORIO' | 'RECONFIRMA' | 'PARTIDO_CAMBIO' | 'PARTIDO_CANCELADO'
+  tipo      String
+  titulo    String
+  cuerpo    String?
+  url       String?
+  expiraEn  DateTime?
+  leidaEn   DateTime?
+  creadoEn  DateTime  @default(now())
+
+  @@index([usuarioId, leidaEn, creadoEn])
+}
+
+model Denuncia {
+  id            String   @id @default(cuid())
+  denuncianteId String
+  denunciante   Usuario  @relation("denunciante", fields: [denuncianteId], references: [id])
+  denunciadoId  String?
+  denunciado    Usuario? @relation("denunciado", fields: [denunciadoId], references: [id])
+  partidoId     String?
+  motivo        String
+  detalle       String?
+  // 'PENDIENTE' | 'RESUELTA' | 'DESCARTADA'
+  estado        String   @default("PENDIENTE")
+  creadoEn      DateTime @default(now())
+}
+
+model Bloqueo {
+  bloqueadorId String
+  bloqueador   Usuario  @relation("bloqueador", fields: [bloqueadorId], references: [id], onDelete: Cascade)
+  bloqueadoId  String
+  bloqueado    Usuario  @relation("bloqueado", fields: [bloqueadoId], references: [id], onDelete: Cascade)
+  creadoEn     DateTime @default(now())
+
+  @@id([bloqueadorId, bloqueadoId])
+}
+
+// ---------- Geografía (catálogo para el autocompletado de ciudad) ----------
+
+model Pais {
+  codigo     String      @id // ISO-3166-1 alfa-2, ej. "AR"
+  nombre     String
+  provincias Provincia[]
+}
+
+model Provincia {
+  id         String   @id @default(cuid())
+  nombre     String
+  codigo     String? // ISO-3166-2, ej. "AR-B"
+  paisCodigo String
+  pais       Pais     @relation(fields: [paisCodigo], references: [codigo], onDelete: Cascade)
+  latitud    Float?
+  longitud   Float?
+  ciudades   Ciudad[]
+
+  @@unique([paisCodigo, nombre])
+}
+
+model Ciudad {
+  id          String    @id @default(cuid())
+  nombre      String
+  // Nombre normalizado (minúsculas, sin tildes) para buscar en cualquier base.
+  nombreNorm  String
+  provinciaId String
+  provincia   Provincia @relation(fields: [provinciaId], references: [id], onDelete: Cascade)
+  latitud     Float?
+  longitud    Float?
+
+  @@unique([provinciaId, nombre])
+  @@index([nombreNorm])
+}

@@ -1,0 +1,292 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   Tokens del sistema de diseño — fuente: diseno/README.md
+   Tema oscuro = marca, por defecto. Claro se activa con
+   data-theme="light" en <html> (ajustes del usuario, cookie).
+   ============================================================ */
+:root {
+  --fondo: #0a0b08;
+  --panel: #12140d;
+  --borde: #272b19;
+  --borde-2: #383e22;
+  --tinta: #f4f6ea;
+  --tinta-2: #bbc1a8;
+  --tinta-3: #818872;
+
+  --verde: #a8e617;
+  --sobre-verde: #0b0d03;
+  --verde-txt: #a8e617;
+  --naranja-txt: #f59e1e;
+  --azul-txt: #5a79ff;
+  --gris-estado: #767d67;
+  --rojo: #f0563c;
+}
+
+:root[data-theme='light'] {
+  --fondo: #f4f5ec;
+  --panel: #fdfdf9;
+  --borde: #dfe2d0;
+  --borde-2: #c8cdb2;
+  --tinta: #15180d;
+  --tinta-2: #4a5039;
+  --tinta-3: #79806a;
+
+  --verde-txt: #63970a;
+  --naranja-txt: #c46f06;
+  --azul-txt: #3355e0;
+  --gris-estado: #8b917c;
+  --rojo: #d8391f;
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-panel: var(--panel);
+  --color-borde: var(--borde);
+  --color-borde-2: var(--borde-2);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-tinta-3: var(--tinta-3);
+  --color-verde: var(--verde);
+  --color-sobre-verde: var(--sobre-verde);
+  --color-verde-txt: var(--verde-txt);
+  --color-naranja-txt: var(--naranja-txt);
+  --color-azul-txt: var(--azul-txt);
+  --color-gris-estado: var(--gris-estado);
+  --color-rojo: var(--rojo);
+
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-cuerpo: 'Instrument Sans', system-ui, sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, monospace;
+
+  /* Radios: 6px controles, 12px tarjetas. Sin píldoras. */
+  --radius-control: 6px;
+  --radius-tarjeta: 12px;
+}
+
+@layer base {
+  body {
+    background: var(--fondo);
+    color: var(--tinta);
+    font-family: var(--font-cuerpo);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+}
+
+@layer components {
+  /* ---------- tipografía ---------- */
+  /* Títulos y momentos: Archivo Italic pesada en mayúsculas. */
+  .t-display {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  .t-pantalla {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    font-size: 22px;
+  }
+  /* Rótulo mono: secciones, etiquetas de campo, datos. */
+  .t-rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tinta-3);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- botones ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-cuerpo);
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.1;
+    border-radius: var(--radius-control);
+    padding: 14px 24px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--verde);
+    outline-offset: 2px;
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn-primario {
+    background: var(--verde);
+    color: var(--sobre-verde);
+  }
+  .btn-secundario {
+    background: transparent;
+    color: var(--tinta);
+    border-color: var(--borde-2);
+  }
+  .btn-fantasma {
+    background: transparent;
+    color: var(--tinta-2);
+  }
+  .btn-peligro {
+    background: transparent;
+    color: var(--rojo);
+    border-color: var(--rojo);
+  }
+  .btn-sm {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+
+  /* ---------- chips ---------- */
+  /* Chip de selección (deportes, fecha/hora, filtros). */
+  .chip-sel {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 9px 13px;
+    border-radius: var(--radius-control);
+    border: 1.5px solid var(--borde-2);
+    color: var(--tinta);
+    background: transparent;
+    cursor: pointer;
+  }
+  .chip-sel:focus-visible {
+    outline: 2px solid var(--verde);
+    outline-offset: 2px;
+  }
+  .chip-sel-activo {
+    background: var(--verde);
+    border-color: var(--verde);
+    color: var(--sobre-verde);
+  }
+  /* Chip de estado (Voy / Tal vez / No voy / En espera). */
+  .chip-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 12px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--borde);
+    background: var(--panel);
+    color: var(--tinta-2);
+  }
+  .punto-estado {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ---------- campos ---------- */
+  .campo {
+    width: 100%;
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-radius: var(--radius-control);
+    color: var(--tinta);
+    font-family: var(--font-cuerpo);
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+  .campo::placeholder {
+    color: var(--tinta-3);
+  }
+  .campo:focus {
+    outline: none;
+    border-color: var(--verde);
+  }
+  .rotulo-campo {
+    display: block;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tinta-3);
+  }
+
+  /* ---------- superficies ---------- */
+  .tarjeta {
+    background: var(--panel);
+    border: 1px solid var(--borde);
+    border-radius: var(--radius-tarjeta);
+  }
+  .barra-progreso {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--borde);
+    overflow: hidden;
+  }
+  .barra-progreso > i {
+    display: block;
+    height: 100%;
+    background: var(--verde);
+    border-radius: 2px;
+  }
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--borde-2);
+    color: var(--tinta);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  /* ---------- marca según tema ---------- */
+  .solo-oscuro {
+    display: block;
+  }
+  .solo-claro {
+    display: none;
+  }
+  :root[data-theme='light'] .solo-oscuro {
+    display: none;
+  }
+  :root[data-theme='light'] .solo-claro {
+    display: block;
+  }
+
+  /* ---------- mensajes ---------- */
+  .aviso-error {
+    border: 1px solid var(--rojo);
+    border-radius: var(--radius-control);
+    padding: 10px 13px;
+    font-size: 13px;
+    color: var(--rojo);
+  }
+  .aviso-ok {
+    border: 1px solid var(--verde-txt);
+    border-radius: var(--radius-control);
+    padding: 10px 13px;
+    font-size: 13px;
+    color: var(--verde-txt);
+  }
+}

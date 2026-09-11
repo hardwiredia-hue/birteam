@@ -1,0 +1,66 @@
+name: Publicar
+
+# Dos ambientes, una regla simple:
+#   rama `staging`    → https://staging.birteam.com
+#   rama `produccion` → https://birteam.com
+on:
+  push:
+    branches: [staging, produccion]
+
+concurrency:
+  group: publicar-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    name: Revisar (tipos + build)
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: 'file:./dev.db'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build
+
+  publicar:
+    name: Publicar en ${{ github.ref_name == 'produccion' && 'birteam.com' || 'staging.birteam.com' }}
+    needs: revisar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar secretos
+        env:
+          SSH_CLAVE_PRIVADA: ${{ secrets.SSH_CLAVE_PRIVADA }}
+          SSH_SERVIDOR: ${{ secrets.SSH_SERVIDOR }}
+          SSH_CLAVE_DEL_SERVIDOR: ${{ secrets.SSH_CLAVE_DEL_SERVIDOR }}
+        run: |
+          faltan=""
+          [ -z "$SSH_CLAVE_PRIVADA" ] && faltan="$faltan SSH_CLAVE_PRIVADA"
+          [ -z "$SSH_SERVIDOR" ] && faltan="$faltan SSH_SERVIDOR"
+          [ -z "$SSH_CLAVE_DEL_SERVIDOR" ] && faltan="$faltan SSH_CLAVE_DEL_SERVIDOR"
+          if [ -n "$faltan" ]; then
+            echo "::error::Faltan secretos:$faltan. Ver deploy/PUBLICAR.md para configurarlos."
+            exit 1
+          fi
+
+      - name: Publicar por SSH
+        env:
+          SSH_CLAVE_PRIVADA: ${{ secrets.SSH_CLAVE_PRIVADA }}
+          SSH_SERVIDOR: ${{ secrets.SSH_SERVIDOR }}
+          SSH_CLAVE_DEL_SERVIDOR: ${{ secrets.SSH_CLAVE_DEL_SERVIDOR }}
+          SSH_USUARIO: ${{ secrets.SSH_USUARIO || 'birteam' }}
+          SSH_PUERTO: ${{ secrets.SSH_PUERTO || '22' }}
+          AMBIENTE: ${{ github.ref_name }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_CLAVE_PRIVADA" > ~/.ssh/clave
+          chmod 600 ~/.ssh/clave
+          printf '%s\n' "$SSH_CLAVE_DEL_SERVIDOR" > ~/.ssh/known_hosts
+          # La clave está restringida en el servidor: solo puede ejecutar el
+          # script de publicación, que valida estos dos argumentos.
+          ssh -i ~/.ssh/clave -p "$SSH_PUERTO" -o StrictHostKeyChecking=yes \
+            "$SSH_USUARIO@$SSH_SERVIDOR" "$GITHUB_SHA $AMBIENTE"
