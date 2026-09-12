@@ -5,7 +5,11 @@ Dos ambientes en el mismo servidor (CWP + PostgreSQL), una regla:
 | Rama | Dominio | Carpeta | Servicio | Puerto interno | Base |
 |---|---|---|---|---|---|
 | `staging` | staging.birteam.com | `/home/birteam/staging` | `birteam-staging` | 3001 | `birteam_staging` |
-| `produccion` | birteam.com | `/home/birteam/app` | `birteam` | 3000 | `birteam` |
+| `produccion` | birteam.com | `/home/birteam/app` | `birteam` | 3007 | `birteam` |
+
+> Producción usa el **3007** porque el 3000 ya está tomado por otro servicio del
+> servidor. Si algún día se migra de máquina, elegir puertos libres y mantener
+> esta tabla al día.
 
 Cada push a esas ramas dispara GitHub Actions: primero **revisar** (tipos + build) y,
 si pasa, **publicar** por SSH con una clave que solo puede ejecutar el script de
@@ -43,10 +47,13 @@ sudo -u postgres psql -c "CREATE DATABASE birteam_staging OWNER birteam;"
 
 ```bash
 # /home/birteam/app/.env.production
-DATABASE_URL="postgresql://birteam:<clave>@localhost:5432/birteam"
+DATABASE_URL="postgresql://birteam:<clave>@127.0.0.1:5432/birteam"
 # /home/birteam/staging/.env.production
-DATABASE_URL="postgresql://birteam:<clave>@localhost:5432/birteam_staging"
+DATABASE_URL="postgresql://birteam:<clave>@127.0.0.1:5432/birteam_staging"
 ```
+
+> Con `127.0.0.1`, no `localhost`: en este servidor Postgres escucha solo en
+> IPv4 y `localhost` resuelve a `::1`, así que la conexión fallaría.
 
 Servicios systemd — `/etc/systemd/system/birteam.service` (y el gemelo
 `birteam-staging.service` cambiando carpeta y puerto):
@@ -60,7 +67,9 @@ After=network.target postgresql.service
 User=birteam
 WorkingDirectory=/home/birteam/app
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/npx next start -p 3000
+# --hostname explícito: next start (Next 15) ignora la variable HOSTNAME,
+# y sin esto queda escuchando en todas las interfaces.
+ExecStart=/usr/bin/npx next start -p 3007 --hostname 127.0.0.1
 Restart=always
 
 [Install]
@@ -86,7 +95,7 @@ Para cada dominio (birteam.com y staging.birteam.com):
 1. Crear el dominio/subdominio en CWP apuntando al usuario `birteam`.
 2. **Antes de tocar un vhost existente, copia con fecha**:
    `cp conf.conf conf.conf.respaldo-$(date +%F)`.
-3. Configurar el vhost como proxy inverso a `http://127.0.0.1:3000`
+3. Configurar el vhost como proxy inverso a `http://127.0.0.1:3007`
    (staging: `3001`).
 4. Emitir SSL (Let's Encrypt desde CWP) para ambos dominios.
 
@@ -116,7 +125,11 @@ En el repo → Settings → Secrets and variables → Actions:
 | `SSH_SERVIDOR` | IP o host del servidor. |
 | `SSH_CLAVE_DEL_SERVIDOR` | La línea de `ssh-keyscan -t ed25519 <IP>` (huella del servidor). |
 | `SSH_USUARIO` | Opcional, por defecto `birteam`. |
-| `SSH_PUERTO` | Opcional, por defecto `22`. |
+| `SSH_PUERTO` | **Obligatorio en este servidor**: SSH no atiende en el 22, usar el puerto real. |
+
+Nota: el usuario `birteam` necesita shell real (`/bin/bash`) — con `/sbin/nologin`
+el `command=` forzado de la clave nunca corre. Compensado en `sshd_config` con
+`Match User birteam` + `PasswordAuthentication no`.
 
 ## 6 · Publicar
 
