@@ -58,9 +58,13 @@ jobs:
           AMBIENTE: ${{ github.ref_name }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_CLAVE_PRIVADA" > ~/.ssh/clave
+          # Al pegar el secreto suele colarse sangría: limpiamos los espacios
+          # al borde de cada línea y las líneas vacías, o libcrypto lo rechaza.
+          printf '%s\n' "$SSH_CLAVE_PRIVADA" \
+            | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' > ~/.ssh/clave
           chmod 600 ~/.ssh/clave
-          printf '%s\n' "$SSH_CLAVE_DEL_SERVIDOR" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_CLAVE_DEL_SERVIDOR" \
+            | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' > ~/.ssh/known_hosts
           # La clave está restringida en el servidor: solo puede ejecutar el
           # script de publicación, que valida estos dos argumentos.
           ssh -i ~/.ssh/clave -p "$SSH_PUERTO" -o StrictHostKeyChecking=yes \
