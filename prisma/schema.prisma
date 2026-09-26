@@ -55,6 +55,8 @@ model Usuario {
   meGusta          MeGustaJugada[]
   siguiendo        Seguimiento[]      @relation("seguidor")
   seguidores       Seguimiento[]      @relation("seguido")
+  torneosOrganizados Torneo[]         @relation("torneosOrganizados")
+  equiposCapitan   EquipoTorneo[]     @relation("equiposCapitan")
 }
 
 model Sesion {
@@ -77,6 +79,7 @@ model Deporte {
   usuarios UsuarioDeporte[]
   grupos   Grupo[]
   partidos Partido[]
+  torneos  Torneo[]
 }
 
 model UsuarioDeporte {
@@ -252,6 +255,61 @@ model Bloqueo {
   creadoEn     DateTime @default(now())
 
   @@id([bloqueadorId, bloqueadoId])
+}
+
+// ---------- Torneos: la pieza de COMPETIR ----------
+
+model Torneo {
+  id           String   @id @default(cuid())
+  nombre       String
+  descripcion  String?
+  deporteId    String
+  deporte      Deporte  @relation(fields: [deporteId], references: [id])
+  organizadorId String
+  organizador  Usuario  @relation("torneosOrganizados", fields: [organizadorId], references: [id])
+  ciudad       String?
+  provincia    String?
+  // 'INSCRIPCION' | 'EN_JUEGO' | 'TERMINADO'
+  estado       String   @default("INSCRIPCION")
+  maxEquipos   Int      @default(8)
+  creadoEn     DateTime @default(now())
+
+  equipos  EquipoTorneo[]
+  partidos PartidoTorneo[]
+
+  @@index([deporteId, estado])
+}
+
+model EquipoTorneo {
+  id        String   @id @default(cuid())
+  torneoId  String
+  torneo    Torneo   @relation(fields: [torneoId], references: [id], onDelete: Cascade)
+  nombre    String
+  capitanId String
+  capitan   Usuario  @relation("equiposCapitan", fields: [capitanId], references: [id])
+  creadoEn  DateTime @default(now())
+
+  deLocal     PartidoTorneo[] @relation("local")
+  deVisitante PartidoTorneo[] @relation("visitante")
+
+  @@unique([torneoId, nombre])
+  @@unique([torneoId, capitanId])
+}
+
+model PartidoTorneo {
+  id             String    @id @default(cuid())
+  torneoId       String
+  torneo         Torneo    @relation(fields: [torneoId], references: [id], onDelete: Cascade)
+  ronda          Int
+  localId        String
+  local          EquipoTorneo @relation("local", fields: [localId], references: [id], onDelete: Cascade)
+  visitanteId    String
+  visitante      EquipoTorneo @relation("visitante", fields: [visitanteId], references: [id], onDelete: Cascade)
+  golesLocal     Int?
+  golesVisitante Int?
+  jugadoEn       DateTime?
+
+  @@index([torneoId, ronda])
 }
 
 // ---------- Jugadas: la parte social (ESQUEMA.md §3.8, fase 2) ----------

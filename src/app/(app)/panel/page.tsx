@@ -132,6 +132,16 @@ export default async function Inicio() {
         <span className="t-display text-[16px] text-verde-txt">→</span>
       </Link>
 
+      <Link href="/torneos" className="tarjeta flex items-center justify-between gap-3 p-4">
+        <div>
+          <p className="t-rotulo text-naranja-txt">Torneos</p>
+          <p className="mt-0.5 text-sm font-semibold">
+            Armá una liga o anotá tu equipo — la tabla se lleva sola
+          </p>
+        </div>
+        <span className="t-display text-[16px] text-naranja-txt">→</span>
+      </Link>
+
       <section>
         <div className="mb-2 flex items-baseline justify-between">
           <p className="t-rotulo">Tus grupos</p>

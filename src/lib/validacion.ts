@@ -65,6 +65,35 @@ export const esquemaPartido = z.object({
   error: 'El mínimo no puede superar el cupo.',
 });
 
+export const esquemaTorneo = z.object({
+  nombre: z
+    .string({ error: 'Ponele nombre al torneo.' })
+    .trim()
+    .min(2, 'El nombre es muy corto.')
+    .max(60, 'El nombre es muy largo.'),
+  deporteId: z.string({ error: 'Elegí el deporte.' }).min(1, 'Elegí el deporte.'),
+  descripcion: z.string().trim().max(400, 'La descripción es muy larga.').nullish(),
+  maxEquipos: z
+    .number({ error: 'Definí el cupo de equipos.' })
+    .int()
+    .min(2, 'Un torneo necesita al menos 2 equipos.')
+    .max(24, 'Hasta 24 equipos.'),
+});
+
+export const esquemaEquipoTorneo = z.object({
+  nombre: z
+    .string({ error: 'Ponele nombre al equipo.' })
+    .trim()
+    .min(2, 'El nombre es muy corto.')
+    .max(40, 'El nombre es muy largo.'),
+});
+
+export const esquemaResultado = z.object({
+  partidoTorneoId: z.string().min(1),
+  golesLocal: z.number({ error: 'Cargá los goles.' }).int().min(0).max(99),
+  golesVisitante: z.number({ error: 'Cargá los goles.' }).int().min(0).max(99),
+});
+
 export const esquemaGrupo = z.object({
   nombre: z
     .string({ error: 'Ponele nombre al grupo.' })

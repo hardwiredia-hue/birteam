@@ -22,7 +22,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
   const deporte = await prisma.deporte.findUnique({ where: { slug } });
   if (!deporte) notFound();
 
-  const [partidos, grupos, jugadoresTotal, ranking] = await Promise.all([
+  const [partidos, grupos, jugadoresTotal, ranking, torneos] = await Promise.all([
     prisma.partido.findMany({
       where: {
         deporteId: deporte.id,
@@ -42,6 +42,12 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
     }),
     prisma.usuarioDeporte.count({ where: { deporteId: deporte.id } }),
     calcularRanking(usuario.id, { deporteSlug: slug, soloCiudad: usuario.ciudad }),
+    prisma.torneo.findMany({
+      where: { deporteId: deporte.id, estado: { in: ['INSCRIPCION', 'EN_JUEGO'] } },
+      include: { _count: { select: { equipos: true } } },
+      orderBy: { creadoEn: 'desc' },
+      take: 3,
+    }),
   ]);
 
   // Si en tu ciudad no hay ranking todavía, se abre al país.
@@ -122,6 +128,34 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
           </div>
         )}
       </section>
+
+      {torneos.length > 0 ? (
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <p className="t-rotulo">Torneos</p>
+            <Link href="/torneos" className="text-xs font-semibold text-verde-txt">Ver todos</Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            {torneos.map((torneo) => (
+              <Link key={torneo.id} href={`/torneos/${torneo.id}`} className="tarjeta flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{torneo.nombre}</p>
+                  <p className="t-rotulo mt-0.5 tabular">
+                    {torneo._count.equipos}/{torneo.maxEquipos} equipos
+                    {torneo.ciudad ? ` · ${torneo.ciudad}` : ''}
+                  </p>
+                </div>
+                <span
+                  className="flex-shrink-0 text-xs font-semibold"
+                  style={{ color: torneo.estado === 'INSCRIPCION' ? 'var(--verde-txt)' : 'var(--naranja-txt)' }}
+                >
+                  {torneo.estado === 'INSCRIPCION' ? 'Inscripción' : 'En juego'}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {grupos.length > 0 ? (
         <section>
