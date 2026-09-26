@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { DEPORTES_INICIALES } from '../src/lib/constantes';
 import { slugificar } from '../src/lib/normalizar';
+import { sembrarArgentina } from '../src/lib/geografia';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,11 @@ async function sembrar() {
     });
   }
   console.log(`Deportes sembrados: ${DEPORTES_INICIALES.length}`);
+
+  const nuevas = await sembrarArgentina(prisma);
+  const totales = await prisma.ciudad.count();
+  const provincias = await prisma.provincia.count();
+  console.log(`Argentina: ${provincias} provincias · ${totales} ciudades (${nuevas} nuevas)`);
 }
 
 sembrar()

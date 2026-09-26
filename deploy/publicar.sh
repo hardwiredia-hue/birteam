@@ -49,6 +49,10 @@ set -a; . ./.env.production; set +a
 npx prisma generate
 npx prisma db push --skip-generate
 
+# Catálogos (deportes, geografía): la siembra es idempotente, solo agrega lo
+# que falta y nunca pisa datos cargados.
+npx tsx prisma/seed.ts
+
 # Compilar guardando lo anterior para poder volver atrás sin recompilar.
 if [ -d .next ]; then rm -rf .next.anterior && mv .next .next.anterior; fi
 if ! npm run build; then
@@ -60,3 +64,7 @@ fi
 
 sudo /bin/systemctl restart "$SERVICIO"
 anotar "Publicado $SHA y reiniciado $SERVICIO."
+
+# Los scripts de publicación del repo pisan la copia viva para la PRÓXIMA
+# corrida, así el circuito se actualiza solo.
+cp -f deploy/publicar.sh deploy/publicar-remoto.sh /home/birteam/deploy/ 2>/dev/null || true

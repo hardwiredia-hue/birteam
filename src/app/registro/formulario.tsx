@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { SelectorCiudad } from '@/components/selector-ciudad';
 
 interface Deporte {
   id: string;
@@ -28,6 +29,11 @@ export function FormularioRegistro({ deportes }: { deportes: Deporte[] }) {
     setErrores({});
 
     const form = new FormData(evento.currentTarget);
+    const numero = (crudo: FormDataEntryValue | null) => {
+      const valor = String(crudo ?? '').trim();
+      const parseado = Number(valor);
+      return valor && Number.isFinite(parseado) ? parseado : null;
+    };
     const respuesta = await fetch('/api/auth/registro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,6 +45,9 @@ export function FormularioRegistro({ deportes }: { deportes: Deporte[] }) {
         deporteIds: elegidos,
         ciudad: form.get('ciudad') || null,
         provincia: form.get('provincia') || null,
+        pais: form.get('pais') || 'AR',
+        latitud: numero(form.get('latitud')),
+        longitud: numero(form.get('longitud')),
         aceptaTerminos: form.get('aceptaTerminos') === 'on',
       }),
     });
@@ -127,19 +136,11 @@ export function FormularioRegistro({ deportes }: { deportes: Deporte[] }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="rotulo-campo" htmlFor="ciudad">
-            Ciudad
-          </label>
-          <input id="ciudad" name="ciudad" className="campo" placeholder="Córdoba" />
-        </div>
-        <div>
-          <label className="rotulo-campo" htmlFor="provincia">
-            Provincia
-          </label>
-          <input id="provincia" name="provincia" className="campo" placeholder="Córdoba" />
-        </div>
+      <div>
+        <label className="rotulo-campo" htmlFor="ciudad">
+          Dónde jugás
+        </label>
+        <SelectorCiudad />
       </div>
 
       <label className="flex items-start gap-2.5 text-sm text-tinta-2">
