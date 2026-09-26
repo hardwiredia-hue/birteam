@@ -6,9 +6,12 @@ import { useState } from 'react';
 export function BotoneraRsvp({
   partidoId,
   estadoActual,
+  invitacionHasta,
 }: {
   partidoId: string;
   estadoActual: string | null;
+  /** ISO: hasta cuándo tengo reservado un lugar liberado (o null). */
+  invitacionHasta?: string | null;
 }) {
   const router = useRouter();
   const [enviando, setEnviando] = useState<string | null>(null);
@@ -31,13 +34,29 @@ export function BotoneraRsvp({
   }
 
   const enEspera = estadoActual === 'ESPERA';
+  const reservaVigente =
+    enEspera && invitacionHasta && new Date(invitacionHasta).getTime() > Date.now();
+  const horaLimite = reservaVigente
+    ? new Date(invitacionHasta!).toLocaleTimeString('es-AR', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Argentina/Buenos_Aires',
+      })
+    : null;
 
   return (
     <div className="flex flex-col gap-2">
       {error ? <p className="aviso-error">{error}</p> : null}
-      {enEspera ? (
+      {reservaVigente ? (
+        <p className="aviso-ok">
+          Se liberó un lugar y es tuyo hasta las {horaLimite}. Tocá <b>Voy</b> y quedás adentro; si
+          no, pasa al siguiente.
+        </p>
+      ) : enEspera ? (
         <p className="aviso-ok border-azul-txt text-azul-txt">
-          Estás en la lista de espera. Si se libera un lugar, entrás y te avisamos.
+          Estás en la lista de espera. Si se libera un lugar, te lo reservamos 2 horas y te
+          avisamos.
         </p>
       ) : null}
       <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-2">

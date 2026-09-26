@@ -143,6 +143,28 @@ El flujo de trabajo diario: se trabaja en la rama principal, se prueba empujando
 publicado queda en `/home/birteam/publicaciones.log`. Si un build falla en el
 servidor, el script restaura la versión anterior solo.
 
+## Recordatorios automáticos
+
+El endpoint `/api/tareas` vence las invitaciones de la lista de espera (2 h)
+y manda los recordatorios (24 h antes y reconfirmación 2 h antes). Lo dispara
+un cron del servidor cada 10 minutos. Puesta en marcha (una vez por ambiente):
+
+```bash
+# 1. Generar una clave y agregarla a cada .env.production (sin mostrarla):
+#    TAREAS_CLAVE="<clave larga aleatoria>"
+openssl rand -hex 32
+
+# 2. Reiniciar los servicios para que tomen la variable:
+systemctl restart birteam birteam-staging
+
+# 3. Cron del usuario birteam (crontab -u birteam -e), una línea por ambiente:
+*/10 * * * * curl -s -X POST -H "X-Tarea-Clave: <clave-produccion>" http://127.0.0.1:3007/api/tareas >/dev/null 2>&1
+*/10 * * * * curl -s -X POST -H "X-Tarea-Clave: <clave-staging>" http://127.0.0.1:3001/api/tareas >/dev/null 2>&1
+```
+
+Sin `TAREAS_CLAVE` el endpoint contesta 503 y no hace nada; con clave
+incorrecta, 401. Cada aviso sale una sola vez (control de duplicados).
+
 ## Reglas fijas
 
 - Nunca abrir 3000/3001 a internet.

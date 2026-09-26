@@ -172,7 +172,11 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         {!cerrado && !yaPaso ? (
           <>
             <CompartirPartido rutaPublica={`/p/${partido.tokenPublico}`} />
-            <BotoneraRsvp partidoId={partido.id} estadoActual={mia?.estado ?? null} />
+            <BotoneraRsvp
+              partidoId={partido.id}
+              estadoActual={mia?.estado ?? null}
+              invitacionHasta={mia?.invitacionExpiraEn?.toISOString() ?? null}
+            />
             {organizo ? <CancelarPartido partidoId={partido.id} /> : null}
           </>
         ) : null}
