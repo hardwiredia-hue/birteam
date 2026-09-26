@@ -6,6 +6,7 @@ import { distanciaKm, formatearDistancia } from '@/lib/geo';
 import { formatearPlata } from '@/lib/formato';
 import { normalizar } from '@/lib/normalizar';
 import { idsBloqueados } from '@/lib/bloqueos';
+import { calcularRanking } from '@/lib/estadisticas';
 
 export const metadata = { title: 'Explorar' };
 export const dynamic = 'force-dynamic';
@@ -15,9 +16,9 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
 export default async function Explorar({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; deporte?: string; q?: string }>;
+  searchParams: Promise<{ tab?: string; deporte?: string; q?: string; ambito?: string }>;
 }) {
-  const { tab = 'partidos', deporte, q } = await searchParams;
+  const { tab = 'partidos', deporte, q, ambito } = await searchParams;
   const usuario = (await usuarioActual())!;
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
@@ -45,9 +46,49 @@ export default async function Explorar({
         <Solapa activa={tab === 'partidos'} href="/explorar">Partidos</Solapa>
         <Solapa activa={tab === 'jugadores'} href="/explorar?tab=jugadores">Jugadores</Solapa>
         <Solapa activa={tab === 'grupos'} href="/explorar?tab=grupos">Grupos</Solapa>
+        <Solapa activa={tab === 'ranking'} href="/explorar?tab=ranking">Ranking</Solapa>
       </div>
 
-      {tab === 'jugadores' ? (
+      {tab === 'ranking' ? (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {usuario.ciudad ? (
+              <>
+                <Link
+                  href={`/explorar?tab=ranking${deporte ? `&deporte=${deporte}` : ''}`}
+                  className={ambito !== 'todos' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                >
+                  {usuario.ciudad}
+                </Link>
+                <Link
+                  href={`/explorar?tab=ranking&ambito=todos${deporte ? `&deporte=${deporte}` : ''}`}
+                  className={ambito === 'todos' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                >
+                  Todo el país
+                </Link>
+              </>
+            ) : null}
+            {deportes.map((d) => (
+              <Link
+                key={d.id}
+                href={
+                  d.slug === deporte
+                    ? `/explorar?tab=ranking${ambito === 'todos' ? '&ambito=todos' : ''}`
+                    : `/explorar?tab=ranking&deporte=${d.slug}${ambito === 'todos' ? '&ambito=todos' : ''}`
+                }
+                className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {d.nombre}
+              </Link>
+            ))}
+          </div>
+          <Ranking
+            usuarioId={usuario.id}
+            deporteSlug={deporte}
+            soloCiudad={ambito === 'todos' ? null : usuario.ciudad}
+          />
+        </>
+      ) : tab === 'jugadores' ? (
         <Jugadores q={q} miId={usuario.id} />
       ) : tab === 'grupos' ? (
         <div className="tarjeta p-5">
@@ -183,6 +224,81 @@ async function Partidos({
           </Link>
         );
       })}
+    </div>
+  );
+}
+
+async function Ranking({
+  usuarioId,
+  deporteSlug,
+  soloCiudad,
+}: {
+  usuarioId: string;
+  deporteSlug?: string;
+  soloCiudad?: string | null;
+}) {
+  const { filas, mia } = await calcularRanking(usuarioId, { deporteSlug, soloCiudad });
+
+  if (filas.length === 0) {
+    return (
+      <div className="tarjeta p-5">
+        <p className="text-sm text-tinta-2">
+          Todavía no hay partidos jugados {soloCiudad ? `en ${soloCiudad}` : ''} para armar el
+          ranking. Se suma jugando: 3 puntos por partido jugado y 2 por organizarlo.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs text-tinta-3">
+        3 puntos por partido jugado · 2 por partido organizado. Cuenta lo jugado de verdad, con
+        lista pasada.
+      </p>
+      <div>
+        {filas.map((fila) => {
+          const soyYo = fila.usuario.id === usuarioId;
+          return (
+            <Link
+              key={fila.usuario.id}
+              href={soyYo ? '/perfil' : `/jugadores/${fila.usuario.usuario}`}
+              className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0"
+              style={soyYo ? { background: 'rgba(168,230,23,0.06)' } : undefined}
+            >
+              <span
+                className="t-display w-8 text-center text-[17px] tabular"
+                style={{ color: fila.posicion <= 3 ? 'var(--verde-txt)' : 'var(--tinta-3)' }}
+              >
+                {fila.posicion}
+              </span>
+              <span className="avatar h-8 w-8 text-[11px]">
+                {fila.usuario.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">
+                  {fila.usuario.nombre}
+                  {soyYo ? ' · vos' : ''}
+                </p>
+                <p className="text-xs text-tinta-3">
+                  {fila.jugados} jugados · {fila.organizados} organizados
+                  {fila.usuario.ciudad && !soloCiudad ? ` · ${fila.usuario.ciudad}` : ''}
+                </p>
+              </div>
+              <span className="t-display text-[17px] text-verde-txt tabular">{fila.puntos} pts</span>
+            </Link>
+          );
+        })}
+      </div>
+      {mia && mia.posicion > filas.length ? (
+        <div className="tarjeta flex items-center gap-3 p-3.5">
+          <span className="t-display w-8 text-center text-[17px] tabular text-tinta-3">
+            {mia.posicion}
+          </span>
+          <p className="flex-1 text-sm font-semibold">Vos</p>
+          <span className="t-display text-[17px] text-verde-txt tabular">{mia.puntos} pts</span>
+        </div>
+      ) : null}
     </div>
   );
 }

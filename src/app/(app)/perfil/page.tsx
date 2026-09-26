@@ -4,6 +4,7 @@ import { AccionesPerfil } from './acciones';
 import { ListaBloqueados } from './bloqueados';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
+import { estadisticasJugador } from '@/lib/estadisticas';
 
 export const metadata = { title: 'Perfil' };
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,7 @@ export default async function Perfil() {
     prisma.seguimiento.count({ where: { seguidoId: usuario.id } }),
     prisma.seguimiento.count({ where: { seguidorId: usuario.id } }),
   ]);
+  const estadisticas = await estadisticasJugador(usuario.id);
 
   const jugados = conRegistro.filter((p) => p.asistio).length;
   const asistencia =
@@ -81,6 +83,34 @@ export default async function Perfil() {
         <p className="-mt-3 text-xs text-tinta-3">
           El % de asistencia aparece cuando el organizador pasa lista en tu primer partido jugado.
         </p>
+      ) : null}
+
+      <section className="grid grid-cols-3 gap-2">
+        <div className="tarjeta px-2 py-3 text-center">
+          <p className="t-display text-[22px] tabular">{estadisticas.organizados}</p>
+          <p className="t-rotulo mt-1 text-[9.5px]">Organizados</p>
+        </div>
+        <div className="tarjeta px-2 py-3 text-center">
+          <p className="t-display text-[22px] tabular">{estadisticas.jugadasPublicadas}</p>
+          <p className="t-rotulo mt-1 text-[9.5px]">Jugadas</p>
+        </div>
+        <div className="tarjeta px-2 py-3 text-center">
+          <p className="t-display text-[22px] text-verde-txt tabular">{estadisticas.puntos}</p>
+          <p className="t-rotulo mt-1 text-[9.5px]">Puntos</p>
+        </div>
+      </section>
+
+      {estadisticas.porDeporte.length > 0 ? (
+        <section>
+          <p className="t-rotulo mb-2">Jugados por deporte</p>
+          <div className="flex flex-wrap gap-2">
+            {estadisticas.porDeporte.map((fila) => (
+              <span key={fila.deporte} className="chip-sel pointer-events-none tabular">
+                {fila.deporte} × {fila.jugados}
+              </span>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {usuario.deportes.length > 0 ? (

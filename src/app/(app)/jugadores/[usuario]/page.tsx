@@ -5,6 +5,7 @@ import { Moderacion } from '@/components/moderacion';
 import { BotonSeguir } from '@/components/seguir';
 import { TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
+import { estadisticasJugador } from '@/lib/estadisticas';
 
 export const metadata = { title: 'Jugador' };
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
   ]);
 
   const jugadas = await obtenerJugadas(yo.id, { autorId: jugador.id }, 10);
+  const estadisticas = await estadisticasJugador(jugador.id);
   const jugados = conRegistro.filter((p) => p.asistio).length;
   const asistencia =
     conRegistro.length > 0 ? Math.round((jugados / conRegistro.length) * 100) : null;
@@ -84,6 +86,18 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
           <p className="t-rotulo mt-1 text-[9.5px]">Grupos</p>
         </div>
       </section>
+
+      <div className="-mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <span className="t-rotulo tabular">
+          <b className="text-verde-txt">{estadisticas.puntos}</b> puntos
+        </span>
+        <span className="t-rotulo tabular">{estadisticas.organizados} organizados</span>
+        {estadisticas.porDeporte.slice(0, 3).map((fila) => (
+          <span key={fila.deporte} className="t-rotulo tabular">
+            {fila.deporte} ×{fila.jugados}
+          </span>
+        ))}
+      </div>
 
       {jugador.bio ? <p className="text-sm text-tinta-2">{jugador.bio}</p> : null}
 
