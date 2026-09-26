@@ -53,15 +53,19 @@ npx prisma db push --skip-generate
 # que falta y nunca pisa datos cargados.
 npx tsx prisma/seed.ts
 
-# Compilar guardando lo anterior para poder volver atrás sin recompilar.
-if [ -d .next ]; then rm -rf .next.anterior && mv .next .next.anterior; fi
-if ! npm run build; then
-  anotar "FALLÓ el build de $SHA; restaurando la versión anterior."
-  [ -d .next.anterior ] && mv .next.anterior .next
-  sudo /bin/systemctl restart "$SERVICIO"
+# Compilar A UN COSTADO: el .next vivo no se toca hasta tener el nuevo listo,
+# así el sitio sigue sirviendo durante todo el build (sin 500 de ventana).
+rm -rf .next.nuevo
+if ! DIST_DIR=.next.nuevo npm run build; then
+  anotar "FALLÓ el build de $SHA; la versión anterior sigue en el aire, sin tocar."
+  rm -rf .next.nuevo
   exit 1
 fi
 
+# Intercambio instantáneo + reinicio. Lo anterior queda para volver atrás.
+rm -rf .next.anterior
+[ -d .next ] && mv .next .next.anterior
+mv .next.nuevo .next
 sudo /bin/systemctl restart "$SERVICIO"
 anotar "Publicado $SHA y reiniciado $SERVICIO."
 
