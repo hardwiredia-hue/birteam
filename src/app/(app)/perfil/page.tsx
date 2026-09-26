@@ -180,6 +180,15 @@ export default async function Perfil() {
 
       <ListaBloqueados bloqueados={bloqueos.map((bloqueo) => bloqueo.bloqueado)} />
 
+      <div className="grid grid-cols-2 gap-2">
+        <a href="/perfil/editar" className="btn btn-secundario">
+          Editar perfil
+        </a>
+        <a href="/grupos" className="btn btn-secundario">
+          Mis grupos
+        </a>
+      </div>
+
       {usuario.rol === 'ADMIN' ? (
         <a href="/admin" className="btn btn-secundario">
           Backoffice

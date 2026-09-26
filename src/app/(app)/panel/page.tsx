@@ -26,6 +26,13 @@ export default async function Inicio() {
     include: { partido: { include: { deporte: true } } },
   });
 
+  const membresias = await prisma.miembroGrupo.findMany({
+    where: { usuarioId: usuario.id },
+    include: { grupo: { include: { deporte: true, _count: { select: { miembros: true } } } } },
+    orderBy: { unidoEn: 'asc' },
+    take: 3,
+  });
+
   const avisos = await prisma.notificacion.findMany({
     where: { usuarioId: usuario.id, leidaEn: null },
     orderBy: { creadoEn: 'desc' },
@@ -50,14 +57,6 @@ export default async function Inicio() {
       </header>
 
       <Avisos avisos={avisos} />
-
-      <Link href="/jugadas" className="tarjeta flex items-center justify-between p-4">
-        <div>
-          <p className="text-sm font-semibold">Jugadas</p>
-          <p className="text-xs text-tinta-3">Las fotos y momentos de tu red, atados a partidos reales.</p>
-        </div>
-        <span className="t-display text-[18px] text-verde-txt">→</span>
-      </Link>
 
       <section>
         <p className="t-rotulo mb-2">Tu próximo partido</p>
@@ -90,6 +89,37 @@ export default async function Inicio() {
             <Link href="/explorar" className="btn btn-secundario">
               Buscar partidos cerca
             </Link>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="mb-2 flex items-baseline justify-between">
+          <p className="t-rotulo">Tus grupos</p>
+          <Link href="/grupos" className="text-xs font-semibold text-verde-txt">
+            {membresias.length > 0 ? 'Ver todos' : 'Crear uno'}
+          </Link>
+        </div>
+        {membresias.length === 0 ? (
+          <Link href="/grupos/nuevo" className="tarjeta block p-4">
+            <p className="text-sm text-tinta-2">
+              Tu gente en un solo lugar: armás el grupo una vez y cada partido sale con un toque.
+            </p>
+          </Link>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {membresias.map(({ grupo }) => (
+              <Link key={grupo.id} href={`/grupos/${grupo.id}`} className="tarjeta flex items-center justify-between gap-3 p-3.5">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{grupo.nombre}</p>
+                  <p className="t-rotulo mt-0.5">
+                    {grupo.deporte.nombre} · {grupo._count.miembros}{' '}
+                    {grupo._count.miembros === 1 ? 'miembro' : 'miembros'}
+                  </p>
+                </div>
+                <span className="t-display text-[16px] text-verde-txt">→</span>
+              </Link>
+            ))}
           </div>
         )}
       </section>

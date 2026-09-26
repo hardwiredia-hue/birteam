@@ -7,6 +7,7 @@ import { formatearPlata } from '@/lib/formato';
 import { normalizar } from '@/lib/normalizar';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { calcularRanking } from '@/lib/estadisticas';
+import { BotonSumarme } from '@/components/sumarse-grupo';
 
 export const metadata = { title: 'Explorar' };
 export const dynamic = 'force-dynamic';
@@ -91,10 +92,7 @@ export default async function Explorar({
       ) : tab === 'jugadores' ? (
         <Jugadores q={q} miId={usuario.id} />
       ) : tab === 'grupos' ? (
-        <div className="tarjeta p-5">
-          <p className="t-rotulo text-verde-txt">Muy pronto</p>
-          <p className="mt-2 text-sm text-tinta-2">Los grupos abiertos van a aparecer acá.</p>
-        </div>
+        <GruposAbiertos q={q} usuario={usuario} />
       ) : (
         <>
           <div className="flex flex-wrap gap-2">
@@ -299,6 +297,72 @@ async function Ranking({
           <span className="t-display text-[17px] text-verde-txt tabular">{mia.puntos} pts</span>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+async function GruposAbiertos({
+  q,
+  usuario,
+}: {
+  q?: string;
+  usuario: { id: string; ciudad: string | null };
+}) {
+  const filtro = q ? normalizar(q) : null;
+  const grupos = await prisma.grupo.findMany({
+    where: {
+      abierto: true,
+      miembros: { none: { usuarioId: usuario.id } },
+    },
+    include: { deporte: true, _count: { select: { miembros: true } } },
+    orderBy: { creadoEn: 'desc' },
+    take: 60,
+  });
+
+  // Primero los de tu ciudad; filtro de texto sin tildes.
+  const lista = grupos
+    .filter((grupo) =>
+      !filtro
+        ? true
+        : normalizar(`${grupo.nombre} ${grupo.ciudad ?? ''} ${grupo.deporte.nombre}`).includes(filtro)
+    )
+    .sort((a, b) => {
+      const aCerca = usuario.ciudad && a.ciudad === usuario.ciudad ? 0 : 1;
+      const bCerca = usuario.ciudad && b.ciudad === usuario.ciudad ? 0 : 1;
+      return aCerca - bCerca;
+    })
+    .slice(0, 25);
+
+  if (lista.length === 0) {
+    return (
+      <div className="tarjeta p-5">
+        <p className="text-sm text-tinta-2">
+          No hay grupos abiertos {filtro ? 'con esa búsqueda' : 'para sumarte por ahora'}. Armá el
+          tuyo e invitá gente: crece solo.
+        </p>
+        <Link href="/grupos/nuevo" className="btn btn-primario mt-4">Crear mi grupo</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {lista.map((grupo) => (
+        <div key={grupo.id} className="tarjeta flex items-center gap-3 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{grupo.nombre}</p>
+            <p className="t-rotulo mt-0.5">
+              {grupo.deporte.nombre} · {grupo._count.miembros}{' '}
+              {grupo._count.miembros === 1 ? 'miembro' : 'miembros'}
+              {grupo.ciudad ? ` · ${grupo.ciudad}` : ''}
+            </p>
+            {grupo.descripcion ? (
+              <p className="mt-1 truncate text-xs text-tinta-3">{grupo.descripcion}</p>
+            ) : null}
+          </div>
+          <BotonSumarme grupoId={grupo.id} />
+        </div>
+      ))}
     </div>
   );
 }

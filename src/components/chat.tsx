@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Mensaje {
@@ -82,7 +83,12 @@ export function Chat({ partidoId, grupoId }: { partidoId?: string; grupoId?: str
           mensajes.map((mensaje) => (
             <div key={mensaje.id} className={mensaje.mio ? 'ml-8 text-right' : 'mr-8'}>
               {!mensaje.mio ? (
-                <p className="mb-0.5 text-[11px] font-semibold text-tinta-3">{mensaje.autor.nombre}</p>
+                <Link
+                  href={`/jugadores/${mensaje.autor.usuario}`}
+                  className="mb-0.5 block text-[11px] font-semibold text-tinta-3"
+                >
+                  {mensaje.autor.nombre}
+                </Link>
               ) : null}
               <p
                 className="inline-block rounded-[6px] px-3 py-1.5 text-left text-sm"

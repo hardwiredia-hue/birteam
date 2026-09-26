@@ -47,7 +47,7 @@ export default async function PaginaRegistro({
               : 'Lo justo y necesario para empezar a jugar.'}
         </p>
 
-        <FormularioRegistro deportes={deportes} volver={destino} />
+        <FormularioRegistro deportes={deportes} volver={destino} puerta={puerta} />
       </div>
 
       <p className="text-center text-sm text-tinta-2">

@@ -12,9 +12,11 @@ interface Deporte {
 export function FormularioRegistro({
   deportes,
   volver,
+  puerta,
 }: {
   deportes: Deporte[];
   volver?: string | null;
+  puerta?: string;
 }) {
   const router = useRouter();
   const [elegidos, setElegidos] = useState<string[]>([]);
@@ -66,7 +68,10 @@ export function FormularioRegistro({
       return;
     }
 
-    router.push(volver ?? '/panel');
+    // Cada puerta lleva a su destino: armar el grupo o salir a buscar juego.
+    const destino =
+      volver ?? (puerta === 'grupo' ? '/grupos/nuevo' : puerta === 'jugar' ? '/explorar' : '/panel');
+    router.push(destino);
     router.refresh();
   }
 

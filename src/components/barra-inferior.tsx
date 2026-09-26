@@ -27,12 +27,12 @@ function IconoMas() {
     </svg>
   );
 }
-function IconoGrupos() {
+function IconoJugadas() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TRAZO} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="8" r="3.5" />
-      <circle cx="17" cy="10" r="2.5" />
-      <path d="M3 19c0-3 2.5-5 6-5s6 2 6 5M15 14.5c2.8 0 5 1.6 5 4" />
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="m3.5 17 5-4.5 4 3.5 4-3 4 3.5" />
     </svg>
   );
 }
@@ -45,11 +45,13 @@ function IconoPerfil() {
   );
 }
 
+// Fase 2 (ESQUEMA.md §2): Jugadas toma el lugar en la barra y Grupos
+// se muda a Inicio y Perfil. La barra cambia una sola vez.
 const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
   { href: '/crear', rotulo: 'Crear', Icono: IconoMas, central: true },
-  { href: '/grupos', rotulo: 'Grupos', Icono: IconoGrupos },
+  { href: '/jugadas', rotulo: 'Jugadas', Icono: IconoJugadas },
   { href: '/perfil', rotulo: 'Perfil', Icono: IconoPerfil },
 ] as const;
 

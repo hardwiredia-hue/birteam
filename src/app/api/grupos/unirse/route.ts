@@ -9,10 +9,22 @@ export async function POST(request: Request) {
 
   const cuerpo = await request.json().catch(() => ({}));
   const token = String(cuerpo.token ?? '');
-  if (!token) return NextResponse.json({ error: 'Falta el link de invitación.' }, { status: 400 });
+  const grupoId = String(cuerpo.grupoId ?? '');
+  if (!token && !grupoId) {
+    return NextResponse.json({ error: 'Falta el grupo o el link de invitación.' }, { status: 400 });
+  }
 
-  const grupo = await prisma.grupo.findUnique({ where: { tokenInvitacion: token } });
-  if (!grupo) return NextResponse.json({ error: 'Ese link de invitación no existe.' }, { status: 404 });
+  // Por link de invitación entra cualquiera; por id, solo a grupos abiertos.
+  const grupo = token
+    ? await prisma.grupo.findUnique({ where: { tokenInvitacion: token } })
+    : await prisma.grupo.findUnique({ where: { id: grupoId } });
+  if (!grupo) return NextResponse.json({ error: 'Ese grupo no existe.' }, { status: 404 });
+  if (!token && !grupo.abierto) {
+    return NextResponse.json(
+      { error: 'Ese grupo es cerrado: se entra con el link de invitación de un miembro.' },
+      { status: 403 }
+    );
+  }
 
   await prisma.miembroGrupo.upsert({
     where: { grupoId_usuarioId: { grupoId: grupo.id, usuarioId: usuario.id } },

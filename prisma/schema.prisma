@@ -104,6 +104,8 @@ model Grupo {
   longitud        Float?
   // Token del link de invitación (compartir por WhatsApp).
   tokenInvitacion String   @unique @default(cuid())
+  // Visible en Explorar con botón "Sumarme". Cerrado = solo por link.
+  abierto         Boolean  @default(true)
   creadorId       String
   creador         Usuario  @relation("creadorGrupo", fields: [creadorId], references: [id])
   creadoEn        DateTime @default(now())
