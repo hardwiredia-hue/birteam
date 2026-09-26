@@ -45,6 +45,10 @@ export default async function Inicio() {
   });
 
   const primerNombre = usuario.nombre.split(' ')[0];
+  const deportePrincipal =
+    usuario.deportes.find((relacion) => relacion.principal)?.deporte ??
+    usuario.deportes[0]?.deporte ??
+    null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,6 +117,20 @@ export default async function Inicio() {
           </div>
         )}
       </section>
+
+      <Link
+        href={deportePrincipal ? `/comunidades/${deportePrincipal.slug}` : '/comunidades'}
+        className="tarjeta flex items-center justify-between gap-3 p-4"
+      >
+        <div>
+          <p className="t-rotulo text-verde-txt">Tu comunidad</p>
+          <p className="mt-0.5 text-sm font-semibold">
+            {deportePrincipal ? deportePrincipal.nombre : 'Elegí tu deporte'} — partidos abiertos,
+            grupos y ranking
+          </p>
+        </div>
+        <span className="t-display text-[16px] text-verde-txt">→</span>
+      </Link>
 
       <section>
         <div className="mb-2 flex items-baseline justify-between">
