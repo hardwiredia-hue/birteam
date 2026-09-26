@@ -156,7 +156,17 @@ export function FormularioRegistro({
 
       <label className="flex items-start gap-2.5 text-sm text-tinta-2">
         <input type="checkbox" name="aceptaTerminos" required className="mt-1 accent-[#a8e617]" />
-        <span>Acepto los términos de uso y la política de privacidad de birteam.</span>
+        <span>
+          Acepto los{' '}
+          <a href="/terminos" target="_blank" className="font-semibold text-verde-txt">
+            términos de uso
+          </a>{' '}
+          y la{' '}
+          <a href="/privacidad" target="_blank" className="font-semibold text-verde-txt">
+            política de privacidad
+          </a>{' '}
+          de birteam.
+        </span>
       </label>
       <ErrorDeCampo mensajes={errores.aceptaTerminos} />
 

@@ -9,7 +9,9 @@ export const metadata: Metadata = {
   },
   description:
     'Organizá partidos, armá tu grupo y encontrá con quién jugar. Fútbol, básquet, vóley, tenis, pádel y más, cerca tuyo.',
-  icons: { icon: '/birteam-iso.png' },
+  icons: { icon: '/birteam-iso.png', apple: '/icono-192.png' },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'birteam' },
 };
 
 export const viewport: Viewport = {
@@ -32,7 +34,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@1,800;1,900&family=Instrument+Sans:wght@400;600&family=Spline+Sans+Mono:wght@400;500&display=swap"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}",
+          }}
+        />
+      </body>
     </html>
   );
 }
