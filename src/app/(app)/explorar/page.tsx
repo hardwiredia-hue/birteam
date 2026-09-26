@@ -147,7 +147,7 @@ async function Partidos({
         const voy = p.participaciones.length;
         const faltan = p.cupo - voy;
         const hora = p.fecha.toLocaleTimeString('es-AR', {
-          hour: '2-digit',
+          hour12: false, hour: '2-digit',
           minute: '2-digit',
           timeZone: 'America/Argentina/Buenos_Aires',
         });

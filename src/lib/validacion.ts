@@ -59,10 +59,35 @@ export const esquemaPartido = z.object({
   minimo: z.number().int().min(2, 'El mínimo es 2.').max(200).default(2),
   costoPorJugador: z.number().min(0).max(10_000_000).nullish(),
   visibilidad: z.enum(['GRUPO', 'ABIERTO']).default('GRUPO'),
+  grupoId: z.string().nullish(),
 }).refine((datos) => datos.minimo <= datos.cupo, {
   path: ['minimo'],
   error: 'El mínimo no puede superar el cupo.',
 });
+
+export const esquemaGrupo = z.object({
+  nombre: z
+    .string({ error: 'Ponele nombre al grupo.' })
+    .trim()
+    .min(2, 'El nombre es muy corto.')
+    .max(60, 'El nombre es muy largo.'),
+  deporteId: z.string({ error: 'Elegí el deporte.' }).min(1, 'Elegí el deporte.'),
+  descripcion: z.string().trim().max(400, 'La descripción es muy larga.').nullish(),
+});
+
+export const esquemaMensaje = z
+  .object({
+    texto: z
+      .string({ error: 'Escribí el mensaje.' })
+      .trim()
+      .min(1, 'El mensaje está vacío.')
+      .max(500, 'Máximo 500 caracteres.'),
+    partidoId: z.string().nullish(),
+    grupoId: z.string().nullish(),
+  })
+  .refine((datos) => Boolean(datos.partidoId) !== Boolean(datos.grupoId), {
+    error: 'El mensaje va a un partido o a un grupo.',
+  });
 
 export const esquemaRsvp = z.object({
   estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),

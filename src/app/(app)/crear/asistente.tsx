@@ -33,12 +33,23 @@ function proximosDias() {
  * Asistente de creación en 6 pasos, un paso por pantalla (ESQUEMA.md §3.5):
  * deporte → cuándo → dónde → cupo → costo → visibilidad.
  */
-export function Asistente({ deportes }: { deportes: Deporte[] }) {
+export function Asistente({
+  deportes,
+  grupos,
+  grupoInicial,
+}: {
+  deportes: Deporte[];
+  grupos: { id: string; nombre: string; deporteId: string }[];
+  grupoInicial: string | null;
+}) {
   const router = useRouter();
   const dias = useMemo(proximosDias, []);
 
   const [paso, setPaso] = useState(1);
-  const [deporteId, setDeporteId] = useState<string | null>(null);
+  const [grupoId, setGrupoId] = useState<string | null>(grupoInicial);
+  const [deporteId, setDeporteId] = useState<string | null>(
+    grupos.find((g) => g.id === grupoInicial)?.deporteId ?? null
+  );
   const [dia, setDia] = useState<string | null>(null);
   const [hora, setHora] = useState('21:00');
   const [repite, setRepite] = useState(false);
@@ -71,6 +82,7 @@ export function Asistente({ deportes }: { deportes: Deporte[] }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         deporteId,
+        grupoId,
         fecha: fecha.toISOString(),
         recurrenteSemanal: repite,
         lugarNombre: lugarNombre.trim(),
@@ -269,6 +281,25 @@ export function Asistente({ deportes }: { deportes: Deporte[] }) {
       ) : (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Quién puede<br />verlo?</h1>
+          {grupos.length > 0 ? (
+            <div>
+              <label className="rotulo-campo" htmlFor="sel-grupo">¿Es de un grupo?</label>
+              <select
+                id="sel-grupo"
+                className="campo"
+                value={grupoId ?? ''}
+                onChange={(evento) => setGrupoId(evento.target.value || null)}
+              >
+                <option value="">No, partido suelto</option>
+                {grupos.map((grupo) => (
+                  <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-tinta-3">
+                Si es del grupo, todos los miembros reciben la invitación al crearlo.
+              </p>
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={() => setVisibilidad('ABIERTO')}

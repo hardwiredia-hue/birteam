@@ -63,7 +63,7 @@ export default async function Inicio() {
               <p className="t-display text-[26px]">
                 {DIAS[proxima.partido.fecha.getDay()]}{' '}
                 {proxima.partido.fecha.toLocaleTimeString('es-AR', {
-                  hour: '2-digit',
+                  hour12: false, hour: '2-digit',
                   minute: '2-digit',
                   timeZone: 'America/Argentina/Buenos_Aires',
                 })}

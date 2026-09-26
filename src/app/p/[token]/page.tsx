@@ -32,7 +32,7 @@ export default async function PartidoPublico({ params }: { params: Promise<{ tok
   const voy = partido.participaciones.length;
   const lugares = Math.max(0, partido.cupo - voy);
   const hora = partido.fecha.toLocaleTimeString('es-AR', {
-    hour: '2-digit',
+    hour12: false, hour: '2-digit',
     minute: '2-digit',
     timeZone: 'America/Argentina/Buenos_Aires',
   });

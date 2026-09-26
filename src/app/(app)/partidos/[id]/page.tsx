@@ -1,7 +1,9 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
+import { Chat } from '@/components/chat';
 import { BotoneraRsvp, CompartirPartido } from './acciones';
 
 export const metadata = { title: 'Partido' };
@@ -17,6 +19,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
     where: { id },
     include: {
       deporte: true,
+      grupo: { select: { id: true, nombre: true } },
       organizador: { select: { id: true, nombre: true, usuario: true } },
       participaciones: {
         include: { usuario: { select: { id: true, nombre: true, usuario: true } } },
@@ -33,7 +36,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   const pagaron = voy.filter((p) => p.pago).length;
 
   const hora = partido.fecha.toLocaleTimeString('es-AR', {
-    hour: '2-digit',
+    hour12: false, hour: '2-digit',
     minute: '2-digit',
     timeZone: 'America/Argentina/Buenos_Aires',
   });
@@ -55,6 +58,14 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         </p>
         <p className="text-[13px] text-tinta-3">
           Organiza {partido.organizador.nombre} (@{partido.organizador.usuario})
+          {partido.grupo ? (
+            <>
+              {' · '}
+              <Link href={`/grupos/${partido.grupo.id}`} className="font-semibold text-verde-txt">
+                {partido.grupo.nombre}
+              </Link>
+            </>
+          ) : null}
         </p>
       </header>
 
@@ -105,6 +116,17 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
             detalle: `${indice + 1}º en la lista`,
           }))} />
         ) : null}
+      </section>
+
+      <section>
+        <p className="t-rotulo mb-2">Charla del partido</p>
+        {mia || partido.organizadorId === usuario.id ? (
+          <Chat partidoId={partido.id} />
+        ) : (
+          <p className="tarjeta p-4 text-sm text-tinta-3">
+            El chat es de los que participan: respondé Voy, Tal vez o No voy y entrás.
+          </p>
+        )}
       </section>
 
       <div className="mt-auto flex flex-col gap-3 pt-2">
