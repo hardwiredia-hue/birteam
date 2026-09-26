@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { Chat } from '@/components/chat';
-import { BotoneraRsvp, CompartirPartido } from './acciones';
+import { BotoneraRsvp, CancelarPartido, CompartirPartido, PasarLista } from './acciones';
 
 export const metadata = { title: 'Partido' };
 export const dynamic = 'force-dynamic';
@@ -34,6 +34,9 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   const espera = partido.participaciones.filter((p) => p.estado === 'ESPERA');
   const mia = partido.participaciones.find((p) => p.usuarioId === usuario.id);
   const pagaron = voy.filter((p) => p.pago).length;
+  const organizo = partido.organizadorId === usuario.id || partido.coOrganizadorId === usuario.id;
+  const yaPaso = partido.fecha < new Date();
+  const cerrado = partido.estado === 'JUGADO' || partido.estado === 'CANCELADO';
 
   const hora = partido.fecha.toLocaleTimeString('es-AR', {
     hour12: false, hour: '2-digit',
@@ -47,11 +50,18 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         <p className="t-rotulo text-verde-txt">
           {partido.deporte.nombre}
           {partido.recurrenteSemanal ? ' · se repite' : ''}
-          {partido.estado === 'CANCELADO' ? ' · CANCELADO' : ''}
+          {partido.estado === 'CANCELADO' ? (
+            <span style={{ color: 'var(--rojo)' }}> · cancelado</span>
+          ) : partido.estado === 'JUGADO' ? (
+            ' · jugado'
+          ) : null}
         </p>
         <h1 className="t-display text-[30px]">
           {DIAS[partido.fecha.getDay()]} {hora}
         </h1>
+        {partido.resultado ? (
+          <p className="t-display text-[20px] tabular text-verde-txt">{partido.resultado}</p>
+        ) : null}
         <p className="text-sm text-tinta-2">
           {partido.lugarNombre}
           {partido.direccion ? ` · ${partido.direccion}` : ''}
@@ -96,12 +106,31 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         </section>
       ) : null}
 
+      {organizo && yaPaso && !cerrado && voy.length > 0 ? (
+        <PasarLista
+          partidoId={partido.id}
+          jugadores={voy.map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre }))}
+        />
+      ) : null}
+
       <section className="flex flex-col gap-4">
-        <ListaDeGente titulo={`Confirmados · ${voy.length}`} color="var(--verde-txt)" filas={voy.map((p) => ({
-          id: p.id,
-          nombre: p.usuario.nombre,
-          detalle: p.usuarioId === partido.organizadorId ? 'organiza' : `@${p.usuario.usuario}`,
-        }))} />
+        <ListaDeGente
+          titulo={partido.estado === 'JUGADO' ? `Jugaron · ${voy.filter((p) => p.asistio).length}` : `Confirmados · ${voy.length}`}
+          color="var(--verde-txt)"
+          filas={voy.map((p) => ({
+            id: p.id,
+            nombre: p.usuario.nombre,
+            detalle:
+              partido.estado === 'JUGADO'
+                ? p.asistio === false
+                  ? 'no fue'
+                  : 'jugó'
+                : p.usuarioId === partido.organizadorId
+                  ? 'organiza'
+                  : `@${p.usuario.usuario}`,
+            apagado: partido.estado === 'JUGADO' && p.asistio === false,
+          }))}
+        />
         {talvez.length > 0 ? (
           <ListaDeGente titulo={`Tal vez · ${talvez.length}`} color="var(--naranja-txt)" filas={talvez.map((p) => ({
             id: p.id,
@@ -130,8 +159,13 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
       </section>
 
       <div className="mt-auto flex flex-col gap-3 pt-2">
-        <CompartirPartido rutaPublica={`/p/${partido.tokenPublico}`} />
-        <BotoneraRsvp partidoId={partido.id} estadoActual={mia?.estado ?? null} />
+        {!cerrado && !yaPaso ? (
+          <>
+            <CompartirPartido rutaPublica={`/p/${partido.tokenPublico}`} />
+            <BotoneraRsvp partidoId={partido.id} estadoActual={mia?.estado ?? null} />
+            {organizo ? <CancelarPartido partidoId={partido.id} /> : null}
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -144,15 +178,22 @@ function ListaDeGente({
 }: {
   titulo: string;
   color: string;
-  filas: { id: string; nombre: string; detalle: string }[];
+  filas: { id: string; nombre: string; detalle: string; apagado?: boolean }[];
 }) {
   return (
     <div>
       <p className="t-rotulo mb-1">{titulo}</p>
       <div>
         {filas.map((fila) => (
-          <div key={fila.id} className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0">
-            <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: color }} />
+          <div
+            key={fila.id}
+            className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0"
+            style={fila.apagado ? { opacity: 0.5 } : undefined}
+          >
+            <span
+              className="h-2 w-2 flex-shrink-0 rounded-full"
+              style={{ background: fila.apagado ? 'var(--gris-estado)' : color }}
+            />
             <span className="avatar h-7 w-7 text-[11px]">
               {fila.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
             </span>

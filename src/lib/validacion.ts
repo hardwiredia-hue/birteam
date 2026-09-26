@@ -89,6 +89,14 @@ export const esquemaMensaje = z
     error: 'El mensaje va a un partido o a un grupo.',
   });
 
+export const esquemaAsistencia = z.object({
+  asistencias: z
+    .array(z.object({ usuarioId: z.string().min(1), asistio: z.boolean() }))
+    .min(1, 'Marcá al menos a un jugador.')
+    .max(200),
+  resultado: z.string().trim().max(40, 'El resultado es muy largo.').nullish(),
+});
+
 export const esquemaRsvp = z.object({
   estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),
 });
