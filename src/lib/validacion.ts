@@ -36,6 +36,38 @@ export const esquemaEntrar = z.object({
   clave: z.string({ error: 'Ingresá tu contraseña.' }).min(1, 'Ingresá tu contraseña.'),
 });
 
+export const esquemaPartido = z.object({
+  deporteId: z.string({ error: 'Elegí el deporte.' }).min(1, 'Elegí el deporte.'),
+  fecha: z.coerce.date({ error: 'Elegí cuándo juegan.' }).refine(
+    (fecha) => fecha.getTime() > Date.now() - 60 * 60 * 1000,
+    'La fecha ya pasó. Elegí una futura.'
+  ),
+  recurrenteSemanal: z.boolean().default(false),
+  lugarNombre: z
+    .string({ error: 'Contanos dónde juegan.' })
+    .trim()
+    .min(2, 'El lugar es muy corto.')
+    .max(120, 'El lugar es muy largo.'),
+  direccion: z.string().trim().max(160).nullish(),
+  ciudad: z.string().trim().max(80).nullish(),
+  provincia: z.string().trim().max(80).nullish(),
+  cupo: z
+    .number({ error: 'Definí el cupo.' })
+    .int('El cupo es un número entero.')
+    .min(2, 'El cupo mínimo es 2.')
+    .max(200, 'Ese cupo es demasiado grande.'),
+  minimo: z.number().int().min(2, 'El mínimo es 2.').max(200).default(2),
+  costoPorJugador: z.number().min(0).max(10_000_000).nullish(),
+  visibilidad: z.enum(['GRUPO', 'ABIERTO']).default('GRUPO'),
+}).refine((datos) => datos.minimo <= datos.cupo, {
+  path: ['minimo'],
+  error: 'El mínimo no puede superar el cupo.',
+});
+
+export const esquemaRsvp = z.object({
+  estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),
+});
+
 /** Respuesta uniforme de error de validación para la API. */
 export function erroresDeZod(error: z.ZodError) {
   const porCampo: Record<string, string[]> = {};

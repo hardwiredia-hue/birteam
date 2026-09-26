@@ -44,8 +44,8 @@ export default async function Inicio() {
       <section>
         <p className="t-rotulo mb-2">Tu próximo partido</p>
         {proxima ? (
-          <div className="tarjeta flex flex-col gap-3 p-5">
-            <p className="t-rotulo !text-verde-txt">
+          <Link href={`/partidos/${proxima.partidoId}`} className="tarjeta flex flex-col gap-3 p-5">
+            <p className="t-rotulo text-verde-txt">
               {proxima.partido.deporte.nombre}
               {proxima.partido.recurrenteSemanal ? ' · se repite' : ''}
             </p>
@@ -60,7 +60,7 @@ export default async function Inicio() {
               </p>
               <p className="mt-1 text-sm text-tinta-2">{proxima.partido.lugarNombre}</p>
             </div>
-          </div>
+          </Link>
         ) : (
           <div className="tarjeta flex flex-col gap-4 p-5">
             <p className="text-sm text-tinta-2">

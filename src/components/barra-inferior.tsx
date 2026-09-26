@@ -81,7 +81,7 @@ export function BarraInferior() {
               className={`flex flex-col items-center gap-1 py-2 ${activo ? 'text-verde-txt' : 'text-tinta-3'}`}
             >
               <Icono />
-              <span className="t-rotulo !text-[9px] !tracking-[0.08em]" style={{ color: 'inherit' }}>
+              <span className="t-rotulo text-[9px] tracking-[0.08em]" style={{ color: 'inherit' }}>
                 {rotulo}
               </span>
             </Link>

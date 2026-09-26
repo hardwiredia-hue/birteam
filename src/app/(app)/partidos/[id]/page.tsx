@@ -1,0 +1,146 @@
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import { usuarioActual } from '@/lib/auth';
+import { formatearPlata } from '@/lib/formato';
+import { BotoneraRsvp, CompartirPartido } from './acciones';
+
+export const metadata = { title: 'Partido' };
+export const dynamic = 'force-dynamic';
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+export default async function PaginaPartido({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const usuario = (await usuarioActual())!;
+
+  const partido = await prisma.partido.findUnique({
+    where: { id },
+    include: {
+      deporte: true,
+      organizador: { select: { id: true, nombre: true, usuario: true } },
+      participaciones: {
+        include: { usuario: { select: { id: true, nombre: true, usuario: true } } },
+        orderBy: [{ ordenEspera: 'asc' }, { creadoEn: 'asc' }],
+      },
+    },
+  });
+  if (!partido) notFound();
+
+  const voy = partido.participaciones.filter((p) => p.estado === 'VOY');
+  const talvez = partido.participaciones.filter((p) => p.estado === 'TALVEZ');
+  const espera = partido.participaciones.filter((p) => p.estado === 'ESPERA');
+  const mia = partido.participaciones.find((p) => p.usuarioId === usuario.id);
+  const pagaron = voy.filter((p) => p.pago).length;
+
+  const hora = partido.fecha.toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  });
+
+  return (
+    <div className="flex min-h-[75dvh] flex-col gap-5">
+      <header className="flex flex-col gap-2">
+        <p className="t-rotulo text-verde-txt">
+          {partido.deporte.nombre}
+          {partido.recurrenteSemanal ? ' · se repite' : ''}
+          {partido.estado === 'CANCELADO' ? ' · CANCELADO' : ''}
+        </p>
+        <h1 className="t-display text-[30px]">
+          {DIAS[partido.fecha.getDay()]} {hora}
+        </h1>
+        <p className="text-sm text-tinta-2">
+          {partido.lugarNombre}
+          {partido.direccion ? ` · ${partido.direccion}` : ''}
+        </p>
+        <p className="text-[13px] text-tinta-3">
+          Organiza {partido.organizador.nombre} (@{partido.organizador.usuario})
+        </p>
+      </header>
+
+      <section className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between">
+          <span className="t-rotulo tabular">
+            {voy.length}/{partido.cupo} confirmados
+          </span>
+          <span className="t-rotulo tabular">
+            mínimo {partido.minimo} {voy.length >= partido.minimo ? '✓' : ''}
+          </span>
+        </div>
+        <div className="barra-progreso">
+          <i style={{ width: `${Math.min(100, (voy.length / partido.cupo) * 100)}%` }} />
+        </div>
+      </section>
+
+      {partido.costoPorJugador ? (
+        <section className="tarjeta flex items-center justify-between p-4">
+          <div>
+            <p className="text-sm font-semibold tabular">
+              {formatearPlata(partido.costoPorJugador)} por jugador
+            </p>
+            <p className="text-xs text-tinta-3">
+              Pagaron {pagaron} de {voy.length} · se arregla con @{partido.organizador.usuario}
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="flex flex-col gap-4">
+        <ListaDeGente titulo={`Confirmados · ${voy.length}`} color="var(--verde-txt)" filas={voy.map((p) => ({
+          id: p.id,
+          nombre: p.usuario.nombre,
+          detalle: p.usuarioId === partido.organizadorId ? 'organiza' : `@${p.usuario.usuario}`,
+        }))} />
+        {talvez.length > 0 ? (
+          <ListaDeGente titulo={`Tal vez · ${talvez.length}`} color="var(--naranja-txt)" filas={talvez.map((p) => ({
+            id: p.id,
+            nombre: p.usuario.nombre,
+            detalle: `@${p.usuario.usuario}`,
+          }))} />
+        ) : null}
+        {espera.length > 0 ? (
+          <ListaDeGente titulo={`En espera · ${espera.length}`} color="var(--azul-txt)" filas={espera.map((p, indice) => ({
+            id: p.id,
+            nombre: p.usuario.nombre,
+            detalle: `${indice + 1}º en la lista`,
+          }))} />
+        ) : null}
+      </section>
+
+      <div className="mt-auto flex flex-col gap-3 pt-2">
+        <CompartirPartido />
+        <BotoneraRsvp partidoId={partido.id} estadoActual={mia?.estado ?? null} />
+      </div>
+    </div>
+  );
+}
+
+function ListaDeGente({
+  titulo,
+  color,
+  filas,
+}: {
+  titulo: string;
+  color: string;
+  filas: { id: string; nombre: string; detalle: string }[];
+}) {
+  return (
+    <div>
+      <p className="t-rotulo mb-1">{titulo}</p>
+      <div>
+        {filas.map((fila) => (
+          <div key={fila.id} className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0">
+            <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: color }} />
+            <span className="avatar h-7 w-7 text-[11px]">
+              {fila.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{fila.nombre}</p>
+            </div>
+            <span className="text-xs text-tinta-3">{fila.detalle}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
