@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { Avisos } from './avisos';
 import iso from '../../../../public/birteam-iso.png';
 
 export const metadata = { title: 'Inicio' };
@@ -25,6 +26,13 @@ export default async function Inicio() {
     include: { partido: { include: { deporte: true } } },
   });
 
+  const avisos = await prisma.notificacion.findMany({
+    where: { usuarioId: usuario.id, leidaEn: null },
+    orderBy: { creadoEn: 'desc' },
+    take: 5,
+    select: { id: true, tipo: true, titulo: true, cuerpo: true, url: true },
+  });
+
   const primerNombre = usuario.nombre.split(' ')[0];
 
   return (
@@ -40,6 +48,8 @@ export default async function Inicio() {
           </div>
         </div>
       </header>
+
+      <Avisos avisos={avisos} />
 
       <section>
         <p className="t-rotulo mb-2">Tu próximo partido</p>

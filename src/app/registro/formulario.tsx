@@ -9,7 +9,13 @@ interface Deporte {
   nombre: string;
 }
 
-export function FormularioRegistro({ deportes }: { deportes: Deporte[] }) {
+export function FormularioRegistro({
+  deportes,
+  volver,
+}: {
+  deportes: Deporte[];
+  volver?: string | null;
+}) {
   const router = useRouter();
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -60,7 +66,7 @@ export function FormularioRegistro({ deportes }: { deportes: Deporte[] }) {
       return;
     }
 
-    router.push('/panel');
+    router.push(volver ?? '/panel');
     router.refresh();
   }
 

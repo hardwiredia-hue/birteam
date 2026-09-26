@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export function FormularioEntrar() {
+export function FormularioEntrar({ volver }: { volver?: string | null }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -30,7 +30,7 @@ export function FormularioEntrar() {
       return;
     }
 
-    router.push('/panel');
+    router.push(volver ?? '/panel');
     router.refresh();
   }
 

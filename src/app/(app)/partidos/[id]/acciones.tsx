@@ -72,11 +72,12 @@ export function BotoneraRsvp({
   );
 }
 
-export function CompartirPartido() {
+export function CompartirPartido({ rutaPublica }: { rutaPublica: string }) {
   const [copiado, setCopiado] = useState(false);
 
   async function compartir() {
-    const url = window.location.href;
+    // El link público: se abre sin cuenta y invita a sumarse en 30 segundos.
+    const url = `${window.location.origin}${rutaPublica}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: 'Partido en birteam', url });

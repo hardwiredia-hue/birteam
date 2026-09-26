@@ -7,15 +7,21 @@ import { FormularioRegistro } from './formulario';
 
 export const metadata = { title: 'Creá tu cuenta' };
 
+/** Solo rutas internas: nada de mandar a otro dominio al salir del registro. */
+function rutaSegura(volver?: string) {
+  return volver && volver.startsWith('/') && !volver.startsWith('//') ? volver : null;
+}
+
 export default async function PaginaRegistro({
   searchParams,
 }: {
-  searchParams: Promise<{ puerta?: string }>;
+  searchParams: Promise<{ puerta?: string; volver?: string }>;
 }) {
-  const usuario = await usuarioActual();
-  if (usuario) redirect('/panel');
+  const { puerta, volver } = await searchParams;
+  const destino = rutaSegura(volver);
 
-  const { puerta } = await searchParams;
+  const usuario = await usuarioActual();
+  if (usuario) redirect(destino ?? '/panel');
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
     select: { id: true, nombre: true },
@@ -41,7 +47,7 @@ export default async function PaginaRegistro({
               : 'Lo justo y necesario para empezar a jugar.'}
         </p>
 
-        <FormularioRegistro deportes={deportes} />
+        <FormularioRegistro deportes={deportes} volver={destino} />
       </div>
 
       <p className="text-center text-sm text-tinta-2">

@@ -108,7 +108,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
       </section>
 
       <div className="mt-auto flex flex-col gap-3 pt-2">
-        <CompartirPartido />
+        <CompartirPartido rutaPublica={`/p/${partido.tokenPublico}`} />
         <BotoneraRsvp partidoId={partido.id} estadoActual={mia?.estado ?? null} />
       </div>
     </div>

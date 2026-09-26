@@ -6,9 +6,20 @@ import { FormularioEntrar } from './formulario';
 
 export const metadata = { title: 'Entrar' };
 
-export default async function PaginaEntrar() {
+function rutaSegura(volver?: string) {
+  return volver && volver.startsWith('/') && !volver.startsWith('//') ? volver : null;
+}
+
+export default async function PaginaEntrar({
+  searchParams,
+}: {
+  searchParams: Promise<{ volver?: string }>;
+}) {
+  const { volver } = await searchParams;
+  const destino = rutaSegura(volver);
+
   const usuario = await usuarioActual();
-  if (usuario) redirect('/panel');
+  if (usuario) redirect(destino ?? '/panel');
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-10">
@@ -19,7 +30,7 @@ export default async function PaginaEntrar() {
       <div className="flex flex-1 flex-col justify-center py-8">
         <h1 className="t-display text-[32px]">Entrá</h1>
         <p className="mt-2 text-tinta-2">Tu gente ya debe estar armando el próximo partido.</p>
-        <FormularioEntrar />
+        <FormularioEntrar volver={destino} />
       </div>
 
       <p className="text-center text-sm text-tinta-2">
