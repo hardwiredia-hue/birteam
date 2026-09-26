@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { idsBloqueados } from '@/lib/bloqueos';
+import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Mensajes' };
 export const dynamic = 'force-dynamic';
@@ -19,8 +20,8 @@ export default async function Mensajes() {
         : {}),
     },
     include: {
-      autor: { select: { id: true, nombre: true, usuario: true } },
-      destinatario: { select: { id: true, nombre: true, usuario: true } },
+      autor: { select: { id: true, nombre: true, usuario: true, avatarUrl: true } },
+      destinatario: { select: { id: true, nombre: true, usuario: true, avatarUrl: true } },
     },
     orderBy: { creadoEn: 'desc' },
     take: 200,
@@ -28,7 +29,12 @@ export default async function Mensajes() {
 
   const conversaciones = new Map<
     string,
-    { otro: { id: string; nombre: string; usuario: string }; ultimo: string; mio: boolean; sinLeer: number }
+    {
+      otro: { id: string; nombre: string; usuario: string; avatarUrl: string | null };
+      ultimo: string;
+      mio: boolean;
+      sinLeer: number;
+    }
   >();
   for (const mensaje of mensajes) {
     const otro = mensaje.autorId === usuario.id ? mensaje.destinatario! : mensaje.autor;
@@ -71,9 +77,7 @@ export default async function Mensajes() {
               href={`/mensajes/${conversacion.otro.usuario}`}
               className="flex items-center gap-3 border-b border-borde py-3 last:border-b-0"
             >
-              <span className="avatar h-10 w-10 text-xs">
-                {conversacion.otro.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
+              <Avatar nombre={conversacion.otro.nombre} avatarUrl={conversacion.otro.avatarUrl} tam={40} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{conversacion.otro.nombre}</p>
                 <p className="truncate text-xs text-tinta-3">

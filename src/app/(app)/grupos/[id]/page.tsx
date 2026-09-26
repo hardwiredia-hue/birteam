@@ -6,6 +6,7 @@ import { Chat } from '@/components/chat';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { CopiarInvitacion } from './acciones';
+import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Grupo' };
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,9 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
     include: {
       deporte: true,
       miembros: {
-        include: { usuario: { select: { id: true, nombre: true, usuario: true, ciudad: true } } },
+        include: {
+          usuario: { select: { id: true, nombre: true, usuario: true, ciudad: true, avatarUrl: true } },
+        },
         orderBy: { unidoEn: 'asc' },
       },
       partidos: {
@@ -105,9 +108,7 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
         <div>
           {grupo.miembros.map((miembro) => (
             <div key={miembro.usuarioId} className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0">
-              <span className="avatar h-8 w-8 text-[11px]">
-                {miembro.usuario.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
+              <Avatar nombre={miembro.usuario.nombre} avatarUrl={miembro.usuario.avatarUrl} tam={32} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{miembro.usuario.nombre}</p>
                 <p className="text-xs text-tinta-3">

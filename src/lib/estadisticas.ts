@@ -8,7 +8,13 @@ export const PUNTOS_POR_ORGANIZAR = 2;
 
 export interface FilaRanking {
   posicion: number;
-  usuario: { id: string; nombre: string; usuario: string; ciudad: string | null };
+  usuario: {
+    id: string;
+    nombre: string;
+    usuario: string;
+    ciudad: string | null;
+    avatarUrl: string | null;
+  };
   jugados: number;
   organizados: number;
   puntos: number;
@@ -53,7 +59,7 @@ export async function calcularRanking(
 
   const usuarios = await prisma.usuario.findMany({
     where: { id: { in: ids }, ...(opciones.soloCiudad ? { ciudad: opciones.soloCiudad } : {}) },
-    select: { id: true, nombre: true, usuario: true, ciudad: true },
+    select: { id: true, nombre: true, usuario: true, ciudad: true, avatarUrl: true },
   });
 
   const ordenadas = usuarios

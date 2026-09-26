@@ -8,6 +8,7 @@ import { normalizar } from '@/lib/normalizar';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { calcularRanking } from '@/lib/estadisticas';
 import { BotonSumarme } from '@/components/sumarse-grupo';
+import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Explorar' };
 export const dynamic = 'force-dynamic';
@@ -270,9 +271,7 @@ async function Ranking({
               >
                 {fila.posicion}
               </span>
-              <span className="avatar h-8 w-8 text-[11px]">
-                {fila.usuario.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
+              <Avatar nombre={fila.usuario.nombre} avatarUrl={fila.usuario.avatarUrl} tam={32} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">
                   {fila.usuario.nombre}
@@ -404,9 +403,7 @@ async function Jugadores({ q, miId }: { q?: string; miId: string }) {
           href={`/jugadores/${jugador.usuario}`}
           className="flex items-center gap-3 border-b border-borde py-3 last:border-b-0"
         >
-          <span className="avatar h-9 w-9 text-xs">
-            {jugador.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
-          </span>
+          <Avatar nombre={jugador.nombre} avatarUrl={jugador.avatarUrl} tam={36} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{jugador.nombre}</p>
             <p className="text-xs text-tinta-3">

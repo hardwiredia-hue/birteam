@@ -17,6 +17,7 @@ export default async function EditarPerfil() {
           telefono: usuario.telefono,
           ciudad: usuario.ciudad,
           provincia: usuario.provincia,
+          avatarUrl: usuario.avatarUrl,
         }}
       />
     </div>

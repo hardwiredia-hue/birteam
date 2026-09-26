@@ -6,6 +6,11 @@ import { erroresDeZod } from '@/lib/validacion';
 
 const esquemaPerfil = z.object({
   nombre: z.string({ error: 'Contanos tu nombre.' }).trim().min(2, 'El nombre es muy corto.').max(60),
+  // Nombre de archivo ya subido a /api/archivos; null borra la foto.
+  avatar: z
+    .string()
+    .regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Foto inválida.')
+    .nullish(),
   bio: z.string().trim().max(300, 'La bio es muy larga.').nullish(),
   telefono: z.string().trim().max(30).nullish(),
   ciudad: z.string().trim().max(80).nullish(),
@@ -33,6 +38,10 @@ export async function PATCH(request: Request) {
     where: { id: usuario.id },
     data: {
       nombre: d.nombre,
+      // La foto solo se toca si vino en el pedido: nombre nuevo o null (borrar).
+      ...(d.avatar !== undefined
+        ? { avatarUrl: d.avatar ? `/api/archivos/${d.avatar}` : null }
+        : {}),
       bio: d.bio ?? null,
       telefono: d.telefono ?? null,
       ciudad: d.ciudad ?? null,

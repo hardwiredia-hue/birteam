@@ -7,7 +7,7 @@ export interface JugadaParaMostrar {
   texto: string | null;
   fotos: string[];
   creadoEn: string;
-  autor: { nombre: string; usuario: string };
+  autor: { nombre: string; usuario: string; avatarUrl: string | null };
   mia: boolean;
   totalMeGusta: number;
   meGusta: boolean;
@@ -84,7 +84,7 @@ async function armarJugadas(
   const jugadas = await prisma.jugada.findMany({
     where,
     include: {
-      autor: { select: { nombre: true, usuario: true } },
+      autor: { select: { nombre: true, usuario: true, avatarUrl: true } },
       meGusta: { select: { usuarioId: true } },
       _count: { select: { comentarios: true } },
     },

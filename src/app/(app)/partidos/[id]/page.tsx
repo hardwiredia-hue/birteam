@@ -7,6 +7,7 @@ import { Chat } from '@/components/chat';
 import { Moderacion } from '@/components/moderacion';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
+import { Avatar } from '@/components/avatar';
 import { BotoneraRsvp, CancelarPartido, CompartirPartido, PasarLista } from './acciones';
 
 export const metadata = { title: 'Partido' };
@@ -25,7 +26,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
       grupo: { select: { id: true, nombre: true } },
       organizador: { select: { id: true, nombre: true, usuario: true } },
       participaciones: {
-        include: { usuario: { select: { id: true, nombre: true, usuario: true } } },
+        include: { usuario: { select: { id: true, nombre: true, usuario: true, avatarUrl: true } } },
         orderBy: [{ ordenEspera: 'asc' }, { creadoEn: 'asc' }],
       },
     },
@@ -123,6 +124,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           filas={voy.map((p) => ({
             id: p.id,
             nombre: p.usuario.nombre,
+            avatarUrl: p.usuario.avatarUrl,
             href: p.usuarioId === usuario.id ? undefined : `/jugadores/${p.usuario.usuario}`,
             detalle:
               partido.estado === 'JUGADO'
@@ -139,6 +141,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           <ListaDeGente titulo={`Tal vez · ${talvez.length}`} color="var(--naranja-txt)" filas={talvez.map((p) => ({
             id: p.id,
             nombre: p.usuario.nombre,
+            avatarUrl: p.usuario.avatarUrl,
             href: p.usuarioId === usuario.id ? undefined : `/jugadores/${p.usuario.usuario}`,
             detalle: `@${p.usuario.usuario}`,
           }))} />
@@ -147,6 +150,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           <ListaDeGente titulo={`En espera · ${espera.length}`} color="var(--azul-txt)" filas={espera.map((p, indice) => ({
             id: p.id,
             nombre: p.usuario.nombre,
+            avatarUrl: p.usuario.avatarUrl,
             href: p.usuarioId === usuario.id ? undefined : `/jugadores/${p.usuario.usuario}`,
             detalle: `${indice + 1}º en la lista`,
           }))} />
@@ -209,7 +213,14 @@ function ListaDeGente({
 }: {
   titulo: string;
   color: string;
-  filas: { id: string; nombre: string; detalle: string; apagado?: boolean; href?: string }[];
+  filas: {
+    id: string;
+    nombre: string;
+    avatarUrl?: string | null;
+    detalle: string;
+    apagado?: boolean;
+    href?: string;
+  }[];
 }) {
   return (
     <div>
@@ -222,9 +233,7 @@ function ListaDeGente({
                 className="h-2 w-2 flex-shrink-0 rounded-full"
                 style={{ background: fila.apagado ? 'var(--gris-estado)' : color }}
               />
-              <span className="avatar h-7 w-7 text-[11px]">
-                {fila.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
+              <Avatar nombre={fila.nombre} avatarUrl={fila.avatarUrl} tam={28} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{fila.nombre}</p>
               </div>

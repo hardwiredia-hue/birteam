@@ -37,10 +37,12 @@ export function Asistente({
   deportes,
   grupos,
   grupoInicial,
+  deporteInicial,
 }: {
   deportes: Deporte[];
   grupos: { id: string; nombre: string; deporteId: string }[];
   grupoInicial: string | null;
+  deporteInicial?: string | null;
 }) {
   const router = useRouter();
   const dias = useMemo(proximosDias, []);
@@ -48,7 +50,7 @@ export function Asistente({
   const [paso, setPaso] = useState(1);
   const [grupoId, setGrupoId] = useState<string | null>(grupoInicial);
   const [deporteId, setDeporteId] = useState<string | null>(
-    grupos.find((g) => g.id === grupoInicial)?.deporteId ?? null
+    grupos.find((g) => g.id === grupoInicial)?.deporteId ?? deporteInicial ?? null
   );
   const [dia, setDia] = useState<string | null>(null);
   const [hora, setHora] = useState('21:00');

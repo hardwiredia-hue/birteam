@@ -8,13 +8,16 @@ export const dynamic = 'force-dynamic';
 export default async function Crear({
   searchParams,
 }: {
-  searchParams: Promise<{ grupo?: string }>;
+  searchParams: Promise<{ grupo?: string; deporte?: string }>;
 }) {
-  const { grupo } = await searchParams;
+  const { grupo, deporte } = await searchParams;
   const usuario = (await usuarioActual())!;
 
   const [deportes, membresias] = await Promise.all([
-    prisma.deporte.findMany({ orderBy: { orden: 'asc' }, select: { id: true, nombre: true } }),
+    prisma.deporte.findMany({
+      orderBy: { orden: 'asc' },
+      select: { id: true, nombre: true, slug: true },
+    }),
     prisma.miembroGrupo.findMany({
       where: { usuarioId: usuario.id },
       include: { grupo: { select: { id: true, nombre: true, deporteId: true } } },
@@ -23,6 +26,14 @@ export default async function Crear({
 
   const grupos = membresias.map((membresia) => membresia.grupo);
   const grupoInicial = grupos.find((g) => g.id === grupo) ?? null;
+  const deporteInicial = deportes.find((d) => d.slug === deporte)?.id ?? null;
 
-  return <Asistente deportes={deportes} grupos={grupos} grupoInicial={grupoInicial?.id ?? null} />;
+  return (
+    <Asistente
+      deportes={deportes}
+      grupos={grupos}
+      grupoInicial={grupoInicial?.id ?? null}
+      deporteInicial={deporteInicial}
+    />
+  );
 }

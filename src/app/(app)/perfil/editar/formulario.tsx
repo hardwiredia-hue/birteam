@@ -13,6 +13,7 @@ export function FormularioEditar({
     telefono: string | null;
     ciudad: string | null;
     provincia: string | null;
+    avatarUrl: string | null;
   };
 }) {
   const router = useRouter();
@@ -20,6 +21,29 @@ export function FormularioEditar({
   const [error, setError] = useState<string | null>(null);
   const [listo, setListo] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  // undefined = sin cambios · nombre de archivo = foto nueva · null = borrarla
+  const [fotoNueva, setFotoNueva] = useState<string | null | undefined>(undefined);
+  const [vistaPrevia, setVistaPrevia] = useState<string | null>(inicial.avatarUrl);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+
+  async function elegirFoto(evento: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    setSubiendoFoto(true);
+    setError(null);
+    const form = new FormData();
+    form.append('archivo', archivo);
+    const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
+    const datos = await respuesta.json().catch(() => ({}));
+    setSubiendoFoto(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos subir la foto.');
+      return;
+    }
+    setFotoNueva(datos.nombre);
+    setVistaPrevia(datos.url);
+  }
 
   async function alEnviar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -39,6 +63,7 @@ export function FormularioEditar({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nombre: form.get('nombre'),
+        ...(fotoNueva !== undefined ? { avatar: fotoNueva } : {}),
         bio: form.get('bio') || null,
         telefono: form.get('telefono') || null,
         ciudad: form.get('ciudad') || null,
@@ -61,6 +86,42 @@ export function FormularioEditar({
 
   return (
     <form onSubmit={alEnviar} className="flex flex-col gap-4">
+      <div className="flex items-center gap-4">
+        {vistaPrevia ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={vistaPrevia} alt="" className="avatar h-[72px] w-[72px] object-cover" />
+        ) : (
+          <span className="avatar h-[72px] w-[72px] text-xl">
+            {inicial.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
+          </span>
+        )}
+        <div className="flex flex-col gap-2">
+          <label className="btn btn-secundario btn-sm cursor-pointer" htmlFor="foto-perfil">
+            {subiendoFoto ? 'Subiendo…' : vistaPrevia ? 'Cambiar foto' : 'Subir foto'}
+            <input
+              id="foto-perfil"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={elegirFoto}
+              disabled={subiendoFoto}
+            />
+          </label>
+          {vistaPrevia ? (
+            <button
+              type="button"
+              className="text-xs font-semibold text-tinta-3"
+              onClick={() => {
+                setFotoNueva(null);
+                setVistaPrevia(null);
+              }}
+            >
+              Quitar foto
+            </button>
+          ) : null}
+        </div>
+      </div>
+
       <div>
         <label className="rotulo-campo" htmlFor="nombre">Nombre y apellido</label>
         <input id="nombre" name="nombre" className="campo" defaultValue={inicial.nombre} required />

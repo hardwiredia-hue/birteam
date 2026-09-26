@@ -6,6 +6,7 @@ import { BotonSeguir } from '@/components/seguir';
 import { TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { estadisticasJugador } from '@/lib/estadisticas';
+import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Jugador' };
 export const dynamic = 'force-dynamic';
@@ -58,7 +59,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-4">
-        <span className="avatar h-[64px] w-[64px] text-lg">{iniciales}</span>
+        <Avatar nombre={jugador.nombre} avatarUrl={jugador.avatarUrl} tam={64} />
         <div className="min-w-0 flex-1">
           <h1 className="t-display text-[20px]">{jugador.nombre}</h1>
           <p className="t-rotulo mt-1">

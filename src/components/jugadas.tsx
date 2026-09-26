@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { JugadaParaMostrar } from '@/lib/jugadas';
+import { Avatar } from '@/components/avatar';
 
 /** Publicar una jugada: hasta 5 fotos + texto. */
 export function PublicarJugada({
@@ -188,8 +189,9 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
 
   return (
     <article className="tarjeta flex flex-col gap-3 p-4">
-      <header className="flex items-baseline justify-between gap-3">
-        <Link href={`/jugadores/${jugada.autor.usuario}`} className="text-sm font-semibold">
+      <header className="flex items-center justify-between gap-3">
+        <Link href={`/jugadores/${jugada.autor.usuario}`} className="flex items-center gap-2.5 text-sm font-semibold">
+          <Avatar nombre={jugada.autor.nombre} avatarUrl={jugada.autor.avatarUrl} tam={28} />
           {jugada.autor.nombre}
         </Link>
         <span className="t-rotulo">

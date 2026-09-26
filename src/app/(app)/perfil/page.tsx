@@ -5,6 +5,7 @@ import { ListaBloqueados } from './bloqueados';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { estadisticasJugador } from '@/lib/estadisticas';
+import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Perfil' };
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,7 @@ export default async function Perfil() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-4">
-        <span className="avatar h-[76px] w-[76px] text-xl">{iniciales}</span>
+        <Avatar nombre={usuario.nombre} avatarUrl={usuario.avatarUrl} tam={76} />
         <div>
           <h1 className="t-display text-[20px]">{usuario.nombre}</h1>
           <p className="t-rotulo mt-1">
