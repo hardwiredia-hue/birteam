@@ -165,6 +165,24 @@ systemctl restart birteam birteam-staging
 Sin `TAREAS_CLAVE` el endpoint contesta 503 y no hace nada; con clave
 incorrecta, 401. Cada aviso sale una sola vez (control de duplicados).
 
+## Respaldos automáticos
+
+`deploy/respaldo.sh` respalda todos los días las bases (pg_dump) y las fotos
+subidas de los dos ambientes en `/home/birteam/respaldos`, con rotación:
+diarios 7 días, los del domingo 35. Puesta en marcha (una vez):
+
+```bash
+cp -f /home/birteam/app/deploy/respaldo.sh /home/birteam/deploy/
+chmod +x /home/birteam/deploy/respaldo.sh
+# Probarlo a mano una vez:
+sudo -u birteam /home/birteam/deploy/respaldo.sh && tail -5 /home/birteam/respaldos/respaldos.log
+# Cron del usuario birteam, todos los días a las 4:30:
+# 30 4 * * * /home/birteam/deploy/respaldo.sh >/dev/null 2>&1
+```
+
+Restaurar una base: `gunzip -c db-app-<fecha>.sql.gz | psql "$DATABASE_URL"`
+(sobre una base vacía). Las fotos: destarar en la carpeta del ambiente.
+
 ## Reglas fijas
 
 - Nunca abrir 3000/3001 a internet.

@@ -193,6 +193,11 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         {!cerrado && !yaPaso ? (
           <>
             <CompartirPartido rutaPublica={`/p/${partido.tokenPublico}`} />
+            {organizo ? (
+              <Link href={`/partidos/${partido.id}/editar`} className="btn btn-secundario">
+                Editar el partido
+              </Link>
+            ) : null}
             <BotoneraRsvp
               partidoId={partido.id}
               estadoActual={mia?.estado ?? null}

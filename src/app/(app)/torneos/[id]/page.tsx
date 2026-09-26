@@ -2,7 +2,13 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { calcularTabla } from '@/lib/torneos';
-import { AnotarEquipo, ArrancarTorneo, CargarResultado, TerminarTorneo } from './acciones';
+import {
+  AnotarEquipo,
+  ArrancarTorneo,
+  CargarResultado,
+  CompartirTorneo,
+  TerminarTorneo,
+} from './acciones';
 
 export const metadata = { title: 'Torneo' };
 export const dynamic = 'force-dynamic';
@@ -91,6 +97,9 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
           ) : (
             <p className="aviso-ok border-azul-txt text-azul-txt">Cupo completo.</p>
           )}
+          {torneo.tokenPublico ? (
+            <CompartirTorneo rutaPublica={`/t/${torneo.tokenPublico}`} />
+          ) : null}
           {organizo ? (
             <ArrancarTorneo torneoId={torneo.id} equipos={torneo.equipos.length} />
           ) : null}

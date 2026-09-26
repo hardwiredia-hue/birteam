@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { DEPORTES_INICIALES } from '../src/lib/constantes';
 import { slugificar } from '../src/lib/normalizar';
@@ -14,6 +15,16 @@ async function sembrar() {
     });
   }
   console.log(`Deportes sembrados: ${DEPORTES_INICIALES.length}`);
+
+  // Torneos viejos sin link público: se les genera uno.
+  const sinToken = await prisma.torneo.findMany({ where: { tokenPublico: null } });
+  for (const torneo of sinToken) {
+    await prisma.torneo.update({
+      where: { id: torneo.id },
+      data: { tokenPublico: randomUUID() },
+    });
+  }
+  if (sinToken.length > 0) console.log(`Links públicos generados: ${sinToken.length} torneos`);
 
   const nuevas = await sembrarArgentina(prisma);
   const totales = await prisma.ciudad.count();

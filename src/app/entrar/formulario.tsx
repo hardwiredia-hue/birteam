@@ -54,6 +54,10 @@ export function FormularioEntrar({ volver }: { volver?: string | null }) {
       <button type="submit" className="btn btn-primario mt-2" disabled={enviando}>
         {enviando ? 'Entrando…' : 'Entrar'}
       </button>
+
+      <a href="/recuperar" className="text-center text-xs font-semibold text-tinta-3">
+        ¿Olvidaste tu contraseña?
+      </a>
     </form>
   );
 }

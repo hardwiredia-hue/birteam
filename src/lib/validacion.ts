@@ -169,6 +169,21 @@ export const esquemaAsistencia = z.object({
   resultado: z.string().trim().max(40, 'El resultado es muy largo.').nullish(),
 });
 
+export const esquemaEditarPartido = z.object({
+  fecha: z.coerce.date({ error: 'Elegí cuándo juegan.' }),
+  lugarNombre: z
+    .string({ error: 'Contanos dónde juegan.' })
+    .trim()
+    .min(2, 'El lugar es muy corto.')
+    .max(120, 'El lugar es muy largo.'),
+  direccion: z.string().trim().max(160).nullish(),
+  cupo: z.number({ error: 'Definí el cupo.' }).int().min(2).max(200),
+  minimo: z.number().int().min(2).max(200),
+  costoPorJugador: z.number().min(0).max(10_000_000).nullish(),
+  visibilidad: z.enum(['GRUPO', 'ABIERTO']),
+  recurrenteSemanal: z.boolean(),
+});
+
 export const esquemaRsvp = z.object({
   estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),
 });
