@@ -3,6 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { Chat } from '@/components/chat';
+import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
+import { obtenerJugadas } from '@/lib/jugadas';
 import { CopiarInvitacion } from './acciones';
 
 export const metadata = { title: 'Grupo' };
@@ -88,6 +90,14 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
       <section>
         <p className="t-rotulo mb-2">Charla del grupo</p>
         <Chat grupoId={grupo.id} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <p className="t-rotulo">Jugadas del grupo</p>
+        <PublicarJugada grupoId={grupo.id} invitacion="Subí una jugada del grupo" />
+        {(await obtenerJugadas(usuario.id, { grupoId: grupo.id })).map((jugada) => (
+          <TarjetaJugada key={jugada.id} jugada={jugada} />
+        ))}
       </section>
 
       <section>

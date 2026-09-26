@@ -2,6 +2,8 @@ import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { Moderacion } from '@/components/moderacion';
+import { TarjetaJugada } from '@/components/jugadas';
+import { obtenerJugadas } from '@/lib/jugadas';
 
 export const metadata = { title: 'Jugador' };
 export const dynamic = 'force-dynamic';
@@ -35,6 +37,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
     }),
   ]);
 
+  const jugadas = await obtenerJugadas(yo.id, { autorId: jugador.id }, 10);
   const jugados = conRegistro.filter((p) => p.asistio).length;
   const asistencia =
     conRegistro.length > 0 ? Math.round((jugados / conRegistro.length) * 100) : null;
@@ -117,6 +120,15 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
               </div>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {jugadas.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <p className="t-rotulo">Jugadas</p>
+          {jugadas.map((jugada) => (
+            <TarjetaJugada key={jugada.id} jugada={jugada} />
+          ))}
         </section>
       ) : null}
 

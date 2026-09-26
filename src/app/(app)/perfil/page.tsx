@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { AccionesPerfil } from './acciones';
 import { ListaBloqueados } from './bloqueados';
+import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
+import { obtenerJugadas } from '@/lib/jugadas';
 
 export const metadata = { title: 'Perfil' };
 export const dynamic = 'force-dynamic';
@@ -130,6 +132,14 @@ export default async function Perfil() {
           </div>
         </section>
       ) : null}
+
+      <section className="flex flex-col gap-3">
+        <p className="t-rotulo">Tus jugadas</p>
+        <PublicarJugada invitacion="Subí una jugada" />
+        {(await obtenerJugadas(usuario.id, { autorId: usuario.id }, 10)).map((jugada) => (
+          <TarjetaJugada key={jugada.id} jugada={jugada} />
+        ))}
+      </section>
 
       <ListaBloqueados bloqueados={bloqueos.map((bloqueo) => bloqueo.bloqueado)} />
 

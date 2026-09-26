@@ -5,6 +5,8 @@ import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { Chat } from '@/components/chat';
 import { Moderacion } from '@/components/moderacion';
+import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
+import { obtenerJugadas } from '@/lib/jugadas';
 import { BotoneraRsvp, CancelarPartido, CompartirPartido, PasarLista } from './acciones';
 
 export const metadata = { title: 'Partido' };
@@ -150,6 +152,21 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           }))} />
         ) : null}
       </section>
+
+      {partido.estado === 'JUGADO' ? (
+        <section className="flex flex-col gap-3">
+          <p className="t-rotulo">Jugadas del partido</p>
+          {mia || organizo ? (
+            <PublicarJugada
+              partidoId={partido.id}
+              invitacion={`Subí la jugada del ${DIAS[partido.fecha.getDay()]}`}
+            />
+          ) : null}
+          {(await obtenerJugadas(usuario.id, { partidoId: partido.id })).map((jugada) => (
+            <TarjetaJugada key={jugada.id} jugada={jugada} />
+          ))}
+        </section>
+      ) : null}
 
       <section>
         <p className="t-rotulo mb-2">Charla del partido</p>

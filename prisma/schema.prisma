@@ -49,6 +49,9 @@ model Usuario {
   denunciasContra  Denuncia[]        @relation("denunciado")
   bloqueosHechos   Bloqueo[]         @relation("bloqueador")
   bloqueosContra   Bloqueo[]         @relation("bloqueado")
+  jugadas          Jugada[]
+  comentarios      ComentarioJugada[]
+  meGusta          MeGustaJugada[]
 }
 
 model Sesion {
@@ -238,6 +241,50 @@ model Bloqueo {
   creadoEn     DateTime @default(now())
 
   @@id([bloqueadorId, bloqueadoId])
+}
+
+// ---------- Jugadas: la parte social (ESQUEMA.md §3.8, fase 2) ----------
+
+model Jugada {
+  id        String   @id @default(cuid())
+  autorId   String
+  autor     Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  // Atada a un partido real: el diferencial de birteam.
+  partidoId String?
+  grupoId   String?
+  texto     String?
+  // Nombres de archivo subidos, como JSON (SQLite no tiene arrays).
+  fotos     String   @default("[]")
+  creadoEn  DateTime @default(now())
+
+  comentarios ComentarioJugada[]
+  meGusta     MeGustaJugada[]
+
+  @@index([autorId, creadoEn])
+  @@index([grupoId, creadoEn])
+  @@index([partidoId, creadoEn])
+}
+
+model ComentarioJugada {
+  id       String   @id @default(cuid())
+  jugadaId String
+  jugada   Jugada   @relation(fields: [jugadaId], references: [id], onDelete: Cascade)
+  autorId  String
+  autor    Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  texto    String
+  creadoEn DateTime @default(now())
+
+  @@index([jugadaId, creadoEn])
+}
+
+model MeGustaJugada {
+  jugadaId  String
+  jugada    Jugada   @relation(fields: [jugadaId], references: [id], onDelete: Cascade)
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now())
+
+  @@id([jugadaId, usuarioId])
 }
 
 // ---------- Geografía (catálogo para el autocompletado de ciudad) ----------

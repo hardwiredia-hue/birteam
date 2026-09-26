@@ -89,6 +89,28 @@ export const esquemaMensaje = z
     error: 'El mensaje va a un partido o a un grupo.',
   });
 
+export const esquemaJugada = z
+  .object({
+    texto: z.string().trim().max(500, 'El texto es muy largo.').nullish(),
+    fotos: z
+      .array(z.string().regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Foto inválida.'))
+      .max(5, 'Hasta 5 fotos por jugada.')
+      .default([]),
+    partidoId: z.string().nullish(),
+    grupoId: z.string().nullish(),
+  })
+  .refine((datos) => (datos.texto && datos.texto.length > 0) || datos.fotos.length > 0, {
+    error: 'La jugada necesita al menos una foto o un texto.',
+  });
+
+export const esquemaComentario = z.object({
+  texto: z
+    .string({ error: 'Escribí el comentario.' })
+    .trim()
+    .min(1, 'El comentario está vacío.')
+    .max(300, 'Máximo 300 caracteres.'),
+});
+
 export const esquemaDenuncia = z
   .object({
     denunciadoId: z.string().nullish(),
