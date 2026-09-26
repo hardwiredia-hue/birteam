@@ -44,6 +44,7 @@ model Usuario {
   partidosCoOrg    Partido[]         @relation("coOrganizador")
   participaciones  Participacion[]
   mensajes         Mensaje[]
+  mensajesRecibidos Mensaje[]        @relation("mensajesRecibidos")
   notificaciones   Notificacion[]
   denunciasHechas  Denuncia[]        @relation("denunciante")
   denunciasContra  Denuncia[]        @relation("denunciado")
@@ -193,18 +194,24 @@ model Participacion {
 }
 
 model Mensaje {
-  id        String   @id @default(cuid())
-  partidoId String?
-  partido   Partido? @relation(fields: [partidoId], references: [id], onDelete: Cascade)
-  grupoId   String?
-  grupo     Grupo?   @relation(fields: [grupoId], references: [id], onDelete: Cascade)
-  autorId   String
-  autor     Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
-  texto     String
-  creadoEn  DateTime @default(now())
+  id             String    @id @default(cuid())
+  partidoId      String?
+  partido        Partido?  @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  grupoId        String?
+  grupo          Grupo?    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  // Mensaje directo: va a una persona en vez de a un partido o grupo.
+  destinatarioId String?
+  destinatario   Usuario?  @relation("mensajesRecibidos", fields: [destinatarioId], references: [id], onDelete: Cascade)
+  leidoEn        DateTime?
+  autorId        String
+  autor          Usuario   @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  texto          String
+  creadoEn       DateTime  @default(now())
 
   @@index([partidoId, creadoEn])
   @@index([grupoId, creadoEn])
+  @@index([destinatarioId, leidoEn])
+  @@index([autorId, destinatarioId, creadoEn])
 }
 
 model Notificacion {

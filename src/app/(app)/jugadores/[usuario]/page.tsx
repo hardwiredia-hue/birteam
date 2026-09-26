@@ -67,7 +67,14 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
             {seguidores > 0 ? ` · ${seguidores} ${seguidores === 1 ? 'seguidor' : 'seguidores'}` : ''}
           </p>
         </div>
-        {!bloqueo ? <BotonSeguir usuarioId={jugador.id} siguiendoInicial={Boolean(loSigo)} /> : null}
+        {!bloqueo ? (
+          <div className="flex flex-col items-end gap-2">
+            <BotonSeguir usuarioId={jugador.id} siguiendoInicial={Boolean(loSigo)} />
+            <a href={`/mensajes/${jugador.usuario}`} className="btn btn-secundario btn-sm">
+              Mensaje
+            </a>
+          </div>
+        ) : null}
       </header>
 
       <section className="grid grid-cols-3 gap-2">

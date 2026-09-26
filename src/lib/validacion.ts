@@ -84,10 +84,13 @@ export const esquemaMensaje = z
       .max(500, 'Máximo 500 caracteres.'),
     partidoId: z.string().nullish(),
     grupoId: z.string().nullish(),
+    destinatarioId: z.string().nullish(),
   })
-  .refine((datos) => Boolean(datos.partidoId) !== Boolean(datos.grupoId), {
-    error: 'El mensaje va a un partido o a un grupo.',
-  });
+  .refine(
+    (datos) =>
+      [datos.partidoId, datos.grupoId, datos.destinatarioId].filter(Boolean).length === 1,
+    { error: 'El mensaje va a un partido, a un grupo o a una persona.' }
+  );
 
 export const esquemaJugada = z
   .object({

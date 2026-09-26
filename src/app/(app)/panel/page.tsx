@@ -40,6 +40,10 @@ export default async function Inicio() {
     select: { id: true, tipo: true, titulo: true, cuerpo: true, url: true },
   });
 
+  const mensajesSinLeer = await prisma.mensaje.count({
+    where: { destinatarioId: usuario.id, leidoEn: null },
+  });
+
   const primerNombre = usuario.nombre.split(' ')[0];
 
   return (
@@ -54,6 +58,23 @@ export default async function Inicio() {
             </p>
           </div>
         </div>
+        <Link
+          href="/mensajes"
+          aria-label="Mensajes"
+          className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-borde-2 text-tinta-2"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a8 8 0 0 1-8 8H4l1.5-3.2A8 8 0 1 1 21 12z" />
+          </svg>
+          {mensajesSinLeer > 0 ? (
+            <span
+              className="absolute -right-1 -top-1 h-4 min-w-4 rounded-full px-1 text-center text-[10px] font-bold leading-4 tabular"
+              style={{ background: 'var(--verde)', color: 'var(--sobre-verde)' }}
+            >
+              {mensajesSinLeer}
+            </span>
+          ) : null}
+        </Link>
       </header>
 
       <Avisos avisos={avisos} />

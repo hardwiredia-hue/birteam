@@ -15,13 +15,26 @@ interface Mensaje {
  * Chat de partido o de grupo. Refresca solo cada 8 segundos mientras la
  * pestaña está visible.
  */
-export function Chat({ partidoId, grupoId }: { partidoId?: string; grupoId?: string }) {
+export function Chat({
+  partidoId,
+  grupoId,
+  dmUsuarioId,
+}: {
+  partidoId?: string;
+  grupoId?: string;
+  /** Chat directo: id de la otra persona. */
+  dmUsuarioId?: string;
+}) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fondo = useRef<HTMLDivElement>(null);
-  const clave = partidoId ? `partidoId=${partidoId}` : `grupoId=${grupoId}`;
+  const clave = partidoId
+    ? `partidoId=${partidoId}`
+    : grupoId
+      ? `grupoId=${grupoId}`
+      : `usuarioId=${dmUsuarioId}`;
 
   const cargar = useCallback(async () => {
     try {
@@ -60,7 +73,12 @@ export function Chat({ partidoId, grupoId }: { partidoId?: string; grupoId?: str
     const respuesta = await fetch('/api/mensajes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ texto: limpio, partidoId: partidoId ?? null, grupoId: grupoId ?? null }),
+      body: JSON.stringify({
+        texto: limpio,
+        partidoId: partidoId ?? null,
+        grupoId: grupoId ?? null,
+        destinatarioId: dmUsuarioId ?? null,
+      }),
     });
     if (respuesta.ok) {
       setTexto('');
@@ -106,7 +124,7 @@ export function Chat({ partidoId, grupoId }: { partidoId?: string; grupoId?: str
       {error ? <p className="px-3.5 pb-1 text-xs text-rojo">{error}</p> : null}
       <form onSubmit={enviar} className="flex gap-2 border-t border-borde p-2.5">
         <input
-          id={`chat-${partidoId ?? grupoId}`}
+          id={`chat-${partidoId ?? grupoId ?? dmUsuarioId}`}
           className="campo"
           placeholder="Escribí un mensaje…"
           value={texto}
