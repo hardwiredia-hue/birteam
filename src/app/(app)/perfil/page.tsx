@@ -133,6 +133,12 @@ export default async function Perfil() {
 
       <ListaBloqueados bloqueados={bloqueos.map((bloqueo) => bloqueo.bloqueado)} />
 
+      {usuario.rol === 'ADMIN' ? (
+        <a href="/admin" className="btn btn-secundario">
+          Backoffice
+        </a>
+      ) : null}
+
       <AccionesPerfil temaActual={usuario.tema} />
     </div>
   );
