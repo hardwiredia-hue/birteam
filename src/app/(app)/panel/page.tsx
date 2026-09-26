@@ -51,6 +51,14 @@ export default async function Inicio() {
 
       <Avisos avisos={avisos} />
 
+      <Link href="/jugadas" className="tarjeta flex items-center justify-between p-4">
+        <div>
+          <p className="text-sm font-semibold">Jugadas</p>
+          <p className="text-xs text-tinta-3">Las fotos y momentos de tu red, atados a partidos reales.</p>
+        </div>
+        <span className="t-display text-[18px] text-verde-txt">→</span>
+      </Link>
+
       <section>
         <p className="t-rotulo mb-2">Tu próximo partido</p>
         {proxima ? (

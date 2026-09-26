@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { Moderacion } from '@/components/moderacion';
+import { BotonSeguir } from '@/components/seguir';
 import { TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 
@@ -20,7 +21,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
   if (!jugador) notFound();
   if (jugador.id === yo.id) redirect('/perfil');
 
-  const [conRegistro, grupos, historial, bloqueo] = await Promise.all([
+  const [conRegistro, grupos, historial, bloqueo, seguidores, loSigo] = await Promise.all([
     prisma.participacion.findMany({
       where: { usuarioId: jugador.id, asistio: { not: null } },
       select: { asistio: true },
@@ -34,6 +35,10 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
     }),
     prisma.bloqueo.findUnique({
       where: { bloqueadorId_bloqueadoId: { bloqueadorId: yo.id, bloqueadoId: jugador.id } },
+    }),
+    prisma.seguimiento.count({ where: { seguidoId: jugador.id } }),
+    prisma.seguimiento.findUnique({
+      where: { seguidorId_seguidoId: { seguidorId: yo.id, seguidoId: jugador.id } },
     }),
   ]);
 
@@ -52,13 +57,15 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-4">
         <span className="avatar h-[64px] w-[64px] text-lg">{iniciales}</span>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="t-display text-[20px]">{jugador.nombre}</h1>
           <p className="t-rotulo mt-1">
             @{jugador.usuario}
             {jugador.ciudad ? ` · ${jugador.ciudad}` : ''}
+            {seguidores > 0 ? ` · ${seguidores} ${seguidores === 1 ? 'seguidor' : 'seguidores'}` : ''}
           </p>
         </div>
+        {!bloqueo ? <BotonSeguir usuarioId={jugador.id} siguiendoInicial={Boolean(loSigo)} /> : null}
       </header>
 
       <section className="grid grid-cols-3 gap-2">

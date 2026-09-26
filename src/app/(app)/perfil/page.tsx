@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function Perfil() {
   const usuario = (await usuarioActual())!;
 
-  const [conRegistro, grupos, historial, bloqueos] = await Promise.all([
+  const [conRegistro, grupos, historial, bloqueos, seguidores, siguiendo] = await Promise.all([
     // Participaciones con lista pasada: la base del % de asistencia.
     prisma.participacion.findMany({
       where: { usuarioId: usuario.id, asistio: { not: null } },
@@ -28,6 +28,8 @@ export default async function Perfil() {
       where: { bloqueadorId: usuario.id },
       include: { bloqueado: { select: { id: true, nombre: true, usuario: true } } },
     }),
+    prisma.seguimiento.count({ where: { seguidoId: usuario.id } }),
+    prisma.seguimiento.count({ where: { seguidorId: usuario.id } }),
   ]);
 
   const jugados = conRegistro.filter((p) => p.asistio).length;
@@ -51,6 +53,11 @@ export default async function Perfil() {
             @{usuario.usuario}
             {usuario.ciudad ? ` · ${usuario.ciudad}` : ''}
           </p>
+          {seguidores > 0 || siguiendo > 0 ? (
+            <p className="t-rotulo mt-0.5 tabular">
+              {seguidores} {seguidores === 1 ? 'seguidor' : 'seguidores'} · sigue a {siguiendo}
+            </p>
+          ) : null}
         </div>
       </header>
 

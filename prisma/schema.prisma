@@ -52,6 +52,8 @@ model Usuario {
   jugadas          Jugada[]
   comentarios      ComentarioJugada[]
   meGusta          MeGustaJugada[]
+  siguiendo        Seguimiento[]      @relation("seguidor")
+  seguidores       Seguimiento[]      @relation("seguido")
 }
 
 model Sesion {
@@ -263,6 +265,17 @@ model Jugada {
   @@index([autorId, creadoEn])
   @@index([grupoId, creadoEn])
   @@index([partidoId, creadoEn])
+}
+
+model Seguimiento {
+  seguidorId String
+  seguidor   Usuario  @relation("seguidor", fields: [seguidorId], references: [id], onDelete: Cascade)
+  seguidoId  String
+  seguido    Usuario  @relation("seguido", fields: [seguidoId], references: [id], onDelete: Cascade)
+  creadoEn   DateTime @default(now())
+
+  @@id([seguidorId, seguidoId])
+  @@index([seguidoId])
 }
 
 model ComentarioJugada {
