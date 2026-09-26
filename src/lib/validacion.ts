@@ -89,6 +89,24 @@ export const esquemaMensaje = z
     error: 'El mensaje va a un partido o a un grupo.',
   });
 
+export const esquemaDenuncia = z
+  .object({
+    denunciadoId: z.string().nullish(),
+    partidoId: z.string().nullish(),
+    motivo: z.enum(['ACOSO', 'VIOLENCIA', 'SPAM', 'PERFIL_FALSO', 'OTRO'], {
+      error: 'Elegí el motivo.',
+    }),
+    detalle: z.string().trim().max(500, 'El detalle es muy largo.').nullish(),
+  })
+  .refine((datos) => datos.denunciadoId || datos.partidoId, {
+    error: 'La denuncia apunta a un usuario o a un partido.',
+  });
+
+export const esquemaBloqueo = z.object({
+  usuarioId: z.string({ error: 'Falta el usuario.' }).min(1),
+  accion: z.enum(['bloquear', 'desbloquear'], { error: 'Acción desconocida.' }),
+});
+
 export const esquemaAsistencia = z.object({
   asistencias: z
     .array(z.object({ usuarioId: z.string().min(1), asistio: z.boolean() }))

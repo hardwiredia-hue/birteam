@@ -38,5 +38,14 @@ export const DEPORTES_INICIALES = [
   'Skate',
 ] as const;
 
+/** Motivos de denuncia, con su rótulo visible. */
+export const MOTIVOS_DENUNCIA = [
+  { valor: 'ACOSO', rotulo: 'Acoso o maltrato' },
+  { valor: 'VIOLENCIA', rotulo: 'Violencia o amenazas' },
+  { valor: 'SPAM', rotulo: 'Spam o venta' },
+  { valor: 'PERFIL_FALSO', rotulo: 'Perfil falso' },
+  { valor: 'OTRO', rotulo: 'Otro motivo' },
+] as const;
+
 /** Radio de búsqueda por defecto y opciones sugeridas (km). */
 export const RADIOS_KM = [5, 10, 15, 25, 50] as const;

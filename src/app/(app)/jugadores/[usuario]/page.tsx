@@ -1,38 +1,44 @@
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
-import { AccionesPerfil } from './acciones';
-import { ListaBloqueados } from './bloqueados';
+import { Moderacion } from '@/components/moderacion';
 
-export const metadata = { title: 'Perfil' };
+export const metadata = { title: 'Jugador' };
 export const dynamic = 'force-dynamic';
 
-export default async function Perfil() {
-  const usuario = (await usuarioActual())!;
+/** El perfil ajeno: lo que mirás antes de aceptar a un desconocido. */
+export default async function PerfilAjeno({ params }: { params: Promise<{ usuario: string }> }) {
+  const { usuario: alias } = await params;
+  const yo = (await usuarioActual())!;
 
-  const [conRegistro, grupos, historial, bloqueos] = await Promise.all([
-    // Participaciones con lista pasada: la base del % de asistencia.
+  const jugador = await prisma.usuario.findUnique({
+    where: { usuario: alias.toLowerCase() },
+    include: { deportes: { include: { deporte: true }, orderBy: { principal: 'desc' } } },
+  });
+  if (!jugador) notFound();
+  if (jugador.id === yo.id) redirect('/perfil');
+
+  const [conRegistro, grupos, historial, bloqueo] = await Promise.all([
     prisma.participacion.findMany({
-      where: { usuarioId: usuario.id, asistio: { not: null } },
+      where: { usuarioId: jugador.id, asistio: { not: null } },
       select: { asistio: true },
     }),
-    prisma.miembroGrupo.count({ where: { usuarioId: usuario.id } }),
+    prisma.miembroGrupo.count({ where: { usuarioId: jugador.id } }),
     prisma.participacion.findMany({
-      where: { usuarioId: usuario.id, partido: { estado: 'JUGADO' } },
+      where: { usuarioId: jugador.id, partido: { estado: 'JUGADO' } },
       include: { partido: { include: { deporte: true } } },
       orderBy: { partido: { fecha: 'desc' } },
-      take: 6,
+      take: 4,
     }),
-    prisma.bloqueo.findMany({
-      where: { bloqueadorId: usuario.id },
-      include: { bloqueado: { select: { id: true, nombre: true, usuario: true } } },
+    prisma.bloqueo.findUnique({
+      where: { bloqueadorId_bloqueadoId: { bloqueadorId: yo.id, bloqueadoId: jugador.id } },
     }),
   ]);
 
   const jugados = conRegistro.filter((p) => p.asistio).length;
   const asistencia =
     conRegistro.length > 0 ? Math.round((jugados / conRegistro.length) * 100) : null;
-
-  const iniciales = usuario.nombre
+  const iniciales = jugador.nombre
     .split(' ')
     .map((parte) => parte[0])
     .slice(0, 2)
@@ -42,12 +48,12 @@ export default async function Perfil() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center gap-4">
-        <span className="avatar h-[76px] w-[76px] text-xl">{iniciales}</span>
+        <span className="avatar h-[64px] w-[64px] text-lg">{iniciales}</span>
         <div>
-          <h1 className="t-display text-[20px]">{usuario.nombre}</h1>
+          <h1 className="t-display text-[20px]">{jugador.nombre}</h1>
           <p className="t-rotulo mt-1">
-            @{usuario.usuario}
-            {usuario.ciudad ? ` · ${usuario.ciudad}` : ''}
+            @{jugador.usuario}
+            {jugador.ciudad ? ` · ${jugador.ciudad}` : ''}
           </p>
         </div>
       </header>
@@ -68,23 +74,19 @@ export default async function Perfil() {
           <p className="t-rotulo mt-1 text-[9.5px]">Grupos</p>
         </div>
       </section>
-      {asistencia === null ? (
-        <p className="-mt-3 text-xs text-tinta-3">
-          El % de asistencia aparece cuando el organizador pasa lista en tu primer partido jugado.
-        </p>
-      ) : null}
 
-      {usuario.deportes.length > 0 ? (
+      {jugador.bio ? <p className="text-sm text-tinta-2">{jugador.bio}</p> : null}
+
+      {jugador.deportes.length > 0 ? (
         <section>
           <p className="t-rotulo mb-2">Deportes</p>
           <div className="flex flex-wrap gap-2">
-            {usuario.deportes.map((relacion) => (
+            {jugador.deportes.map((relacion) => (
               <span
                 key={relacion.deporteId}
                 className={relacion.principal ? 'chip-sel chip-sel-activo' : 'chip-sel'}
               >
                 {relacion.deporte.nombre}
-                {relacion.principal ? ' · principal' : ''}
               </span>
             ))}
           </div>
@@ -93,30 +95,17 @@ export default async function Perfil() {
 
       {historial.length > 0 ? (
         <section>
-          <p className="t-rotulo mb-1">Historial</p>
+          <p className="t-rotulo mb-1">Últimos partidos</p>
           <div>
             {historial.map((participacion) => (
-              <div
-                key={participacion.id}
-                className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0"
-              >
+              <div key={participacion.id} className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0">
                 <span
                   className="h-2 w-2 flex-shrink-0 rounded-full"
-                  style={{
-                    background: participacion.asistio ? 'var(--verde-txt)' : 'var(--gris-estado)',
-                  }}
+                  style={{ background: participacion.asistio ? 'var(--verde-txt)' : 'var(--gris-estado)' }}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">
                     {participacion.partido.deporte.nombre} · {participacion.partido.lugarNombre}
-                  </p>
-                  <p className="text-xs text-tinta-3">
-                    {participacion.partido.fecha.toLocaleDateString('es-AR', {
-                      day: 'numeric',
-                      month: 'short',
-                      timeZone: 'America/Argentina/Buenos_Aires',
-                    })}
-                    {participacion.partido.resultado ? ` · ${participacion.partido.resultado}` : ''}
                   </p>
                 </div>
                 <span
@@ -131,9 +120,9 @@ export default async function Perfil() {
         </section>
       ) : null}
 
-      <ListaBloqueados bloqueados={bloqueos.map((bloqueo) => bloqueo.bloqueado)} />
-
-      <AccionesPerfil temaActual={usuario.tema} />
+      <footer className="mt-2 border-t border-borde pt-4">
+        <Moderacion denunciadoId={jugador.id} bloqueado={Boolean(bloqueo)} />
+      </footer>
     </div>
   );
 }

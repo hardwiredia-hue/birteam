@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaMensaje, erroresDeZod } from '@/lib/validacion';
+import { idsBloqueados } from '@/lib/bloqueos';
 
 /** ¿Puede este usuario leer y escribir en este chat? */
 async function puedeParticipar(usuarioId: string, partidoId?: string | null, grupoId?: string | null) {
@@ -34,8 +35,13 @@ export async function GET(request: Request) {
   if (permitido === null) return NextResponse.json({ error: 'Chat inexistente.' }, { status: 404 });
   if (!permitido) return NextResponse.json({ error: 'Este chat es de los que participan.' }, { status: 403 });
 
+  // Los bloqueados no se leen entre sí.
+  const ocultos = await idsBloqueados(usuario.id);
   const mensajes = await prisma.mensaje.findMany({
-    where: partidoId ? { partidoId } : { grupoId },
+    where: {
+      ...(partidoId ? { partidoId } : { grupoId }),
+      ...(ocultos.length > 0 ? { autorId: { notIn: ocultos } } : {}),
+    },
     include: { autor: { select: { id: true, nombre: true, usuario: true } } },
     orderBy: { creadoEn: 'asc' },
     take: 100,

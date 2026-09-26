@@ -5,6 +5,7 @@ import { usuarioActual } from '@/lib/auth';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
 import { formatearPlata } from '@/lib/formato';
 import { normalizar } from '@/lib/normalizar';
+import { idsBloqueados } from '@/lib/bloqueos';
 
 export const metadata = { title: 'Explorar' };
 export const dynamic = 'force-dynamic';
@@ -188,9 +189,10 @@ async function Partidos({
 
 async function Jugadores({ q, miId }: { q?: string; miId: string }) {
   const filtro = q?.trim();
+  const ocultos = await idsBloqueados(miId);
   const jugadores = await prisma.usuario.findMany({
     where: {
-      id: { not: miId },
+      id: { not: miId, notIn: ocultos },
       ...(filtro
         ? {
             OR: [
@@ -217,7 +219,11 @@ async function Jugadores({ q, miId }: { q?: string; miId: string }) {
   return (
     <div className="flex flex-col">
       {jugadores.map((jugador) => (
-        <div key={jugador.id} className="flex items-center gap-3 border-b border-borde py-3 last:border-b-0">
+        <Link
+          key={jugador.id}
+          href={`/jugadores/${jugador.usuario}`}
+          className="flex items-center gap-3 border-b border-borde py-3 last:border-b-0"
+        >
           <span className="avatar h-9 w-9 text-xs">
             {jugador.nombre.split(' ').map((parte) => parte[0]).slice(0, 2).join('').toUpperCase()}
           </span>
@@ -233,7 +239,7 @@ async function Jugadores({ q, miId }: { q?: string; miId: string }) {
               {jugador.deportes[0].deporte.nombre}
             </span>
           ) : null}
-        </div>
+        </Link>
       ))}
     </div>
   );
