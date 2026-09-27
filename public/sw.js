@@ -14,8 +14,8 @@ self.addEventListener('push', (evento) => {
   evento.waitUntil(
     self.registration.showNotification(datos.titulo || 'birteam', {
       body: datos.cuerpo || '',
-      icon: '/icono-192.png',
-      badge: '/icono-192.png',
+      icon: datos.icono || '/icono-192.png',
+      badge: datos.icono || '/icono-192.png',
       data: { url: datos.url || '/panel' },
       tag: datos.url || undefined,
     })

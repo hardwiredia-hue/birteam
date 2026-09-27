@@ -1,5 +1,6 @@
 import webpush from 'web-push';
 import { prisma } from './db';
+import { obtenerMarca } from './marca';
 
 /**
  * Notificaciones push al navegador (aunque la app esté cerrada).
@@ -53,7 +54,9 @@ export async function enviarPush(usuarioIds: string | string[], carga: CargaPush
   if (suscripciones.length === 0) return;
 
   configurar();
-  const mensaje = JSON.stringify(carga);
+  // El aviso sale con el ícono vigente (puede cambiarse desde el backoffice).
+  const marca = await obtenerMarca().catch(() => null);
+  const mensaje = JSON.stringify({ ...carga, icono: marca?.icono192 ?? '/icono-192.png' });
 
   await Promise.allSettled(
     suscripciones.map(async (s) => {

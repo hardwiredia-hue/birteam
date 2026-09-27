@@ -66,6 +66,13 @@ model Usuario {
   canchas          Cancha[]
 }
 
+// Ajustes del sitio editables desde el backoffice (marca: logo, ícono, favicon).
+model Ajuste {
+  clave         String   @id
+  valor         String
+  actualizadoEn DateTime @updatedAt
+}
+
 // Cancha publicada para alquilar (solo dueños con suscripción activa).
 model Cancha {
   id            String   @id @default(cuid())

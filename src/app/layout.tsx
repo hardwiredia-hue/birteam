@@ -1,18 +1,23 @@
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
+import { obtenerMarca } from '@/lib/marca';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: {
-    default: 'birteam — ¿Querés jugar? Encontrá con quién.',
-    template: '%s · birteam',
-  },
-  description:
-    'Organizá partidos, armá tu grupo y encontrá con quién jugar. Fútbol, básquet, vóley, tenis, pádel y más, cerca tuyo.',
-  icons: { icon: '/birteam-iso.png', apple: '/icono-192.png' },
-  manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'birteam' },
-};
+// El favicon y el ícono pueden cambiarse desde el backoffice (Marca).
+export async function generateMetadata(): Promise<Metadata> {
+  const marca = await obtenerMarca();
+  return {
+    title: {
+      default: 'birteam — ¿Querés jugar? Encontrá con quién.',
+      template: '%s · birteam',
+    },
+    description:
+      'Organizá partidos, armá tu grupo y encontrá con quién jugar. Fútbol, básquet, vóley, tenis, pádel y más, cerca tuyo.',
+    icons: { icon: marca.favicon, apple: marca.icono192 },
+    manifest: '/manifest.webmanifest',
+    appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'birteam' },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: '#0a0b08',

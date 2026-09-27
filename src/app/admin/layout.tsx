@@ -8,6 +8,7 @@ const SECCIONES = [
   { href: '/admin/usuarios', rotulo: 'Usuarios' },
   { href: '/admin/deportes', rotulo: 'Deportes' },
   { href: '/admin/geografia', rotulo: 'Geografía' },
+  { href: '/admin/marca', rotulo: 'Marca' },
 ];
 
 export default async function LayoutAdmin({ children }: { children: React.ReactNode }) {
