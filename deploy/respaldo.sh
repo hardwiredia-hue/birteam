@@ -10,12 +10,16 @@
 # Rotacion: diarios 7 dias; los del domingo se conservan 35 dias.
 set -euo pipefail
 
+# Los respaldos son la base completa: solo los lee el usuario birteam.
+umask 077
+
 DESTINO=/home/birteam/respaldos
 FECHA=$(date +%F)
 DIA_SEMANA=$(date +%u) # 7 = domingo
 BITACORA="$DESTINO/respaldos.log"
 
 mkdir -p "$DESTINO"
+chmod 700 "$DESTINO"
 anotar() { echo "$(date '+%F %T') $1" >> "$BITACORA"; }
 
 for AMBIENTE in app staging; do

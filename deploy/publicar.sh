@@ -73,4 +73,4 @@ anotar "Publicado $SHA y reiniciado $SERVICIO."
 
 # Los scripts de publicacion del repo pisan la copia viva para la PROXIMA
 # corrida, asi el circuito se actualiza solo.
-cp -f deploy/publicar.sh deploy/publicar-remoto.sh /home/birteam/deploy/ 2>/dev/null || true
+cp -f deploy/publicar.sh deploy/publicar-remoto.sh deploy/respaldo.sh /home/birteam/deploy/ 2>/dev/null || true
