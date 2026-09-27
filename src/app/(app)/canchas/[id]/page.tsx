@@ -1,0 +1,131 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import { usuarioActual } from '@/lib/auth';
+import { suscripcionActiva } from '@/lib/suscripcion';
+import { formatearPlata } from '@/lib/formato';
+import { Avatar } from '@/components/avatar';
+
+export const dynamic = 'force-dynamic';
+
+export default async function DetalleCancha({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const usuario = (await usuarioActual())!;
+
+  const cancha = await prisma.cancha.findUnique({
+    where: { id },
+    include: {
+      deporte: true,
+      dueno: {
+        select: {
+          id: true,
+          nombre: true,
+          usuario: true,
+          avatarUrl: true,
+          suscripcionHasta: true,
+        },
+      },
+    },
+  });
+  if (!cancha) notFound();
+
+  const esDueno = cancha.duenoId === usuario.id;
+  const visible = cancha.activa && suscripcionActiva(cancha.dueno);
+  // Pausada o con suscripción vencida: la ve solo el dueño (y administración).
+  if (!visible && !esDueno && usuario.rol !== 'ADMIN') notFound();
+
+  let fotos: string[] = [];
+  try {
+    fotos = JSON.parse(cancha.fotos);
+  } catch {
+    fotos = [];
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {!visible ? (
+        <p className="aviso-error">
+          {cancha.activa
+            ? 'Esta publicación no está visible: la suscripción está vencida.'
+            : 'Esta publicación está pausada: solo la ves vos.'}
+        </p>
+      ) : null}
+
+      {fotos.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={fotos[0]}
+            alt={cancha.nombre}
+            className="max-h-64 w-full rounded-[12px] border border-borde object-cover"
+          />
+          {fotos.length > 1 ? (
+            <div className="flex gap-2 overflow-x-auto">
+              {fotos.slice(1).map((foto) => (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  key={foto}
+                  src={foto}
+                  alt={cancha.nombre}
+                  className="h-20 w-20 shrink-0 rounded-[6px] border border-borde object-cover"
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <header>
+        <p className="t-rotulo text-verde-txt">{cancha.deporte.nombre} · Cancha</p>
+        <h1 className="t-display mt-1 text-[26px]">{cancha.nombre}</h1>
+        <p className="mt-1 text-sm text-tinta-2">
+          {cancha.direccion}
+          {cancha.ciudad ? ` · ${cancha.ciudad}` : ''}
+          {cancha.provincia ? `, ${cancha.provincia}` : ''}
+        </p>
+      </header>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="tarjeta px-3 py-3 text-center">
+          <p className="t-display text-[20px] text-verde-txt tabular">
+            {cancha.precioPorHora ? formatearPlata(cancha.precioPorHora) : 'Consultar'}
+          </p>
+          <p className="t-rotulo mt-1 text-[9.5px]">Por hora</p>
+        </div>
+        <div className="tarjeta px-3 py-3 text-center">
+          <p className="t-display text-[20px] tabular">{cancha.deporte.nombre}</p>
+          <p className="t-rotulo mt-1 text-[9.5px]">Deporte</p>
+        </div>
+      </div>
+
+      {cancha.descripcion ? (
+        <p className="text-sm leading-relaxed text-tinta-2">{cancha.descripcion}</p>
+      ) : null}
+
+      <section className="tarjeta flex items-center gap-3 p-4">
+        <Avatar nombre={cancha.dueno.nombre} avatarUrl={cancha.dueno.avatarUrl} tam={40} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">{cancha.dueno.nombre}</p>
+          <p className="t-rotulo mt-0.5">Publica esta cancha</p>
+        </div>
+        {!esDueno ? (
+          <Link href={`/mensajes/${cancha.dueno.usuario}`} className="btn btn-secundario btn-sm">
+            Mensaje
+          </Link>
+        ) : null}
+      </section>
+
+      {!esDueno && cancha.telefono ? (
+        <a href={`tel:${cancha.telefono.replace(/[^+0-9]/g, '')}`} className="btn btn-primario">
+          Llamar para reservar · {cancha.telefono}
+        </a>
+      ) : null}
+
+      {esDueno ? (
+        <Link href={`/canchas/${cancha.id}/editar`} className="btn btn-secundario">
+          Editar la cancha
+        </Link>
+      ) : null}
+    </div>
+  );
+}

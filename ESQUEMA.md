@@ -65,9 +65,14 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
 - Vacío = las dos puertas + partidos abiertos cerca. Nunca una pantalla desierta.
 
 ### 3.3 Explorar
-- Buscador + solapas **Partidos / Jugadores / Grupos**.
+- Buscador + solapas **Partidos / Jugadores / Grupos / Canchas / Ranking**.
 - Filtros: deporte, distancia (radio), fecha. Resultados con distancia, estado del
   cupo ("Faltan 2") y precio.
+- **Canchas**: publicadas por cuentas de dueño de cancha con suscripción activa
+  (fotos, precio por hora, teléfono, mensaje al dueño). Sin pasarela de pago
+  todavía: la suscripción la activa administración desde el backoffice (30 días
+  por vez). Al registrarse se elige el tipo de cuenta: **Jugar** o **Alquilar mi
+  cancha** (se puede cambiar después en Editar perfil).
 - Fase 2: vista de mapa.
 
 ### 3.4 Partido (la pantalla más importante)
@@ -150,7 +155,10 @@ cupo, mínimo, costo, visibilidad, estado, organizador, co-organizador) ·
 `Participación` (estado voy/talvez/no/espera, orden en espera, vencimiento de
 invitación, pagó, asistió) · `Jugada` (autor, partido?, media, texto) ·
 `Comentario` · `Reacción` · `Seguimiento` · `Mensaje` (partido/grupo) ·
-`Notificación` (tipo, vencimiento) · `Denuncia` · `Bloqueo`.
+`Notificación` (tipo, vencimiento) · `Denuncia` · `Bloqueo` ·
+`SuscripciónPush` (endpoint por dispositivo) · `Cancha` (dueño, deporte,
+dirección+coords, precio/hora, fotos, activa; visible solo con suscripción
+del dueño al día — `Usuario.tipoCuenta` + `Usuario.suscripcionHasta`).
 
 ---
 

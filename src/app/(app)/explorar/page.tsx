@@ -48,6 +48,7 @@ export default async function Explorar({
         <Solapa activa={tab === 'partidos'} href="/explorar">Partidos</Solapa>
         <Solapa activa={tab === 'jugadores'} href="/explorar?tab=jugadores">Jugadores</Solapa>
         <Solapa activa={tab === 'grupos'} href="/explorar?tab=grupos">Grupos</Solapa>
+        <Solapa activa={tab === 'canchas'} href="/explorar?tab=canchas">Canchas</Solapa>
         <Solapa activa={tab === 'ranking'} href="/explorar?tab=ranking">Ranking</Solapa>
       </div>
 
@@ -94,6 +95,25 @@ export default async function Explorar({
         <Jugadores q={q} miId={usuario.id} />
       ) : tab === 'grupos' ? (
         <GruposAbiertos q={q} usuario={usuario} />
+      ) : tab === 'canchas' ? (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {deportes.map((d) => (
+              <Link
+                key={d.id}
+                href={
+                  d.slug === deporte
+                    ? '/explorar?tab=canchas'
+                    : `/explorar?tab=canchas&deporte=${d.slug}`
+                }
+                className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {d.nombre}
+              </Link>
+            ))}
+          </div>
+          <Canchas deporte={deporte} q={q} usuario={usuario} />
+        </>
       ) : (
         <>
           <div className="flex flex-wrap gap-2">
@@ -219,6 +239,102 @@ async function Partidos({
               ) : (
                 <span className="text-xs text-tinta-3">gratis</span>
               )}
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+async function Canchas({
+  deporte,
+  q,
+  usuario,
+}: {
+  deporte?: string;
+  q?: string;
+  usuario: { tipoCuenta: string; latitud: number | null; longitud: number | null };
+}) {
+  const canchas = await prisma.cancha.findMany({
+    where: {
+      activa: true,
+      // Solo publicaciones de dueños con la suscripción al día.
+      dueno: { suscripcionHasta: { gt: new Date() } },
+      ...(deporte ? { deporte: { slug: deporte } } : {}),
+    },
+    include: { deporte: true },
+    orderBy: { creadoEn: 'desc' },
+    take: 80,
+  });
+
+  const buscado = q ? normalizar(q) : null;
+  const lista = canchas
+    .filter((c) =>
+      !buscado
+        ? true
+        : normalizar(`${c.nombre} ${c.direccion} ${c.ciudad ?? ''} ${c.provincia ?? ''}`).includes(
+            buscado
+          )
+    )
+    .map((c) => ({
+      ...c,
+      km:
+        usuario.latitud != null && usuario.longitud != null && c.latitud != null && c.longitud != null
+          ? distanciaKm(usuario.latitud, usuario.longitud, c.latitud, c.longitud)
+          : null,
+    }))
+    .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity))
+    .slice(0, 30);
+
+  if (lista.length === 0) {
+    return (
+      <div className="tarjeta p-5">
+        <p className="text-sm text-tinta-2">
+          Todavía no hay canchas publicadas {buscado ? 'con esa búsqueda' : 'por acá'}.
+          {usuario.tipoCuenta === 'CANCHA' ? ' La tuya puede ser la primera.' : ''}
+        </p>
+        {usuario.tipoCuenta === 'CANCHA' ? (
+          <Link href="/canchas/nueva" className="btn btn-primario mt-4">Publicar mi cancha</Link>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {lista.map((c) => {
+        let foto: string | null = null;
+        try {
+          foto = (JSON.parse(c.fotos) as string[])[0] ?? null;
+        } catch {
+          foto = null;
+        }
+        return (
+          <Link key={c.id} href={`/canchas/${c.id}`} className="tarjeta flex gap-3 p-4">
+            {foto ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={foto}
+                alt={c.nombre}
+                className="h-[72px] w-[72px] shrink-0 rounded-[6px] border border-borde object-cover"
+              />
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="t-rotulo text-verde-txt">{c.deporte.nombre}</span>
+                {c.km != null ? (
+                  <span className="t-rotulo tabular">a {formatearDistancia(c.km)}</span>
+                ) : null}
+              </div>
+              <p className="t-display mt-1 truncate text-[18px]">{c.nombre}</p>
+              <p className="truncate text-[13px] text-tinta-2">
+                {c.direccion}
+                {c.ciudad ? ` · ${c.ciudad}` : ''}
+              </p>
+              <p className="mt-1 text-xs font-semibold tabular text-naranja-txt">
+                {c.precioPorHora ? `${formatearPlata(c.precioPorHora)} la hora` : 'Precio a consultar'}
+              </p>
             </div>
           </Link>
         );

@@ -18,6 +18,7 @@ export default async function EditarPerfil() {
           ciudad: usuario.ciudad,
           provincia: usuario.provincia,
           avatarUrl: usuario.avatarUrl,
+          tipoCuenta: usuario.tipoCuenta,
         }}
       />
     </div>

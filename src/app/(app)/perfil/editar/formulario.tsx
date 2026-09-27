@@ -14,9 +14,11 @@ export function FormularioEditar({
     ciudad: string | null;
     provincia: string | null;
     avatarUrl: string | null;
+    tipoCuenta: string;
   };
 }) {
   const router = useRouter();
+  const [tipoCuenta, setTipoCuenta] = useState(inicial.tipoCuenta);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [listo, setListo] = useState(false);
@@ -71,6 +73,7 @@ export function FormularioEditar({
         pais: form.get('pais') || 'AR',
         latitud: numero(form.get('latitud')),
         longitud: numero(form.get('longitud')),
+        tipoCuenta,
       }),
     });
     setEnviando(false);
@@ -154,6 +157,31 @@ export function FormularioEditar({
       <div>
         <label className="rotulo-campo" htmlFor="ciudad">Dónde jugás</label>
         <SelectorCiudad inicial={{ ciudad: inicial.ciudad, provincia: inicial.provincia }} />
+      </div>
+
+      <div>
+        <span className="rotulo-campo">Tu cuenta es para</span>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setTipoCuenta('JUGADOR')}
+            className={tipoCuenta === 'JUGADOR' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+          >
+            Jugar
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoCuenta('CANCHA')}
+            className={tipoCuenta === 'CANCHA' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+          >
+            Alquilar mi cancha
+          </button>
+        </div>
+        {tipoCuenta === 'CANCHA' && inicial.tipoCuenta !== 'CANCHA' ? (
+          <p className="mt-1.5 text-xs text-tinta-3">
+            Publicar canchas requiere una suscripción, que se activa aparte.
+          </p>
+        ) : null}
       </div>
 
       {error ? <p className="aviso-error">{error}</p> : null}

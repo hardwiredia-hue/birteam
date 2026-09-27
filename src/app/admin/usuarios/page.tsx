@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
 import { adminActual } from '@/lib/admin';
-import { BotonRol } from './acciones';
+import { BotonRol, BotonSuscripcion } from './acciones';
 
 export const metadata = { title: 'Usuarios' };
 export const dynamic = 'force-dynamic';
@@ -36,9 +36,12 @@ export default async function Usuarios({
       email: true,
       ciudad: true,
       rol: true,
+      tipoCuenta: true,
+      suscripcionHasta: true,
       creadoEn: true,
     },
   });
+  const ahora = new Date();
 
   return (
     <div className="flex flex-col gap-4">
@@ -62,6 +65,26 @@ export default async function Usuarios({
                 {usuario.rol === 'ADMIN' ? (
                   <span className="t-rotulo ml-2 text-verde-txt">admin</span>
                 ) : null}
+                {usuario.tipoCuenta === 'CANCHA' ? (
+                  <span
+                    className="t-rotulo ml-2"
+                    style={{
+                      color:
+                        usuario.suscripcionHasta && usuario.suscripcionHasta > ahora
+                          ? 'var(--naranja-txt)'
+                          : 'var(--tinta-3)',
+                    }}
+                  >
+                    cancha{' '}
+                    {usuario.suscripcionHasta && usuario.suscripcionHasta > ahora
+                      ? `· hasta ${usuario.suscripcionHasta.toLocaleDateString('es-AR', {
+                          day: 'numeric',
+                          month: 'short',
+                          timeZone: 'America/Argentina/Buenos_Aires',
+                        })}`
+                      : '· sin suscripción'}
+                  </span>
+                ) : null}
               </p>
               <p className="truncate text-xs text-tinta-3">
                 @{usuario.usuario} · {usuario.email}
@@ -73,6 +96,12 @@ export default async function Usuarios({
                 })}
               </p>
             </div>
+            {usuario.tipoCuenta === 'CANCHA' ? (
+              <BotonSuscripcion
+                usuarioId={usuario.id}
+                activa={Boolean(usuario.suscripcionHasta && usuario.suscripcionHasta > ahora)}
+              />
+            ) : null}
             {usuario.id !== admin.id ? (
               <BotonRol usuarioId={usuario.id} esAdmin={usuario.rol === 'ADMIN'} />
             ) : (

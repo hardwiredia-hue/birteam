@@ -18,6 +18,8 @@ const esquemaPerfil = z.object({
   pais: z.string().trim().length(2).default('AR'),
   latitud: z.number().min(-90).max(90).nullish(),
   longitud: z.number().min(-180).max(180).nullish(),
+  // Jugador o dueño de cancha; si no viene, no se toca.
+  tipoCuenta: z.enum(['JUGADOR', 'CANCHA']).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -51,6 +53,7 @@ export async function PATCH(request: Request) {
       ...(d.latitud != null && d.longitud != null
         ? { latitud: d.latitud, longitud: d.longitud }
         : {}),
+      ...(d.tipoCuenta ? { tipoCuenta: d.tipoCuenta } : {}),
     },
   });
 

@@ -29,6 +29,8 @@ export const esquemaRegistro = z.object({
   aceptaTerminos: z.literal(true, {
     error: 'Para crear la cuenta tenés que aceptar los términos.',
   }),
+  // Jugador (por defecto) o dueño de cancha para alquilar.
+  tipoCuenta: z.enum(['JUGADOR', 'CANCHA']).default('JUGADOR'),
 });
 
 export const esquemaEntrar = z.object({
@@ -186,6 +188,32 @@ export const esquemaEditarPartido = z.object({
 
 export const esquemaRsvp = z.object({
   estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),
+});
+
+export const esquemaCancha = z.object({
+  nombre: z
+    .string({ error: 'Poné el nombre de la cancha.' })
+    .trim()
+    .min(2, 'El nombre es muy corto.')
+    .max(80, 'El nombre es muy largo.'),
+  descripcion: z.string().trim().max(500, 'La descripción es muy larga.').nullish(),
+  deporteId: z.string({ error: 'Elegí el deporte.' }).min(1, 'Elegí el deporte.'),
+  direccion: z
+    .string({ error: 'Contanos dónde queda.' })
+    .trim()
+    .min(2, 'La dirección es muy corta.')
+    .max(160, 'La dirección es muy larga.'),
+  ciudad: z.string().trim().max(80).nullish(),
+  provincia: z.string().trim().max(80).nullish(),
+  pais: z.string().trim().length(2).default('AR'),
+  latitud: z.number().min(-90).max(90).nullish(),
+  longitud: z.number().min(-180).max(180).nullish(),
+  precioPorHora: z.number().min(0).max(10_000_000).nullish(),
+  telefono: z.string().trim().max(30).nullish(),
+  fotos: z
+    .array(z.string().regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Foto inválida.'))
+    .max(5, 'Hasta 5 fotos.')
+    .default([]),
 });
 
 export const esquemaSuscripcionPush = z.object({

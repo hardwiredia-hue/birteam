@@ -49,3 +49,6 @@ export const MOTIVOS_DENUNCIA = [
 
 /** Radio de búsqueda por defecto y opciones sugeridas (km). */
 export const RADIOS_KM = [5, 10, 15, 25, 50] as const;
+
+/** Tipos de cuenta: jugador (por defecto) o dueño de cancha para alquilar. */
+export const TIPOS_CUENTA = ['JUGADOR', 'CANCHA'] as const;

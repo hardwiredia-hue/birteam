@@ -33,6 +33,10 @@ model Usuario {
   tema          String   @default("oscuro")
   // 'USUARIO' | 'ADMIN'
   rol           String   @default("USUARIO")
+  // 'JUGADOR' | 'CANCHA' (dueño de cancha: puede publicar canchas para alquilar)
+  tipoCuenta    String   @default("JUGADOR")
+  // Suscripción de dueño de cancha: activa mientras esta fecha esté en el futuro.
+  suscripcionHasta DateTime?
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
 
@@ -59,6 +63,34 @@ model Usuario {
   equiposCapitan   EquipoTorneo[]     @relation("equiposCapitan")
   tokensRecuperacion TokenRecuperacion[]
   suscripcionesPush SuscripcionPush[]
+  canchas          Cancha[]
+}
+
+// Cancha publicada para alquilar (solo dueños con suscripción activa).
+model Cancha {
+  id            String   @id @default(cuid())
+  duenoId       String
+  dueno         Usuario  @relation(fields: [duenoId], references: [id], onDelete: Cascade)
+  nombre        String
+  descripcion   String?
+  deporteId     String
+  deporte       Deporte  @relation(fields: [deporteId], references: [id])
+  direccion     String
+  ciudad        String?
+  provincia     String?
+  pais          String   @default("AR")
+  latitud       Float?
+  longitud      Float?
+  precioPorHora Float?
+  telefono      String?
+  // Fotos: JSON con nombres de archivo subidos (igual que Jugada).
+  fotos         String   @default("[]")
+  // El dueño la puede pausar sin borrarla.
+  activa        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([deporteId, activa])
 }
 
 // Suscripción del navegador a notificaciones push (una por dispositivo).
@@ -107,6 +139,7 @@ model Deporte {
   grupos   Grupo[]
   partidos Partido[]
   torneos  Torneo[]
+  canchas  Cancha[]
 }
 
 model UsuarioDeporte {

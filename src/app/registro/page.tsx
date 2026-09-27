@@ -44,7 +44,9 @@ export default async function PaginaRegistro({
             ? 'Después armás tu grupo e invitás a tu gente.'
             : puerta === 'jugar'
               ? 'Después buscás partidos y jugadores cerca tuyo.'
-              : 'Lo justo y necesario para empezar a jugar.'}
+              : puerta === 'cancha'
+                ? 'Después publicás tu cancha para que la alquilen.'
+                : 'Lo justo y necesario para empezar a jugar.'}
         </p>
 
         <FormularioRegistro deportes={deportes} volver={destino} puerta={puerta} />

@@ -37,6 +37,13 @@ export default async function Portada() {
         <p className="t-rotulo mt-8">
           Fútbol · Básquet · Vóley · Rugby · Tenis · Pádel · Ciclismo y más
         </p>
+
+        <p className="mt-4 text-sm text-tinta-2">
+          ¿Tenés una cancha para alquilar?{' '}
+          <Link href="/registro?puerta=cancha" className="font-semibold text-naranja-txt">
+            Publicala en birteam
+          </Link>
+        </p>
       </div>
 
       <p className="text-center text-sm text-tinta-2">

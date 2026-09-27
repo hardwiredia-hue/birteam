@@ -20,6 +20,7 @@ export function FormularioRegistro({
 }) {
   const router = useRouter();
   const [elegidos, setElegidos] = useState<string[]>([]);
+  const [tipoCuenta, setTipoCuenta] = useState(puerta === 'cancha' ? 'CANCHA' : 'JUGADOR');
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -57,6 +58,7 @@ export function FormularioRegistro({
         latitud: numero(form.get('latitud')),
         longitud: numero(form.get('longitud')),
         aceptaTerminos: form.get('aceptaTerminos') === 'on',
+        tipoCuenta,
       }),
     });
 
@@ -68,15 +70,48 @@ export function FormularioRegistro({
       return;
     }
 
-    // Cada puerta lleva a su destino: armar el grupo o salir a buscar juego.
+    // Cada puerta lleva a su destino: armar el grupo, buscar juego o publicar la cancha.
     const destino =
-      volver ?? (puerta === 'grupo' ? '/grupos/nuevo' : puerta === 'jugar' ? '/explorar' : '/panel');
+      volver ??
+      (tipoCuenta === 'CANCHA'
+        ? '/canchas/nueva'
+        : puerta === 'grupo'
+          ? '/grupos/nuevo'
+          : puerta === 'jugar'
+            ? '/explorar'
+            : '/panel');
     router.push(destino);
     router.refresh();
   }
 
   return (
     <form onSubmit={alEnviar} className="mt-8 flex flex-col gap-4">
+      <div>
+        <span className="rotulo-campo">Tu cuenta es para</span>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setTipoCuenta('JUGADOR')}
+            className={tipoCuenta === 'JUGADOR' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+          >
+            Jugar
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoCuenta('CANCHA')}
+            className={tipoCuenta === 'CANCHA' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+          >
+            Alquilar mi cancha
+          </button>
+        </div>
+        {tipoCuenta === 'CANCHA' ? (
+          <p className="mt-1.5 text-xs text-tinta-3">
+            Publicás tu cancha para que los equipos la encuentren y la alquilen. Requiere
+            suscripción, que se activa después de crear la cuenta.
+          </p>
+        ) : null}
+      </div>
+
       <div>
         <label className="rotulo-campo" htmlFor="nombre">
           Nombre y apellido
@@ -127,7 +162,7 @@ export function FormularioRegistro({
         <ErrorDeCampo mensajes={errores.email} />
       </div>
 
-      <div>
+      <div style={tipoCuenta === 'CANCHA' ? { display: 'none' } : undefined}>
         <span className="rotulo-campo">Tus deportes · hasta 5, el 1º es el principal</span>
         <div className="mt-1 flex flex-wrap gap-2">
           {deportes.map((deporte) => {

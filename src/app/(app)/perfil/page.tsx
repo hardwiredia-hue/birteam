@@ -5,6 +5,7 @@ import { ListaBloqueados } from './bloqueados';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { estadisticasJugador } from '@/lib/estadisticas';
+import { suscripcionActiva } from '@/lib/suscripcion';
 import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Perfil' };
@@ -171,6 +172,8 @@ export default async function Perfil() {
         </section>
       ) : null}
 
+      {usuario.tipoCuenta === 'CANCHA' ? <SeccionCanchas usuario={usuario} /> : null}
+
       <section className="flex flex-col gap-3">
         <p className="t-rotulo">Tus jugadas</p>
         <PublicarJugada invitacion="Subí una jugada" />
@@ -198,5 +201,67 @@ export default async function Perfil() {
 
       <AccionesPerfil temaActual={usuario.tema} />
     </div>
+  );
+}
+
+async function SeccionCanchas({
+  usuario,
+}: {
+  usuario: { id: string; suscripcionHasta: Date | null };
+}) {
+  const activa = suscripcionActiva(usuario);
+  const canchas = await prisma.cancha.findMany({
+    where: { duenoId: usuario.id },
+    include: { deporte: true },
+    orderBy: { creadoEn: 'desc' },
+  });
+
+  return (
+    <section className="flex flex-col gap-3">
+      <p className="t-rotulo">Tus canchas</p>
+
+      <div className="tarjeta flex items-center justify-between p-4">
+        <div>
+          <p className="text-sm font-semibold">Suscripción de dueño de cancha</p>
+          <p className="text-xs text-tinta-3">
+            {activa
+              ? `Activa hasta el ${usuario.suscripcionHasta!.toLocaleDateString('es-AR', {
+                  day: 'numeric',
+                  month: 'long',
+                  timeZone: 'America/Argentina/Buenos_Aires',
+                })}.`
+              : 'Inactiva: escribinos a hola@birteam.com para activarla.'}
+          </p>
+        </div>
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={{ background: activa ? 'var(--verde-txt)' : 'var(--rojo)' }}
+        />
+      </div>
+
+      {canchas.map((cancha) => (
+        <a key={cancha.id} href={`/canchas/${cancha.id}`} className="tarjeta flex items-center gap-3 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{cancha.nombre}</p>
+            <p className="t-rotulo mt-0.5">
+              {cancha.deporte.nombre}
+              {cancha.ciudad ? ` · ${cancha.ciudad}` : ''}
+            </p>
+          </div>
+          <span
+            className="text-xs font-semibold"
+            style={{ color: cancha.activa && activa ? 'var(--verde-txt)' : 'var(--tinta-3)' }}
+          >
+            {cancha.activa && activa ? 'Publicada' : cancha.activa ? 'Oculta' : 'Pausada'}
+          </span>
+        </a>
+      ))}
+
+      {activa ? (
+        <a href="/canchas/nueva" className="btn btn-secundario">
+          {canchas.length > 0 ? 'Publicar otra cancha' : 'Publicar mi cancha'}
+        </a>
+      ) : null}
+    </section>
   );
 }

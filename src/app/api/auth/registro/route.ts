@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       pais: d.pais,
       latitud: d.latitud ?? null,
       longitud: d.longitud ?? null,
+      tipoCuenta: d.tipoCuenta,
       deportes: {
         create: deportes.map((deporte, indice) => ({
           deporteId: deporte.id,
