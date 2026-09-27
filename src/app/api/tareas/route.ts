@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ofrecerLugarLibre } from '@/lib/espera';
+import { enviarPush } from '@/lib/push';
 
 /**
  * Tareas programadas (las corre el cron del servidor cada 10 minutos, ver
@@ -49,6 +50,11 @@ export async function POST(request: Request) {
         url: `/partidos/${p.partidoId}`,
       },
     });
+    await enviarPush(p.usuarioId, {
+      titulo: 'Se venció tu lugar reservado',
+      cuerpo: 'Pasaron las 2 horas sin respuesta. Quedaste al final de la lista de espera.',
+      url: `/partidos/${p.partidoId}`,
+    });
     await ofrecerLugarLibre(prisma, p.partidoId);
     resumen.invitacionesVencidas++;
   }
@@ -74,6 +80,7 @@ export async function POST(request: Request) {
     const yaAvisado = await prisma.notificacion.findFirst({ where: { usuarioId, tipo, url } });
     if (yaAvisado) return false;
     await prisma.notificacion.create({ data: { usuarioId, tipo, titulo, cuerpo, url } });
+    await enviarPush(usuarioId, { titulo, cuerpo, url });
     return true;
   }
 

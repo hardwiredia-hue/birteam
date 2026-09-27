@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaMensaje, erroresDeZod } from '@/lib/validacion';
 import { idsBloqueados } from '@/lib/bloqueos';
+import { enviarPush } from '@/lib/push';
 
 /** ¿Puede este usuario leer y escribir en este chat? */
 async function puedeParticipar(
@@ -119,6 +120,16 @@ export async function POST(request: Request) {
       destinatarioId: destinatarioId ?? null,
     },
   });
+
+  // Mensaje directo: push al destinatario (los chats de partido/grupo no
+  // empujan para no acribillar a nadie; se ven al entrar).
+  if (destinatarioId) {
+    await enviarPush(destinatarioId, {
+      titulo: `${usuario.nombre} te escribió`,
+      cuerpo: texto.length > 90 ? `${texto.slice(0, 90)}…` : texto,
+      url: `/mensajes/${usuario.usuario}`,
+    });
+  }
 
   return NextResponse.json({ id: mensaje.id }, { status: 201 });
 }

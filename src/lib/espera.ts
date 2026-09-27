@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { HORAS_VENCIMIENTO_ESPERA } from './constantes';
+import { enviarPush } from './push';
 
 type ClienteOTx = PrismaClient | Prisma.TransactionClient;
 
@@ -54,6 +55,11 @@ export async function ofrecerLugarLibre(db: ClienteOTx, partidoId: string) {
       url: `/partidos/${partido.id}`,
       expiraEn: hasta,
     },
+  });
+  await enviarPush(candidato.usuarioId, {
+    titulo: `Se liberó un lugar: confirmá antes de las ${horaCorta(hasta)}`,
+    cuerpo: `${partido.deporte.nombre} en ${partido.lugarNombre}. Tocá "Voy" o el lugar pasa al siguiente.`,
+    url: `/partidos/${partido.id}`,
   });
   return candidato.usuarioId;
 }

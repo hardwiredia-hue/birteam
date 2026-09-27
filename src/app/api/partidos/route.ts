@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaPartido, erroresDeZod } from '@/lib/validacion';
+import { enviarPush } from '@/lib/push';
 
 export async function POST(request: Request) {
   const usuario = await usuarioActual();
@@ -75,6 +76,14 @@ export async function POST(request: Request) {
         url: `/partidos/${partido.id}`,
       })),
     });
+    await enviarPush(
+      invitados.map((miembro) => miembro.usuarioId),
+      {
+        titulo: `Nuevo partido: ${deporte.nombre} el ${dia} ${hora}`,
+        cuerpo: `${usuario.nombre} lo armó en ${d.lugarNombre}. Confirmá si vas.`,
+        url: `/partidos/${partido.id}`,
+      }
+    );
   }
 
   return NextResponse.json({ id: partido.id }, { status: 201 });

@@ -1,7 +1,43 @@
-// Service worker mínimo de birteam: habilita la instalación como app.
+// Service worker de birteam: habilita la instalación como app y los avisos push.
 // La red manda siempre; si no hay red, se avisa con una página simple.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (evento) => evento.waitUntil(self.clients.claim()));
+
+// Aviso push: llega aunque la app esté cerrada (lugar liberado, recordatorio, mensaje).
+self.addEventListener('push', (evento) => {
+  let datos = {};
+  try {
+    datos = evento.data ? evento.data.json() : {};
+  } catch {
+    datos = { titulo: 'birteam', cuerpo: evento.data ? evento.data.text() : '' };
+  }
+  evento.waitUntil(
+    self.registration.showNotification(datos.titulo || 'birteam', {
+      body: datos.cuerpo || '',
+      icon: '/icono-192.png',
+      badge: '/icono-192.png',
+      data: { url: datos.url || '/panel' },
+      tag: datos.url || undefined,
+    })
+  );
+});
+
+// Tocar el aviso abre (o enfoca) la app en la pantalla que corresponde.
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close();
+  const url = (evento.notification.data && evento.notification.data.url) || '/panel';
+  evento.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
+      for (const ventana of ventanas) {
+        if ('focus' in ventana) {
+          ventana.navigate(url);
+          return ventana.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});
 
 self.addEventListener('fetch', (evento) => {
   if (evento.request.mode !== 'navigate') return;

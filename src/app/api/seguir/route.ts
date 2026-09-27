@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { enviarPush } from '@/lib/push';
 
 /** Seguir o dejar de seguir a un usuario. */
 export async function POST(request: Request) {
@@ -35,6 +36,10 @@ export async function POST(request: Request) {
           titulo: `${usuario.nombre} te empezó a seguir`,
           url: `/jugadores/${usuario.usuario}`,
         },
+      });
+      await enviarPush(usuarioId, {
+        titulo: `${usuario.nombre} te empezó a seguir`,
+        url: `/jugadores/${usuario.usuario}`,
       });
     }
   } else {

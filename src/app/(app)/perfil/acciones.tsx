@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ActivarPush } from '@/components/activar-push';
 
 export function AccionesPerfil({ temaActual }: { temaActual: string }) {
   const router = useRouter();
@@ -54,6 +55,8 @@ export function AccionesPerfil({ temaActual }: { temaActual: string }) {
           />
         </button>
       </div>
+
+      <ActivarPush />
 
       <button type="button" className="btn btn-peligro" onClick={salir} disabled={saliendo}>
         {saliendo ? 'Cerrando…' : 'Cerrar sesión'}

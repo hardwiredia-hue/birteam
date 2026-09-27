@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaEditarPartido, erroresDeZod } from '@/lib/validacion';
+import { enviarPush } from '@/lib/push';
 
 /** Editar el partido. Solo organiza/co-organiza, mientras no esté cerrado. */
 export async function PATCH(request: Request, contexto: { params: Promise<{ id: string }> }) {
@@ -85,6 +86,14 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
           url: `/partidos/${partido.id}`,
         })),
       });
+      await enviarPush(
+        avisar.map((p) => p.usuarioId),
+        {
+          titulo: `Cambió el ${partido.deporte.nombre}: ${dia} ${hora}`,
+          cuerpo: `Ahora es en ${d.lugarNombre}. Fijate si te sigue quedando bien.`,
+          url: `/partidos/${partido.id}`,
+        }
+      );
     }
   }
 

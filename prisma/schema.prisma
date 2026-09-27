@@ -58,6 +58,20 @@ model Usuario {
   torneosOrganizados Torneo[]         @relation("torneosOrganizados")
   equiposCapitan   EquipoTorneo[]     @relation("equiposCapitan")
   tokensRecuperacion TokenRecuperacion[]
+  suscripcionesPush SuscripcionPush[]
+}
+
+// Suscripción del navegador a notificaciones push (una por dispositivo).
+model SuscripcionPush {
+  id        String   @id @default(cuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  creadoEn  DateTime @default(now())
+
+  @@index([usuarioId])
 }
 
 model TokenRecuperacion {

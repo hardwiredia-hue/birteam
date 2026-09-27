@@ -165,6 +165,30 @@ systemctl restart birteam birteam-staging
 Sin `TAREAS_CLAVE` el endpoint contesta 503 y no hace nada; con clave
 incorrecta, 401. Cada aviso sale una sola vez (control de duplicados).
 
+## Notificaciones push
+
+Los avisos (lugar liberado, recordatorios, mensajes directos) también llegan
+como notificaciones del navegador/celular aunque la app esté cerrada. Cada
+ambiente necesita su par de claves VAPID en `.env.production` (una sola vez):
+
+```bash
+# 1. Generar el par de claves (repetir para cada ambiente, claves distintas):
+cd /home/birteam/app && npx web-push generate-vapid-keys
+cd /home/birteam/staging && npx web-push generate-vapid-keys
+
+# 2. Agregar a cada .env.production (sin mostrar el archivo):
+#    VAPID_PUBLIC_KEY="<publicKey>"
+#    VAPID_PRIVATE_KEY="<privateKey>"
+
+# 3. Reiniciar para que tomen las variables:
+systemctl restart birteam birteam-staging
+```
+
+Sin claves configuradas la app funciona igual: los avisos quedan solo en la
+campanita y el interruptor "Avisos en este dispositivo" no aparece en Perfil.
+La clave privada nunca sale del servidor; la pública la lee el navegador
+desde `/api/push/clave`.
+
 ## Respaldos automáticos
 
 `deploy/respaldo.sh` respalda todos los días las bases (pg_dump) y las fotos

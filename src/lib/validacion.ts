@@ -188,6 +188,14 @@ export const esquemaRsvp = z.object({
   estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),
 });
 
+export const esquemaSuscripcionPush = z.object({
+  endpoint: z.url({ error: 'Falta el endpoint.' }).max(1000),
+  keys: z.object({
+    p256dh: z.string().min(1).max(300),
+    auth: z.string().min(1).max(100),
+  }),
+});
+
 /** Respuesta uniforme de error de validación para la API. */
 export function erroresDeZod(error: z.ZodError) {
   const porCampo: Record<string, string[]> = {};

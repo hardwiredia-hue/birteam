@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { enviarPush } from '@/lib/push';
 
 /** Cancela el partido y avisa a todos los anotados. Solo quien organiza. */
 export async function POST(request: Request, contexto: { params: Promise<{ id: string }> }) {
@@ -33,6 +34,15 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       })),
     }),
   ]);
+
+  await enviarPush(
+    avisar.map((p) => p.usuarioId),
+    {
+      titulo: `Se canceló el ${partido.deporte.nombre} de ${partido.lugarNombre}`,
+      cuerpo: 'El organizador dio de baja el partido. Buscá otro en Explorar.',
+      url: `/partidos/${partido.id}`,
+    }
+  );
 
   return NextResponse.json({ listo: true });
 }
