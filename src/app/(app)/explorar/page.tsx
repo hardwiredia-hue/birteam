@@ -9,6 +9,7 @@ import { idsBloqueados } from '@/lib/bloqueos';
 import { calcularRanking } from '@/lib/estadisticas';
 import { BotonSumarme } from '@/components/sumarse-grupo';
 import { Avatar } from '@/components/avatar';
+import { Mapa, type PuntoMapa } from '@/components/mapa';
 
 export const metadata = { title: 'Explorar' };
 export const dynamic = 'force-dynamic';
@@ -18,9 +19,15 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
 export default async function Explorar({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; deporte?: string; q?: string; ambito?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    deporte?: string;
+    q?: string;
+    ambito?: string;
+    vista?: string;
+  }>;
 }) {
-  const { tab = 'partidos', deporte, q, ambito } = await searchParams;
+  const { tab = 'partidos', deporte, q, ambito, vista } = await searchParams;
   const usuario = (await usuarioActual())!;
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
@@ -34,6 +41,7 @@ export default async function Explorar({
       <Form action="/explorar" className="flex gap-2">
         {tab !== 'partidos' ? <input type="hidden" name="tab" value={tab} /> : null}
         {deporte ? <input type="hidden" name="deporte" value={deporte} /> : null}
+        {vista === 'mapa' ? <input type="hidden" name="vista" value="mapa" /> : null}
         <input
           id="buscador"
           name="q"
@@ -97,39 +105,80 @@ export default async function Explorar({
         <GruposAbiertos q={q} usuario={usuario} />
       ) : tab === 'canchas' ? (
         <>
+          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} />
           <div className="flex flex-wrap gap-2">
             {deportes.map((d) => (
               <Link
                 key={d.id}
-                href={
-                  d.slug === deporte
-                    ? '/explorar?tab=canchas'
-                    : `/explorar?tab=canchas&deporte=${d.slug}`
-                }
+                href={armarUrl({
+                  tab: 'canchas',
+                  deporte: d.slug === deporte ? undefined : d.slug,
+                  q,
+                  vista,
+                })}
                 className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
               >
                 {d.nombre}
               </Link>
             ))}
           </div>
-          <Canchas deporte={deporte} q={q} usuario={usuario} />
+          <Canchas deporte={deporte} q={q} usuario={usuario} vista={vista} />
         </>
       ) : (
         <>
+          <AlternarVista deporte={deporte} q={q} vista={vista} />
           <div className="flex flex-wrap gap-2">
             {deportes.map((d) => (
               <Link
                 key={d.id}
-                href={d.slug === deporte ? '/explorar' : `/explorar?deporte=${d.slug}`}
+                href={armarUrl({ deporte: d.slug === deporte ? undefined : d.slug, q, vista })}
                 className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
               >
                 {d.nombre}
               </Link>
             ))}
           </div>
-          <Partidos deporte={deporte} q={q} usuario={usuario} />
+          <Partidos deporte={deporte} q={q} usuario={usuario} vista={vista} />
         </>
       )}
+    </div>
+  );
+}
+
+/** Arma la URL de Explorar conservando solo los parámetros con valor. */
+function armarUrl(parametros: Record<string, string | undefined>) {
+  const partes = Object.entries(parametros)
+    .filter(([, valor]) => valor)
+    .map(([clave, valor]) => `${clave}=${encodeURIComponent(valor!)}`);
+  return `/explorar${partes.length > 0 ? `?${partes.join('&')}` : ''}`;
+}
+
+/** Lista o mapa, para partidos y canchas. */
+function AlternarVista({
+  tab,
+  deporte,
+  q,
+  vista,
+}: {
+  tab?: string;
+  deporte?: string;
+  q?: string;
+  vista?: string;
+}) {
+  return (
+    <div className="flex gap-2">
+      <Link
+        href={armarUrl({ tab, deporte, q })}
+        className={vista !== 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+      >
+        Lista
+      </Link>
+      <Link
+        href={armarUrl({ tab, deporte, q, vista: 'mapa' })}
+        className={vista === 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+      >
+        Mapa
+      </Link>
     </div>
   );
 }
@@ -153,10 +202,12 @@ async function Partidos({
   deporte,
   q,
   usuario,
+  vista,
 }: {
   deporte?: string;
   q?: string;
   usuario: { latitud: number | null; longitud: number | null };
+  vista?: string;
 }) {
   const partidos = await prisma.partido.findMany({
     where: {
@@ -199,6 +250,44 @@ async function Partidos({
         </p>
         <Link href="/crear" className="btn btn-primario mt-4">Creá el partido</Link>
       </div>
+    );
+  }
+
+  if (vista === 'mapa') {
+    const puntos: PuntoMapa[] = lista
+      .filter((p) => p.latitud != null && p.longitud != null)
+      .map((p) => ({
+        id: p.id,
+        latitud: p.latitud!,
+        longitud: p.longitud!,
+        titulo: `${p.deporte.nombre} · ${DIAS[p.fecha.getDay()]} ${p.fecha.toLocaleTimeString(
+          'es-AR',
+          { hour12: false, hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }
+        )}`,
+        subtitulo: `${p.lugarNombre}${p.ciudad ? ` · ${p.ciudad}` : ''}`,
+        url: `/partidos/${p.id}`,
+        color: 'verde' as const,
+      }));
+    return (
+      <>
+        <Mapa
+          puntos={puntos}
+          centro={
+            usuario.latitud != null && usuario.longitud != null
+              ? { latitud: usuario.latitud, longitud: usuario.longitud }
+              : null
+          }
+        />
+        {puntos.length < lista.length ? (
+          <p className="text-xs text-tinta-3">
+            {lista.length - puntos.length}{' '}
+            {lista.length - puntos.length === 1
+              ? 'partido no tiene ubicación en el mapa'
+              : 'partidos no tienen ubicación en el mapa'}
+            : está{lista.length - puntos.length === 1 ? '' : 'n'} en la vista Lista.
+          </p>
+        ) : null}
+      </>
     );
   }
 
@@ -251,10 +340,12 @@ async function Canchas({
   deporte,
   q,
   usuario,
+  vista,
 }: {
   deporte?: string;
   q?: string;
   usuario: { tipoCuenta: string; latitud: number | null; longitud: number | null };
+  vista?: string;
 }) {
   const canchas = await prisma.cancha.findMany({
     where: {
@@ -298,6 +389,43 @@ async function Canchas({
           <Link href="/canchas/nueva" className="btn btn-primario mt-4">Publicar mi cancha</Link>
         ) : null}
       </div>
+    );
+  }
+
+  if (vista === 'mapa') {
+    const puntos: PuntoMapa[] = lista
+      .filter((c) => c.latitud != null && c.longitud != null)
+      .map((c) => ({
+        id: c.id,
+        latitud: c.latitud!,
+        longitud: c.longitud!,
+        titulo: c.nombre,
+        subtitulo: `${c.deporte.nombre} · ${
+          c.precioPorHora ? `${formatearPlata(c.precioPorHora)} la hora` : 'precio a consultar'
+        }`,
+        url: `/canchas/${c.id}`,
+        color: 'naranja' as const,
+      }));
+    return (
+      <>
+        <Mapa
+          puntos={puntos}
+          centro={
+            usuario.latitud != null && usuario.longitud != null
+              ? { latitud: usuario.latitud, longitud: usuario.longitud }
+              : null
+          }
+        />
+        {puntos.length < lista.length ? (
+          <p className="text-xs text-tinta-3">
+            {lista.length - puntos.length}{' '}
+            {lista.length - puntos.length === 1
+              ? 'cancha no tiene ubicación en el mapa'
+              : 'canchas no tienen ubicación en el mapa'}
+            : está{lista.length - puntos.length === 1 ? '' : 'n'} en la vista Lista.
+          </p>
+        ) : null}
+      </>
     );
   }
 

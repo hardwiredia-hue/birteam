@@ -290,3 +290,71 @@
     color: var(--verde-txt);
   }
 }
+
+/* ---------- mapa (Explorar) ---------- */
+.mapa-caja {
+  height: min(62dvh, 520px);
+  border: 1px solid var(--borde);
+  border-radius: var(--radius-tarjeta, 12px);
+  overflow: hidden;
+  z-index: 0;
+}
+.mapa-pin {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid #0b0d03;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+.mapa-pin-verde {
+  background: var(--verde);
+}
+.mapa-pin-naranja {
+  background: #f59e1e;
+}
+/* En tema oscuro el mapa acompaña: tiles invertidos con los colores a salvo. */
+:root:not([data-theme='light']) .mapa-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.5);
+}
+.leaflet-container .leaflet-popup-content-wrapper {
+  background: var(--panel);
+  color: var(--tinta);
+  border: 1px solid var(--borde-2);
+  border-radius: var(--radius-control);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+.leaflet-container .leaflet-popup-tip {
+  background: var(--panel);
+  border: 1px solid var(--borde-2);
+}
+.leaflet-container .leaflet-popup-content {
+  margin: 10px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.leaflet-container .leaflet-popup-content p {
+  margin: 0;
+}
+.mapa-popup-titulo {
+  font-weight: 700;
+}
+.mapa-popup-sub {
+  color: var(--tinta-2);
+  font-size: 12px;
+}
+.leaflet-container .leaflet-popup-content a {
+  display: inline-block;
+  margin-top: 6px;
+  font-weight: 700;
+  color: var(--verde-txt);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--tinta-3);
+}
+
+.mapa-caja.leaflet-container {
+  background: var(--panel);
+  font-family: inherit;
+}

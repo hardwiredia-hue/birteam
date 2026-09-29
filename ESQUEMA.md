@@ -73,7 +73,9 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   todavía: la suscripción la activa administración desde el backoffice (30 días
   por vez). Al registrarse se elige el tipo de cuenta: **Jugar** o **Alquilar mi
   cancha** (se puede cambiar después en Editar perfil).
-- Fase 2: vista de mapa.
+- Vista **Lista / Mapa** en Partidos y Canchas: OpenStreetMap (sin claves de
+  terceros), pines verdes (partidos) y naranjas (canchas) con popup al detalle,
+  centrado en el usuario y tiles oscurecidos en el tema oscuro.
 
 ### 3.4 Partido (la pantalla más importante)
 - Cabecera: deporte, horario, lugar, organizador, sello "se repite".
