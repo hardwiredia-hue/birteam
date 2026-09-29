@@ -207,6 +207,19 @@ sudo -u birteam /home/birteam/deploy/respaldo.sh && tail -5 /home/birteam/respal
 Restaurar una base: `gunzip -c db-app-<fecha>.sql.gz | psql "$DATABASE_URL"`
 (sobre una base vacía). Las fotos: destarar en la carpeta del ambiente.
 
+## Subida de videos
+
+Los clips de las jugadas pesan hasta 60 MB. El nginx de cada vhost tiene que
+aceptar cuerpos de ese tamaño (el límite de fábrica es 1 MB y corta también
+las fotos). En los vhosts de birteam.com y staging.birteam.com (bloque
+`server` o `location /`), respaldando antes el archivo con fecha:
+
+```
+client_max_body_size 80m;
+```
+
+y recargar: `nginx -t && systemctl reload nginx`.
+
 ## Reglas fijas
 
 - Nunca abrir 3000/3001 a internet.

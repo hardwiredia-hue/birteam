@@ -36,3 +36,32 @@ export async function guardarImagen(
   await writeFile(path.join(DIR_ARCHIVOS, nombre), Buffer.from(await archivo.arrayBuffer()));
   return { ok: true, nombre, url: `/api/archivos/${nombre}` };
 }
+
+const TIPOS_VIDEO: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  // Lo que graba el iPhone: los navegadores lo reproducen si el códec es H.264.
+  'video/quicktime': 'mov',
+};
+const MAX_BYTES_VIDEO = 60 * 1024 * 1024;
+
+/** Valida y guarda un clip de video con nombre único. */
+export async function guardarVideo(
+  archivo: unknown
+): Promise<{ ok: true; nombre: string; url: string } | { ok: false; error: string; status: number }> {
+  if (!(archivo instanceof File)) {
+    return { ok: false, error: 'Falta el archivo.', status: 400 };
+  }
+  const extension = TIPOS_VIDEO[archivo.type];
+  if (!extension) {
+    return { ok: false, error: 'Solo videos MP4, WebM o del iPhone (MOV).', status: 415 };
+  }
+  if (archivo.size > MAX_BYTES_VIDEO) {
+    return { ok: false, error: 'El video puede pesar hasta 60 MB (un clip corto).', status: 413 };
+  }
+
+  const nombre = `${randomUUID()}.${extension}`;
+  await mkdir(DIR_ARCHIVOS, { recursive: true });
+  await writeFile(path.join(DIR_ARCHIVOS, nombre), Buffer.from(await archivo.arrayBuffer()));
+  return { ok: true, nombre, url: `/api/archivos/${nombre}` };
+}

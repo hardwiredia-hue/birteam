@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { usuarioActual } from '@/lib/auth';
 import { obtenerFeed } from '@/lib/jugadas';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
@@ -11,7 +12,12 @@ export default async function Jugadas() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="t-pantalla">Jugadas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="t-pantalla">Jugadas</h1>
+        <Link href="/clips" className="btn btn-secundario btn-sm">
+          ▶ Clips
+        </Link>
+      </div>
 
       <PublicarJugada invitacion="Subí una jugada" />
 

@@ -6,6 +6,7 @@ export interface JugadaParaMostrar {
   id: string;
   texto: string | null;
   fotos: string[];
+  videoUrl: string | null;
   creadoEn: string;
   autor: { nombre: string; usuario: string; avatarUrl: string | null };
   mia: boolean;
@@ -108,6 +109,7 @@ async function armarJugadas(
       id: jugada.id,
       texto: jugada.texto,
       fotos: JSON.parse(jugada.fotos) as string[],
+      videoUrl: jugada.videoUrl,
       creadoEn: jugada.creadoEn.toISOString(),
       autor: jugada.autor,
       mia: jugada.autorId === usuarioId,
@@ -119,4 +121,23 @@ async function armarJugadas(
         : null,
     };
   });
+}
+
+/** Clips: jugadas con video, de lo público y de tus grupos, para el feed vertical. */
+export async function obtenerClips(usuarioId: string, limite = 30): Promise<JugadaParaMostrar[]> {
+  const [membresias, ocultos] = await Promise.all([
+    prisma.miembroGrupo.findMany({ where: { usuarioId }, select: { grupoId: true } }),
+    idsBloqueados(usuarioId),
+  ]);
+  const misGrupos = membresias.map((m) => m.grupoId);
+
+  return armarJugadas(
+    usuarioId,
+    {
+      videoUrl: { not: null },
+      OR: [{ grupoId: null }, ...(misGrupos.length > 0 ? [{ grupoId: { in: misGrupos } }] : [])],
+      ...(ocultos.length > 0 ? { autorId: { notIn: ocultos } } : {}),
+    },
+    limite
+  );
 }

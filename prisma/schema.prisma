@@ -66,6 +66,7 @@ model Usuario {
   canchas          Cancha[]
 }
 
+
 // Ajustes del sitio editables desde el backoffice (marca: logo, ícono, favicon).
 model Ajuste {
   clave         String   @id
@@ -394,6 +395,8 @@ model Jugada {
   texto     String?
   // Nombres de archivo subidos, como JSON (SQLite no tiene arrays).
   fotos     String   @default("[]")
+  // Clip de video (URL en /api/archivos), para el feed vertical.
+  videoUrl  String?
   creadoEn  DateTime @default(now())
 
   comentarios ComentarioJugada[]

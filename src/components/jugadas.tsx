@@ -20,6 +20,7 @@ export function PublicarJugada({
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState('');
   const [fotos, setFotos] = useState<{ nombre: string; url: string }[]>([]);
+  const [video, setVideo] = useState<{ nombre: string; url: string } | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,24 @@ export function PublicarJugada({
     evento.target.value = '';
   }
 
+  async function elegirVideo(evento: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    setSubiendo(true);
+    setError(null);
+    const form = new FormData();
+    form.append('archivo', archivo);
+    const respuesta = await fetch('/api/archivos/video', { method: 'POST', body: form });
+    const datos = await respuesta.json().catch(() => ({}));
+    setSubiendo(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos subir el video.');
+      return;
+    }
+    setVideo({ nombre: datos.nombre, url: datos.url });
+  }
+
   async function publicar() {
     setEnviando(true);
     setError(null);
@@ -53,6 +72,7 @@ export function PublicarJugada({
       body: JSON.stringify({
         texto: texto.trim() || null,
         fotos: fotos.map((foto) => foto.nombre),
+        video: video?.nombre ?? null,
         partidoId: partidoId ?? null,
         grupoId: grupoId ?? null,
       }),
@@ -65,6 +85,7 @@ export function PublicarJugada({
     }
     setTexto('');
     setFotos([]);
+    setVideo(null);
     setAbierto(false);
     router.refresh();
   }
@@ -102,6 +123,25 @@ export function PublicarJugada({
         </div>
       ) : null}
 
+      {video ? (
+        <div className="flex items-center gap-3">
+          <video
+            src={video.url}
+            className="h-24 rounded-[6px] border border-borde"
+            muted
+            playsInline
+            preload="metadata"
+          />
+          <button
+            type="button"
+            className="text-xs font-semibold text-tinta-3"
+            onClick={() => setVideo(null)}
+          >
+            Quitar video
+          </button>
+        </div>
+      ) : null}
+
       <div className="flex items-center gap-3">
         <label className="btn btn-fantasma btn-sm cursor-pointer" htmlFor="fotos-jugada">
           {subiendo ? 'Subiendo…' : `Fotos (${fotos.length}/5)`}
@@ -115,6 +155,19 @@ export function PublicarJugada({
             disabled={subiendo || fotos.length >= 5}
           />
         </label>
+        {!video ? (
+          <label className="btn btn-fantasma btn-sm cursor-pointer" htmlFor="video-jugada">
+            Video
+            <input
+              id="video-jugada"
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              hidden
+              onChange={elegirVideo}
+              disabled={subiendo}
+            />
+          </label>
+        ) : null}
         <div className="flex-1" />
         <button type="button" className="btn btn-fantasma btn-sm" onClick={() => setAbierto(false)}>
           Cancelar
@@ -123,7 +176,7 @@ export function PublicarJugada({
           type="button"
           className="btn btn-primario btn-sm"
           onClick={publicar}
-          disabled={enviando || subiendo || (fotos.length === 0 && !texto.trim())}
+          disabled={enviando || subiendo || (fotos.length === 0 && !video && !texto.trim())}
         >
           {enviando ? 'Publicando…' : 'Publicar'}
         </button>
@@ -210,6 +263,17 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
       ) : null}
 
       {jugada.texto ? <p className="text-sm">{jugada.texto}</p> : null}
+
+      {jugada.videoUrl ? (
+        <video
+          src={jugada.videoUrl}
+          className="w-full rounded-[6px] border border-borde bg-black"
+          style={{ maxHeight: 480 }}
+          controls
+          playsInline
+          preload="metadata"
+        />
+      ) : null}
 
       {jugada.fotos.length > 0 ? (
         <div className={jugada.fotos.length === 1 ? '' : 'grid grid-cols-2 gap-1.5'}>

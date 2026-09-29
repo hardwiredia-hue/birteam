@@ -8,7 +8,13 @@ import { Moderacion } from '@/components/moderacion';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
-import { BotoneraRsvp, CancelarPartido, CompartirPartido, PasarLista } from './acciones';
+import {
+  BotoneraRsvp,
+  CancelarPartido,
+  CompartirPartido,
+  ElegirCoorganizador,
+  PasarLista,
+} from './acciones';
 
 export const metadata = { title: 'Partido' };
 export const dynamic = 'force-dynamic';
@@ -133,7 +139,9 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
                   : 'jugó'
                 : p.usuarioId === partido.organizadorId
                   ? 'organiza'
-                  : `@${p.usuario.usuario}`,
+                  : p.usuarioId === partido.coOrganizadorId
+                    ? 'co-organiza'
+                    : `@${p.usuario.usuario}`,
             apagado: partido.estado === 'JUGADO' && p.asistio === false,
           }))}
         />
@@ -156,6 +164,16 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           }))} />
         ) : null}
       </section>
+
+      {partido.organizadorId === usuario.id && !cerrado ? (
+        <ElegirCoorganizador
+          partidoId={partido.id}
+          actualId={partido.coOrganizadorId}
+          candidatos={voy
+            .filter((p) => p.usuarioId !== usuario.id)
+            .map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre }))}
+        />
+      ) : null}
 
       {partido.estado === 'JUGADO' ? (
         <section className="flex flex-col gap-3">

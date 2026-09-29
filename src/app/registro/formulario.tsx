@@ -59,6 +59,7 @@ export function FormularioRegistro({
         longitud: numero(form.get('longitud')),
         aceptaTerminos: form.get('aceptaTerminos') === 'on',
         tipoCuenta,
+        web: form.get('web'),
       }),
     });
 
@@ -86,6 +87,12 @@ export function FormularioRegistro({
 
   return (
     <form onSubmit={alEnviar} className="mt-8 flex flex-col gap-4">
+      {/* Trampa anti-robots: invisible para personas, irresistible para scripts. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: -9999, height: 0, overflow: 'hidden' }}>
+        <label htmlFor="web">Tu sitio web</label>
+        <input id="web" name="web" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <div>
         <span className="rotulo-campo">Tu cuenta es para</span>
         <div className="mt-1 grid grid-cols-2 gap-2">

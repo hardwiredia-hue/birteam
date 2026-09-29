@@ -130,12 +130,17 @@ export const esquemaJugada = z
       .array(z.string().regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Foto inválida.'))
       .max(5, 'Hasta 5 fotos por jugada.')
       .default([]),
+    video: z
+      .string()
+      .regex(/^[0-9a-f-]{36}\.(mp4|webm|mov)$/, 'Video inválido.')
+      .nullish(),
     partidoId: z.string().nullish(),
     grupoId: z.string().nullish(),
   })
-  .refine((datos) => (datos.texto && datos.texto.length > 0) || datos.fotos.length > 0, {
-    error: 'La jugada necesita al menos una foto o un texto.',
-  });
+  .refine(
+    (datos) => (datos.texto && datos.texto.length > 0) || datos.fotos.length > 0 || datos.video,
+    { error: 'La jugada necesita una foto, un video o un texto.' }
+  );
 
 export const esquemaComentario = z.object({
   texto: z

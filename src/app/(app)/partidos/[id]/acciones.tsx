@@ -236,3 +236,88 @@ export function CompartirPartido({ rutaPublica }: { rutaPublica: string }) {
     </button>
   );
 }
+
+/** Nombrar o quitar al co-organizador, entre los confirmados. Solo organiza. */
+export function ElegirCoorganizador({
+  partidoId,
+  candidatos,
+  actualId,
+}: {
+  partidoId: string;
+  candidatos: { usuarioId: string; nombre: string }[];
+  actualId: string | null;
+}) {
+  const router = useRouter();
+  const [elegido, setElegido] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function mandar(usuarioId: string | null) {
+    setOcupado(true);
+    setError(null);
+    const respuesta = await fetch(`/api/partidos/${partidoId}/coorganizador`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuarioId }),
+    });
+    setOcupado(false);
+    if (!respuesta.ok) {
+      const datos = await respuesta.json().catch(() => ({}));
+      setError(datos.error ?? 'No pudimos guardar el cambio.');
+      return;
+    }
+    setElegido('');
+    router.refresh();
+  }
+
+  const actual = candidatos.find((c) => c.usuarioId === actualId);
+
+  return (
+    <div className="tarjeta flex flex-col gap-2.5 p-4">
+      <p className="text-sm font-semibold">Co-organizador</p>
+      {actual ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-tinta-2">
+            {actual.nombre} también puede editar, pasar lista y cancelar.
+          </p>
+          <button
+            type="button"
+            className="btn btn-secundario btn-sm"
+            onClick={() => mandar(null)}
+            disabled={ocupado}
+          >
+            Quitar
+          </button>
+        </div>
+      ) : candidatos.length > 0 ? (
+        <div className="flex gap-2">
+          <select
+            className="campo flex-1"
+            value={elegido}
+            onChange={(evento) => setElegido(evento.target.value)}
+          >
+            <option value="">Elegí entre los confirmados…</option>
+            {candidatos.map((c) => (
+              <option key={c.usuarioId} value={c.usuarioId}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="btn btn-secundario btn-sm"
+            onClick={() => elegido && mandar(elegido)}
+            disabled={ocupado || !elegido}
+          >
+            Nombrar
+          </button>
+        </div>
+      ) : (
+        <p className="text-xs text-tinta-3">
+          Cuando alguien confirme, podés nombrarlo co-organizador para repartir el laburo.
+        </p>
+      )}
+      {error ? <p className="aviso-error">{error}</p> : null}
+    </div>
+  );
+}

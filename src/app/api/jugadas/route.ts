@@ -55,6 +55,7 @@ export async function POST(request: Request) {
       grupoId,
       texto: d.texto ?? null,
       fotos: JSON.stringify(d.fotos),
+      videoUrl: d.video ? `/api/archivos/${d.video}` : null,
     },
   });
 
