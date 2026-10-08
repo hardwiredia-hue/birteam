@@ -39,9 +39,12 @@ const DIAS_SEMANA = [
 export function FormularioCancha({
   deportes,
   cancha,
+  predeterminados,
 }: {
   deportes: Deporte[];
   cancha?: CanchaExistente;
+  /** Dirección y teléfono del complejo (del registro), para no tipear dos veces. */
+  predeterminados?: { direccion?: string | null; telefono?: string | null };
 }) {
   const router = useRouter();
   const [deporteId, setDeporteId] = useState(cancha?.deporteId ?? deportes[0]?.id ?? '');
@@ -167,7 +170,7 @@ export function FormularioCancha({
           name="direccion"
           className="campo"
           placeholder="Av. Siempreviva 742"
-          defaultValue={cancha?.direccion ?? ''}
+          defaultValue={cancha?.direccion ?? predeterminados?.direccion ?? ''}
           required
         />
         <ErrorDeCampo mensajes={errores.direccion} />
@@ -208,7 +211,7 @@ export function FormularioCancha({
             name="telefono"
             className="campo"
             placeholder="Para reservas"
-            defaultValue={cancha?.telefono ?? ''}
+            defaultValue={cancha?.telefono ?? predeterminados?.telefono ?? ''}
           />
           <ErrorDeCampo mensajes={errores.telefono} />
         </div>

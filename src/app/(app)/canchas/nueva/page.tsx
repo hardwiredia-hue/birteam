@@ -59,7 +59,10 @@ export default async function NuevaCancha() {
       <p className="text-sm text-tinta-2">
         Contá lo importante: dónde queda, cuánto sale y cómo te reservan.
       </p>
-      <FormularioCancha deportes={deportes} />
+      <FormularioCancha
+        deportes={deportes}
+        predeterminados={{ direccion: usuario.complejoDireccion, telefono: usuario.telefono }}
+      />
     </div>
   );
 }

@@ -71,6 +71,8 @@ export function FormularioRegistro({
         aceptaTerminos: form.get('aceptaTerminos') === 'on',
         tipoCuenta,
         complejoNombre: form.get('complejoNombre') || null,
+        complejoDireccion: form.get('complejoDireccion') || null,
+        telefono: form.get('telefono') || null,
         cuit: form.get('cuit') || null,
         web: form.get('web'),
       }),
@@ -163,6 +165,36 @@ export function FormularioRegistro({
             />
             <p className="mt-1 text-xs text-tinta-3">La referencia que van a ver los jugadores.</p>
             <ErrorDeCampo mensajes={errores.complejoNombre} />
+          </div>
+          <div>
+            <label className="rotulo-campo" htmlFor="complejoDireccion">
+              Dirección del complejo
+            </label>
+            <input
+              id="complejoDireccion"
+              name="complejoDireccion"
+              className="campo"
+              placeholder="Av. Siempreviva 742"
+              maxLength={160}
+              required
+            />
+            <ErrorDeCampo mensajes={errores.complejoDireccion} />
+          </div>
+          <div>
+            <label className="rotulo-campo" htmlFor="telefono">
+              Teléfono de contacto
+            </label>
+            <input
+              id="telefono"
+              name="telefono"
+              className="campo"
+              placeholder="+54 9 11 5555-1234"
+              autoComplete="tel"
+              maxLength={30}
+              required
+            />
+            <p className="mt-1 text-xs text-tinta-3">Para las reservas y consultas de los jugadores.</p>
+            <ErrorDeCampo mensajes={errores.telefono} />
           </div>
           <div>
             <label className="rotulo-campo" htmlFor="logo">

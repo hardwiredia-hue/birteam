@@ -39,6 +39,8 @@ export default async function Usuarios({
       tipoCuenta: true,
       suscripcionHasta: true,
       complejoNombre: true,
+      complejoDireccion: true,
+      telefono: true,
       cuit: true,
       verificacion: true,
       verificacionDocUrl: true,
@@ -102,6 +104,8 @@ export default async function Usuarios({
               {usuario.tipoCuenta === 'CANCHA' ? (
                 <p className="truncate text-xs text-tinta-3">
                   {usuario.complejoNombre ?? 'Sin nombre de complejo'}
+                  {usuario.complejoDireccion ? ` · ${usuario.complejoDireccion}` : ''}
+                  {usuario.telefono ? ` · tel. ${usuario.telefono}` : ''}
                   {usuario.cuit ? ` · CUIT ${usuario.cuit}` : ' · sin CUIT'}
                   {' · '}
                   <span

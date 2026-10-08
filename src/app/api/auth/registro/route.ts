@@ -61,6 +61,8 @@ export async function POST(request: Request) {
       ...(d.tipoCuenta === 'CANCHA'
         ? {
             complejoNombre: d.complejoNombre ?? null,
+            complejoDireccion: d.complejoDireccion ?? null,
+            telefono: d.telefono ?? null,
             cuit: d.cuit ? formatearCuit(d.cuit) : null,
           }
         : {}),

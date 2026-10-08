@@ -32,8 +32,10 @@ export const esquemaRegistro = z.object({
   }),
   // Jugador (por defecto) o dueño de cancha para alquilar.
   tipoCuenta: z.enum(['JUGADOR', 'CANCHA']).default('JUGADOR'),
-  // Solo cuentas de cancha: la referencia pública y el CUIT/CUIL del titular.
+  // Solo cuentas de cancha: la referencia pública y el titular real.
   complejoNombre: z.string().trim().max(80, 'El nombre es muy largo.').nullish(),
+  complejoDireccion: z.string().trim().max(160, 'La dirección es muy larga.').nullish(),
+  telefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
   cuit: z.string().trim().max(15).nullish(),
 }).superRefine((datos, contexto) => {
   if (datos.tipoCuenta !== 'CANCHA') return;
@@ -42,6 +44,20 @@ export const esquemaRegistro = z.object({
       code: 'custom',
       path: ['complejoNombre'],
       message: 'Poné el nombre del complejo o la cancha.',
+    });
+  }
+  if (!datos.complejoDireccion || datos.complejoDireccion.length < 2) {
+    contexto.addIssue({
+      code: 'custom',
+      path: ['complejoDireccion'],
+      message: 'Poné la dirección del complejo.',
+    });
+  }
+  if (!datos.telefono || datos.telefono.length < 6) {
+    contexto.addIssue({
+      code: 'custom',
+      path: ['telefono'],
+      message: 'Poné un teléfono de contacto.',
     });
   }
   if (!datos.cuit || !validarCuit(datos.cuit)) {

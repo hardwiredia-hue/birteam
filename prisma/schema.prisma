@@ -39,6 +39,7 @@ model Usuario {
   suscripcionHasta DateTime?
   // Datos del dueño de cancha: referencia pública y titular real.
   complejoNombre String?
+  complejoDireccion String?
   cuit           String?
   // 'PENDIENTE' (sin comprobante) | 'EN_REVISION' | 'VERIFICADA' | 'RECHAZADA'
   verificacion   String   @default("PENDIENTE")
