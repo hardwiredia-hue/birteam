@@ -22,6 +22,34 @@ export async function POST(request: Request) {
   const deporte = await prisma.deporte.findUnique({ where: { id: d.deporteId } });
   if (!deporte) return NextResponse.json({ error: 'Ese deporte no existe.' }, { status: 400 });
 
+  // Sede en una cancha publicada: tiene que existir, estar activa y abrir ese día.
+  let canchaId: string | null = null;
+  if (d.canchaId) {
+    const cancha = await prisma.cancha.findUnique({ where: { id: d.canchaId } });
+    if (!cancha || !cancha.activa) {
+      return NextResponse.json({ error: 'Esa cancha ya no está publicada.' }, { status: 400 });
+    }
+    let dias: number[] = [0, 1, 2, 3, 4, 5, 6];
+    try {
+      dias = JSON.parse(cancha.diasDisponibles);
+    } catch {
+      dias = [0, 1, 2, 3, 4, 5, 6];
+    }
+    // El día se evalúa en hora argentina: a las 21 acá ya es "mañana" en UTC.
+    const rotuloDia = d.fecha.toLocaleDateString('en-US', {
+      weekday: 'short',
+      timeZone: 'America/Argentina/Buenos_Aires',
+    });
+    const diaLocal = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[rotuloDia] ?? d.fecha.getDay();
+    if (!dias.includes(diaLocal)) {
+      return NextResponse.json(
+        { error: 'La cancha no está disponible ese día. Elegí otro en el almanaque.' },
+        { status: 400 }
+      );
+    }
+    canchaId = cancha.id;
+  }
+
   // Partido de grupo: solo si sos miembro.
   let miembrosDelGrupo: { usuarioId: string }[] = [];
   if (d.grupoId) {
@@ -45,6 +73,7 @@ export async function POST(request: Request) {
       lugarNombre: d.lugarNombre,
       direccion: d.direccion ?? null,
       lugarTelefono: d.lugarTelefono ?? null,
+      canchaId,
       ciudad: d.ciudad ?? usuario.ciudad,
       provincia: d.provincia ?? usuario.provincia,
       cupo: d.cupo,

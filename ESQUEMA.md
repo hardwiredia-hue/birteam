@@ -69,10 +69,15 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
 - Filtros: deporte, distancia (radio), fecha. Resultados con distancia, estado del
   cupo ("Faltan 2") y precio.
 - **Canchas**: publicadas por cuentas de dueño de cancha con suscripción activa
-  (fotos, precio por hora, teléfono, mensaje al dueño). Sin pasarela de pago
-  todavía: la suscripción la activa administración desde el backoffice (30 días
-  por vez). Al registrarse se elige el tipo de cuenta: **Jugar** o **Alquilar mi
-  cancha** (se puede cambiar después en Editar perfil).
+  (fotos, precio por hora, teléfono, días disponibles que el almanaque de los
+  partidos respeta, mensaje al dueño). Sin pasarela de pago todavía: la
+  suscripción la activa administración desde el backoffice (30 días por vez).
+  Al registrarse se elige el tipo de cuenta: **Jugar** o **Alquilar mi cancha**
+  (se puede cambiar después en Editar perfil). El dueño carga el nombre del
+  complejo (referencia), logo, deportes que alquila, titular y CUIT/CUIL (con
+  dígito verificador), y sube un comprobante de titularidad (constancia de
+  AFIP/ARCA o factura de servicio del predio); administración lo revisa en el
+  backoffice (Verificar/Rechazar) y la cancha sale con el sello **Verificada**.
 - Vista **Lista / Mapa** en Partidos y Canchas: OpenStreetMap (sin claves de
   terceros), pines verdes (partidos) y naranjas (canchas) con popup al detalle,
   centrado en el usuario y tiles oscurecidos en el tema oscuro.
@@ -90,10 +95,11 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   asistencia), resultado opcional, y "Subí la jugada" → publicación social (fase 2).
 
 ### 3.5 Crear partido — un paso por pantalla (6 pasos)
-1. Deporte · 2. Cuándo (almanaque con los días pasados bloqueados, chips de hora +
-"se repite todas las semanas") · 3. Dónde (tus lugares guardados de un toque, o
-cargar uno nuevo con dirección y teléfono de la cancha — queda guardado y el
-teléfono se ve en el partido) · 4. Cupo y mínimo · 5. Costo total o por jugador
+1. Deporte · 2. Dónde (canchas publicadas en birteam, tus lugares guardados de un
+toque, o cargar uno nuevo con dirección y teléfono — queda guardado y el teléfono
+se ve en el partido) · 3. Cuándo (almanaque con los días pasados bloqueados y, si
+la sede es una cancha publicada, solo los días que su dueño tiene disponibles;
+chips de hora + "se repite todas las semanas") · 4. Cupo y mínimo · 5. Costo
 6. Visibilidad (solo mi grupo / abierto a cercanos) + grupo (elegir, o crear uno
 nuevo ahí mismo) + invitar gente (tus seguidores de un toque, o buscar a
 cualquiera por nombre o usuario).

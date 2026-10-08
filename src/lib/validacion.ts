@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validarCuit } from './verificacion';
 
 // Mensajes en castellano, concretos, como manda el diseño.
 
@@ -31,6 +32,25 @@ export const esquemaRegistro = z.object({
   }),
   // Jugador (por defecto) o dueño de cancha para alquilar.
   tipoCuenta: z.enum(['JUGADOR', 'CANCHA']).default('JUGADOR'),
+  // Solo cuentas de cancha: la referencia pública y el CUIT/CUIL del titular.
+  complejoNombre: z.string().trim().max(80, 'El nombre es muy largo.').nullish(),
+  cuit: z.string().trim().max(15).nullish(),
+}).superRefine((datos, contexto) => {
+  if (datos.tipoCuenta !== 'CANCHA') return;
+  if (!datos.complejoNombre || datos.complejoNombre.length < 2) {
+    contexto.addIssue({
+      code: 'custom',
+      path: ['complejoNombre'],
+      message: 'Poné el nombre del complejo o la cancha.',
+    });
+  }
+  if (!datos.cuit || !validarCuit(datos.cuit)) {
+    contexto.addIssue({
+      code: 'custom',
+      path: ['cuit'],
+      message: 'Ese CUIT/CUIL no es válido. Revisá los 11 números.',
+    });
+  }
 });
 
 export const esquemaEntrar = z.object({
@@ -52,6 +72,8 @@ export const esquemaPartido = z.object({
     .max(120, 'El lugar es muy largo.'),
   direccion: z.string().trim().max(160).nullish(),
   lugarTelefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
+  // Cancha publicada elegida como sede (opcional): valida sus días disponibles.
+  canchaId: z.string().nullish(),
   // Invitados elegidos a mano (seguidores o buscados) al crear el partido.
   invitadoIds: z.array(z.string()).max(50, 'Hasta 50 invitados.').default([]),
   ciudad: z.string().trim().max(80).nullish(),
@@ -223,6 +245,12 @@ export const esquemaCancha = z.object({
     .array(z.string().regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Foto inválida.'))
     .max(5, 'Hasta 5 fotos.')
     .default([]),
+  // 0=domingo … 6=sábado. Al menos un día abierto.
+  diasDisponibles: z
+    .array(z.number().int().min(0).max(6))
+    .min(1, 'Marcá al menos un día disponible.')
+    .max(7)
+    .default([0, 1, 2, 3, 4, 5, 6]),
 });
 
 export const esquemaSuscripcionPush = z.object({

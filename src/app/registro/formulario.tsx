@@ -21,9 +21,20 @@ export function FormularioRegistro({
   const router = useRouter();
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [tipoCuenta, setTipoCuenta] = useState(puerta === 'cancha' ? 'CANCHA' : 'JUGADOR');
+  const [logo, setLogo] = useState<File | null>(null);
+  const [comprobante, setComprobante] = useState<File | null>(null);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+
+  /** Sube una imagen ya con sesión creada y devuelve el nombre de archivo. */
+  async function subirImagen(archivo: File) {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
+    const datos = await respuesta.json().catch(() => ({}));
+    return respuesta.ok ? (datos.nombre as string) : null;
+  }
 
   function alternarDeporte(id: string) {
     setElegidos((actuales) =>
@@ -59,6 +70,8 @@ export function FormularioRegistro({
         longitud: numero(form.get('longitud')),
         aceptaTerminos: form.get('aceptaTerminos') === 'on',
         tipoCuenta,
+        complejoNombre: form.get('complejoNombre') || null,
+        cuit: form.get('cuit') || null,
         web: form.get('web'),
       }),
     });
@@ -69,6 +82,21 @@ export function FormularioRegistro({
       if (datos.detalles) setErrores(datos.detalles);
       setEnviando(false);
       return;
+    }
+
+    // Dueño de cancha: con la sesión ya creada, suben el logo y el comprobante.
+    if (tipoCuenta === 'CANCHA' && (logo || comprobante)) {
+      const nombreLogo = logo ? await subirImagen(logo) : null;
+      const nombreComprobante = comprobante ? await subirImagen(comprobante) : null;
+      await fetch('/api/perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: form.get('nombre'),
+          ...(nombreLogo ? { avatar: nombreLogo } : {}),
+          ...(nombreComprobante ? { verificacionDoc: nombreComprobante } : {}),
+        }),
+      }).catch(() => {});
     }
 
     // Cada puerta lleva a su destino: armar el grupo, buscar juego o publicar la cancha.
@@ -114,18 +142,87 @@ export function FormularioRegistro({
         {tipoCuenta === 'CANCHA' ? (
           <p className="mt-1.5 text-xs text-tinta-3">
             Publicás tu cancha para que los equipos la encuentren y la alquilen. Requiere
-            suscripción, que se activa después de crear la cuenta.
+            suscripción y verificación de titularidad, que se completan después de crear la cuenta.
           </p>
         ) : null}
       </div>
 
+      {tipoCuenta === 'CANCHA' ? (
+        <>
+          <div>
+            <label className="rotulo-campo" htmlFor="complejoNombre">
+              Nombre del complejo o la cancha
+            </label>
+            <input
+              id="complejoNombre"
+              name="complejoNombre"
+              className="campo"
+              placeholder="Complejo El Potrero"
+              maxLength={80}
+              required
+            />
+            <p className="mt-1 text-xs text-tinta-3">La referencia que van a ver los jugadores.</p>
+            <ErrorDeCampo mensajes={errores.complejoNombre} />
+          </div>
+          <div>
+            <label className="rotulo-campo" htmlFor="logo">
+              Logo o foto del complejo · opcional
+            </label>
+            <input
+              id="logo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="campo"
+              onChange={(evento) => setLogo(evento.target.files?.[0] ?? null)}
+            />
+          </div>
+        </>
+      ) : null}
+
       <div>
         <label className="rotulo-campo" htmlFor="nombre">
-          Nombre y apellido
+          {tipoCuenta === 'CANCHA' ? 'Nombre y apellido del titular' : 'Nombre y apellido'}
         </label>
         <input id="nombre" name="nombre" className="campo" autoComplete="name" required />
         <ErrorDeCampo mensajes={errores.nombre} />
       </div>
+
+      {tipoCuenta === 'CANCHA' ? (
+        <>
+          <div>
+            <label className="rotulo-campo" htmlFor="cuit">
+              CUIT o CUIL del titular
+            </label>
+            <input
+              id="cuit"
+              name="cuit"
+              className="campo tabular"
+              placeholder="20-12345678-3"
+              inputMode="numeric"
+              maxLength={15}
+              required
+            />
+            <ErrorDeCampo mensajes={errores.cuit} />
+          </div>
+          <div>
+            <label className="rotulo-campo" htmlFor="comprobante">
+              Comprobante de titularidad · recomendado
+            </label>
+            <input
+              id="comprobante"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="campo"
+              onChange={(evento) => setComprobante(evento.target.files?.[0] ?? null)}
+            />
+            <p className="mt-1 text-xs text-tinta-3">
+              Foto de la constancia de AFIP/ARCA o de una factura de servicio del predio a nombre
+              del titular. Lo revisamos nosotros y tu cancha sale con el sello Verificada. También
+              podés subirlo después desde tu perfil.
+            </p>
+          </div>
+        </>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -169,8 +266,12 @@ export function FormularioRegistro({
         <ErrorDeCampo mensajes={errores.email} />
       </div>
 
-      <div style={tipoCuenta === 'CANCHA' ? { display: 'none' } : undefined}>
-        <span className="rotulo-campo">Tus deportes · hasta 5, el 1º es el principal</span>
+      <div>
+        <span className="rotulo-campo">
+          {tipoCuenta === 'CANCHA'
+            ? 'Qué canchas alquilás · los deportes de tu complejo'
+            : 'Tus deportes · hasta 5, el 1º es el principal'}
+        </span>
         <div className="mt-1 flex flex-wrap gap-2">
           {deportes.map((deporte) => {
             const activo = elegidos.includes(deporte.id);

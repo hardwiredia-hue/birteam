@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { erroresDeZod } from '@/lib/validacion';
+import { validarCuit, formatearCuit } from '@/lib/verificacion';
 
 const esquemaPerfil = z.object({
   nombre: z.string({ error: 'Contanos tu nombre.' }).trim().min(2, 'El nombre es muy corto.').max(60),
@@ -20,6 +21,14 @@ const esquemaPerfil = z.object({
   longitud: z.number().min(-180).max(180).nullish(),
   // Jugador o dueño de cancha; si no viene, no se toca.
   tipoCuenta: z.enum(['JUGADOR', 'CANCHA']).optional(),
+  // Datos de dueño de cancha; solo se tocan si vienen.
+  complejoNombre: z.string().trim().min(2).max(80).optional(),
+  cuit: z.string().trim().max(15).optional(),
+  // Comprobante de titularidad recién subido: manda la cuenta a revisión.
+  verificacionDoc: z
+    .string()
+    .regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Comprobante inválido.')
+    .optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -35,6 +44,13 @@ export async function PATCH(request: Request) {
     );
   }
   const d = datos.data;
+
+  if (d.cuit !== undefined && !validarCuit(d.cuit)) {
+    return NextResponse.json(
+      { error: 'Revisá los datos marcados.', detalles: { cuit: ['Ese CUIT/CUIL no es válido.'] } },
+      { status: 400 }
+    );
+  }
 
   await prisma.usuario.update({
     where: { id: usuario.id },
@@ -54,6 +70,14 @@ export async function PATCH(request: Request) {
         ? { latitud: d.latitud, longitud: d.longitud }
         : {}),
       ...(d.tipoCuenta ? { tipoCuenta: d.tipoCuenta } : {}),
+      ...(d.complejoNombre !== undefined ? { complejoNombre: d.complejoNombre } : {}),
+      ...(d.cuit !== undefined ? { cuit: formatearCuit(d.cuit) } : {}),
+      ...(d.verificacionDoc
+        ? {
+            verificacionDocUrl: `/api/archivos/${d.verificacionDoc}`,
+            verificacion: 'EN_REVISION',
+          }
+        : {}),
     },
   });
 

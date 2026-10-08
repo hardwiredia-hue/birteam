@@ -354,7 +354,7 @@ async function Canchas({
       dueno: { suscripcionHasta: { gt: new Date() } },
       ...(deporte ? { deporte: { slug: deporte } } : {}),
     },
-    include: { deporte: true },
+    include: { deporte: true, dueno: { select: { verificacion: true } } },
     orderBy: { creadoEn: 'desc' },
     take: 80,
   });
@@ -450,7 +450,12 @@ async function Canchas({
             ) : null}
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="t-rotulo text-verde-txt">{c.deporte.nombre}</span>
+                <span className="t-rotulo text-verde-txt">
+                  {c.deporte.nombre}
+                  {c.dueno.verificacion === 'VERIFICADA' ? (
+                    <span className="ml-1.5 text-naranja-txt">✓</span>
+                  ) : null}
+                </span>
                 {c.km != null ? (
                   <span className="t-rotulo tabular">a {formatearDistancia(c.km)}</span>
                 ) : null}

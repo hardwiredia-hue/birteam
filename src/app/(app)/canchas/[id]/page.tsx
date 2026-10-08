@@ -23,6 +23,8 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
           usuario: true,
           avatarUrl: true,
           suscripcionHasta: true,
+          verificacion: true,
+          complejoNombre: true,
         },
       },
     },
@@ -76,7 +78,12 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
       ) : null}
 
       <header>
-        <p className="t-rotulo text-verde-txt">{cancha.deporte.nombre} · Cancha</p>
+        <p className="t-rotulo text-verde-txt">
+          {cancha.deporte.nombre} · Cancha
+          {cancha.dueno.verificacion === 'VERIFICADA' ? (
+            <span className="ml-2 text-naranja-txt">✓ Verificada</span>
+          ) : null}
+        </p>
         <h1 className="t-display mt-1 text-[26px]">{cancha.nombre}</h1>
         <p className="mt-1 text-sm text-tinta-2">
           {cancha.direccion}
@@ -98,6 +105,8 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
+      <DiasDeLaCancha crudo={cancha.diasDisponibles} />
+
       {cancha.descripcion ? (
         <p className="text-sm leading-relaxed text-tinta-2">{cancha.descripcion}</p>
       ) : null}
@@ -105,8 +114,13 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
       <section className="tarjeta flex items-center gap-3 p-4">
         <Avatar nombre={cancha.dueno.nombre} avatarUrl={cancha.dueno.avatarUrl} tam={40} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{cancha.dueno.nombre}</p>
-          <p className="t-rotulo mt-0.5">Publica esta cancha</p>
+          <p className="truncate text-sm font-semibold">
+            {cancha.dueno.complejoNombre ?? cancha.dueno.nombre}
+          </p>
+          <p className="t-rotulo mt-0.5">
+            Publica esta cancha
+            {cancha.dueno.verificacion === 'VERIFICADA' ? ' · titularidad verificada' : ''}
+          </p>
         </div>
         {!esDueno ? (
           <Link href={`/mensajes/${cancha.dueno.usuario}`} className="btn btn-secundario btn-sm">
@@ -127,5 +141,26 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
         </Link>
       ) : null}
     </div>
+  );
+}
+
+const ROTULOS_DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+/** Días en que la cancha está disponible; si abre todos, no hace falta decir nada. */
+function DiasDeLaCancha({ crudo }: { crudo: string }) {
+  let dias: number[] = [];
+  try {
+    dias = JSON.parse(crudo);
+  } catch {
+    return null;
+  }
+  if (dias.length >= 7 || dias.length === 0) return null;
+  // De lunes a domingo, como se lee un calendario.
+  const orden = [1, 2, 3, 4, 5, 6, 0];
+  return (
+    <p className="text-sm text-tinta-2">
+      <span className="font-semibold text-tinta">Días disponibles:</span>{' '}
+      {orden.filter((dia) => dias.includes(dia)).map((dia) => ROTULOS_DIAS[dia]).join(' · ')}
+    </p>
   );
 }

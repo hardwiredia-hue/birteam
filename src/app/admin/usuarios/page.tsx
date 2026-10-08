@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
 import { adminActual } from '@/lib/admin';
-import { BotonRol, BotonSuscripcion } from './acciones';
+import { BotonRol, BotonSuscripcion, BotonVerificacion } from './acciones';
 
 export const metadata = { title: 'Usuarios' };
 export const dynamic = 'force-dynamic';
@@ -38,6 +38,10 @@ export default async function Usuarios({
       rol: true,
       tipoCuenta: true,
       suscripcionHasta: true,
+      complejoNombre: true,
+      cuit: true,
+      verificacion: true,
+      verificacionDocUrl: true,
       creadoEn: true,
     },
   });
@@ -95,12 +99,50 @@ export default async function Usuarios({
                   timeZone: 'America/Argentina/Buenos_Aires',
                 })}
               </p>
+              {usuario.tipoCuenta === 'CANCHA' ? (
+                <p className="truncate text-xs text-tinta-3">
+                  {usuario.complejoNombre ?? 'Sin nombre de complejo'}
+                  {usuario.cuit ? ` · CUIT ${usuario.cuit}` : ' · sin CUIT'}
+                  {' · '}
+                  <span
+                    style={{
+                      color:
+                        usuario.verificacion === 'VERIFICADA'
+                          ? 'var(--verde-txt)'
+                          : usuario.verificacion === 'EN_REVISION'
+                            ? 'var(--naranja-txt)'
+                            : usuario.verificacion === 'RECHAZADA'
+                              ? 'var(--rojo)'
+                              : undefined,
+                    }}
+                  >
+                    {usuario.verificacion === 'EN_REVISION'
+                      ? 'en revisión'
+                      : usuario.verificacion.toLowerCase()}
+                  </span>
+                  {usuario.verificacionDocUrl ? (
+                    <>
+                      {' · '}
+                      <a
+                        href={usuario.verificacionDocUrl}
+                        target="_blank"
+                        className="font-semibold text-azul-txt"
+                      >
+                        ver comprobante
+                      </a>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
             </div>
             {usuario.tipoCuenta === 'CANCHA' ? (
-              <BotonSuscripcion
-                usuarioId={usuario.id}
-                activa={Boolean(usuario.suscripcionHasta && usuario.suscripcionHasta > ahora)}
-              />
+              <div className="flex flex-col items-end gap-1.5">
+                <BotonSuscripcion
+                  usuarioId={usuario.id}
+                  activa={Boolean(usuario.suscripcionHasta && usuario.suscripcionHasta > ahora)}
+                />
+                <BotonVerificacion usuarioId={usuario.id} estado={usuario.verificacion} />
+              </div>
             ) : null}
             {usuario.id !== admin.id ? (
               <BotonRol usuarioId={usuario.id} esAdmin={usuario.rol === 'ADMIN'} />

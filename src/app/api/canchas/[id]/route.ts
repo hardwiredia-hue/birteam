@@ -55,6 +55,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       precioPorHora: d.precioPorHora ?? null,
       telefono: d.telefono ?? null,
       fotos: JSON.stringify(fotos),
+      diasDisponibles: JSON.stringify([...new Set(d.diasDisponibles)].sort()),
       activa: d.activa,
     },
   });

@@ -22,8 +22,19 @@ function claveDeFecha(fecha: Date) {
   ).padStart(2, '0')}`;
 }
 
-/** Almanaque para elegir el día: cualquier fecha futura, los pasados bloqueados. */
-function Almanaque({ valor, alElegir }: { valor: string | null; alElegir: (valor: string) => void }) {
+/**
+ * Almanaque para elegir el día: cualquier fecha futura, los pasados bloqueados.
+ * Con `diasPermitidos` (la gestión de la cancha), los demás días quedan apagados.
+ */
+function Almanaque({
+  valor,
+  alElegir,
+  diasPermitidos = null,
+}: {
+  valor: string | null;
+  alElegir: (valor: string) => void;
+  diasPermitidos?: number[] | null;
+}) {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const [vista, setVista] = useState(() => new Date(hoy.getFullYear(), hoy.getMonth(), 1));
@@ -79,7 +90,8 @@ function Almanaque({ valor, alElegir }: { valor: string | null; alElegir: (valor
         {Array.from({ length: diasEnMes }, (_, indice) => {
           const fecha = new Date(vista.getFullYear(), vista.getMonth(), indice + 1);
           const clave = claveDeFecha(fecha);
-          const pasado = fecha < hoy;
+          const cerrado = diasPermitidos !== null && !diasPermitidos.includes(fecha.getDay());
+          const pasado = fecha < hoy || cerrado;
           const elegido = valor === clave;
           const esHoy = clave === hoyClave;
           return (
@@ -108,14 +120,25 @@ function Almanaque({ valor, alElegir }: { valor: string | null; alElegir: (valor
   );
 }
 
+interface CanchaElegible {
+  id: string;
+  nombre: string;
+  direccion: string | null;
+  telefono: string | null;
+  ciudad: string | null;
+  deporte: string;
+  diasDisponibles: number[];
+}
+
 /**
  * Asistente de creación en 6 pasos, un paso por pantalla (ESQUEMA.md §3.5):
- * deporte → cuándo → dónde → cupo → costo → visibilidad.
+ * deporte → dónde → cuándo (respeta los días de la cancha) → cupo → costo → visibilidad.
  */
 export function Asistente({
   deportes,
   grupos,
   lugares,
+  canchas,
   seguidores,
   grupoInicial,
   deporteInicial,
@@ -123,6 +146,7 @@ export function Asistente({
   deportes: Deporte[];
   grupos: { id: string; nombre: string; deporteId: string }[];
   lugares: { id: string; nombre: string; direccion: string | null; telefono: string | null }[];
+  canchas: CanchaElegible[];
   seguidores: { id: string; nombre: string; usuario: string }[];
   grupoInicial: string | null;
   deporteInicial?: string | null;
@@ -141,6 +165,8 @@ export function Asistente({
   const [lugarNombre, setLugarNombre] = useState('');
   const [direccion, setDireccion] = useState('');
   const [lugarTelefono, setLugarTelefono] = useState('');
+  // Cancha publicada elegida como sede: su gestión define qué días se puede jugar.
+  const [canchaElegida, setCanchaElegida] = useState<CanchaElegible | null>(null);
   const [invitados, setInvitados] = useState<{ id: string; nombre: string }[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [resultados, setResultados] = useState<{ id: string; nombre: string; usuario: string }[]>([]);
@@ -156,10 +182,22 @@ export function Asistente({
 
   const puedeSeguir =
     paso === 1 ? deporteId !== null
-    : paso === 2 ? dia !== null && /^\d{2}:\d{2}$/.test(hora)
-    : paso === 3 ? lugarNombre.trim().length >= 2
+    : paso === 2 ? lugarNombre.trim().length >= 2
+    : paso === 3 ? dia !== null && /^\d{2}:\d{2}$/.test(hora)
     : paso === 4 ? cupo >= 2 && minimo >= 2 && minimo <= cupo
     : true;
+
+  function elegirCancha(cancha: CanchaElegible) {
+    setCanchaElegida(cancha);
+    setLugarNombre(cancha.nombre);
+    setDireccion(cancha.direccion ?? '');
+    setLugarTelefono(cancha.telefono ?? '');
+    // Si ya había un día elegido que la cancha no abre, se vuelve a elegir.
+    if (dia) {
+      const fecha = new Date(`${dia}T00:00:00`);
+      if (!cancha.diasDisponibles.includes(fecha.getDay())) setDia(null);
+    }
+  }
 
   async function crear() {
     setEnviando(true);
@@ -180,6 +218,7 @@ export function Asistente({
         lugarNombre: lugarNombre.trim(),
         direccion: direccion.trim() || null,
         lugarTelefono: lugarTelefono.trim() || null,
+        canchaId: canchaElegida?.id ?? null,
         invitadoIds: invitados.map((i) => i.id),
         cupo,
         minimo,
@@ -277,12 +316,26 @@ export function Asistente({
             ))}
           </div>
         </section>
-      ) : paso === 2 ? (
+      ) : paso === 3 ? (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Cuándo<br />juegan?</h1>
+          {canchaElegida && canchaElegida.diasDisponibles.length < 7 ? (
+            <p className="text-xs text-naranja-txt">
+              {canchaElegida.nombre} abre:{' '}
+              {[1, 2, 3, 4, 5, 6, 0]
+                .filter((d) => canchaElegida.diasDisponibles.includes(d))
+                .map((d) => DIAS_LARGOS[d])
+                .join(', ')}
+              . El almanaque solo deja elegir esos días.
+            </p>
+          ) : null}
           <div>
             <span className="rotulo-campo">Día</span>
-            <Almanaque valor={dia} alElegir={setDia} />
+            <Almanaque
+              valor={dia}
+              alElegir={setDia}
+              diasPermitidos={canchaElegida?.diasDisponibles ?? null}
+            />
             {dia ? (
               <p className="mt-2 text-sm font-semibold text-verde-txt">
                 {(() => {
@@ -337,9 +390,36 @@ export function Asistente({
             </button>
           </div>
         </section>
-      ) : paso === 3 ? (
+      ) : paso === 2 ? (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Dónde<br />juegan?</h1>
+          {canchas.length > 0 ? (
+            <div>
+              <span className="rotulo-campo">Canchas publicadas en birteam</span>
+              <div className="flex flex-col gap-2">
+                {canchas.map((cancha) => {
+                  const elegida = canchaElegida?.id === cancha.id;
+                  return (
+                    <button
+                      key={cancha.id}
+                      type="button"
+                      onClick={() => elegirCancha(cancha)}
+                      className="tarjeta p-3.5 text-left"
+                      style={elegida ? { borderColor: 'var(--naranja-txt)' } : undefined}
+                    >
+                      <span className="t-rotulo text-naranja-txt">{cancha.deporte}</span>
+                      <span className="mt-0.5 block text-sm font-semibold">{cancha.nombre}</span>
+                      <span className="mt-0.5 block text-xs text-tinta-3">
+                        {cancha.direccion ?? ''}
+                        {cancha.direccion && cancha.ciudad ? ' · ' : ''}
+                        {cancha.ciudad ?? ''}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
           {lugares.length > 0 ? (
             <div>
               <span className="rotulo-campo">Tus lugares · un toque y listo</span>
@@ -351,6 +431,7 @@ export function Asistente({
                       key={lugar.id}
                       type="button"
                       onClick={() => {
+                        setCanchaElegida(null);
                         setLugarNombre(lugar.nombre);
                         setDireccion(lugar.direccion ?? '');
                         setLugarTelefono(lugar.telefono ?? '');
@@ -380,7 +461,10 @@ export function Asistente({
               className="campo"
               placeholder="Cancha El Potrero, Palermo"
               value={lugarNombre}
-              onChange={(evento) => setLugarNombre(evento.target.value)}
+              onChange={(evento) => {
+                setCanchaElegida(null);
+                setLugarNombre(evento.target.value);
+              }}
             />
           </div>
           <div>

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
-import { AccionesPerfil } from './acciones';
+import { AccionesPerfil, SubirComprobante } from './acciones';
+import { ESTADOS_VERIFICACION } from '@/lib/verificacion';
 import { ListaBloqueados } from './bloqueados';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
@@ -207,7 +208,13 @@ export default async function Perfil() {
 async function SeccionCanchas({
   usuario,
 }: {
-  usuario: { id: string; suscripcionHasta: Date | null };
+  usuario: {
+    id: string;
+    nombre: string;
+    suscripcionHasta: Date | null;
+    complejoNombre: string | null;
+    verificacion: string;
+  };
 }) {
   const activa = suscripcionActiva(usuario);
   const canchas = await prisma.cancha.findMany({
@@ -218,7 +225,32 @@ async function SeccionCanchas({
 
   return (
     <section className="flex flex-col gap-3">
-      <p className="t-rotulo">Tus canchas</p>
+      <p className="t-rotulo">{usuario.complejoNombre ?? 'Tus canchas'}</p>
+
+      <div className="tarjeta flex flex-col gap-2 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">Verificación de titularidad</p>
+            <p className="text-xs text-tinta-3">{ESTADOS_VERIFICACION[usuario.verificacion] ?? usuario.verificacion}</p>
+          </div>
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{
+              background:
+                usuario.verificacion === 'VERIFICADA'
+                  ? 'var(--verde-txt)'
+                  : usuario.verificacion === 'EN_REVISION'
+                    ? 'var(--naranja-txt)'
+                    : usuario.verificacion === 'RECHAZADA'
+                      ? 'var(--rojo)'
+                      : 'var(--borde-2)',
+            }}
+          />
+        </div>
+        {usuario.verificacion !== 'VERIFICADA' && usuario.verificacion !== 'EN_REVISION' ? (
+          <SubirComprobante nombreUsuario={usuario.nombre} />
+        ) : null}
+      </div>
 
       <div className="tarjeta flex items-center justify-between p-4">
         <div>

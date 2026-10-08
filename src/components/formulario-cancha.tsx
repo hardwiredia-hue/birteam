@@ -20,8 +20,20 @@ interface CanchaExistente {
   telefono: string | null;
   precioPorHora: number | null;
   fotos: string[];
+  diasDisponibles: number[];
   activa: boolean;
 }
+
+// Semana de lunes a domingo, con el índice que usa Date.getDay().
+const DIAS_SEMANA = [
+  { dia: 1, rotulo: 'Lun' },
+  { dia: 2, rotulo: 'Mar' },
+  { dia: 3, rotulo: 'Mié' },
+  { dia: 4, rotulo: 'Jue' },
+  { dia: 5, rotulo: 'Vie' },
+  { dia: 6, rotulo: 'Sáb' },
+  { dia: 0, rotulo: 'Dom' },
+];
 
 /** Alta y edición de una cancha. Con `cancha` edita; sin ella, publica. */
 export function FormularioCancha({
@@ -37,6 +49,7 @@ export function FormularioCancha({
     (cancha?.fotos ?? []).map((url) => ({ valor: url, url }))
   );
   const [activa, setActiva] = useState(cancha?.activa ?? true);
+  const [dias, setDias] = useState<number[]>(cancha?.diasDisponibles ?? [0, 1, 2, 3, 4, 5, 6]);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -88,6 +101,7 @@ export function FormularioCancha({
       precioPorHora: numero(form.get('precioPorHora')),
       telefono: String(form.get('telefono') ?? '').trim() || null,
       fotos: fotos.map((foto) => foto.valor),
+      diasDisponibles: dias,
       ...(cancha ? { activa } : {}),
     };
 
@@ -198,6 +212,35 @@ export function FormularioCancha({
           />
           <ErrorDeCampo mensajes={errores.telefono} />
         </div>
+      </div>
+
+      <div>
+        <span className="rotulo-campo">Días disponibles · el almanaque de los partidos los respeta</span>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {DIAS_SEMANA.map(({ dia, rotulo }) => {
+            const activo = dias.includes(dia);
+            return (
+              <button
+                key={dia}
+                type="button"
+                onClick={() =>
+                  setDias((actuales) =>
+                    actuales.includes(dia)
+                      ? actuales.filter((otro) => otro !== dia)
+                      : [...actuales, dia]
+                  )
+                }
+                className={activo ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {rotulo}
+              </button>
+            );
+          })}
+        </div>
+        {dias.length === 0 ? (
+          <p className="mt-1 text-xs text-rojo">Marcá al menos un día.</p>
+        ) : null}
+        <ErrorDeCampo mensajes={errores.diasDisponibles} />
       </div>
 
       <div>

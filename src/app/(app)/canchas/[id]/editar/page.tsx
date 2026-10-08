@@ -25,6 +25,12 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
   } catch {
     fotos = [];
   }
+  let diasDisponibles: number[] = [0, 1, 2, 3, 4, 5, 6];
+  try {
+    diasDisponibles = JSON.parse(cancha.diasDisponibles);
+  } catch {
+    diasDisponibles = [0, 1, 2, 3, 4, 5, 6];
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,6 +48,7 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
           telefono: cancha.telefono,
           precioPorHora: cancha.precioPorHora,
           fotos,
+          diasDisponibles,
           activa: cancha.activa,
         }}
       />

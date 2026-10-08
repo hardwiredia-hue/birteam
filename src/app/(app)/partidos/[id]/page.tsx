@@ -73,7 +73,13 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           <p className="t-display text-[20px] tabular text-verde-txt">{partido.resultado}</p>
         ) : null}
         <p className="text-sm text-tinta-2">
-          {partido.lugarNombre}
+          {partido.canchaId ? (
+            <Link href={`/canchas/${partido.canchaId}`} className="font-semibold text-naranja-txt">
+              {partido.lugarNombre}
+            </Link>
+          ) : (
+            partido.lugarNombre
+          )}
           {partido.direccion ? ` · ${partido.direccion}` : ''}
         </p>
         {partido.lugarTelefono ? (

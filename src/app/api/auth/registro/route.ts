@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { crearSesion, hashearClave } from '@/lib/auth';
 import { esquemaRegistro, erroresDeZod } from '@/lib/validacion';
 import { permitir, ipDelPedido } from '@/lib/limite';
+import { formatearCuit } from '@/lib/verificacion';
 
 export async function POST(request: Request) {
   const cuerpo = await request.json().catch(() => null);
@@ -57,6 +58,12 @@ export async function POST(request: Request) {
       latitud: d.latitud ?? null,
       longitud: d.longitud ?? null,
       tipoCuenta: d.tipoCuenta,
+      ...(d.tipoCuenta === 'CANCHA'
+        ? {
+            complejoNombre: d.complejoNombre ?? null,
+            cuit: d.cuit ? formatearCuit(d.cuit) : null,
+          }
+        : {}),
       deportes: {
         create: deportes.map((deporte, indice) => ({
           deporteId: deporte.id,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { adminActual } from '@/lib/admin';
+import { enviarPush } from '@/lib/push';
 
 export async function PATCH(request: Request) {
   const admin = await adminActual();
@@ -10,7 +11,8 @@ export async function PATCH(request: Request) {
   const usuarioId = String(cuerpo.usuarioId ?? '');
   const rol = cuerpo.rol != null ? String(cuerpo.rol) : null;
   const suscripcion = cuerpo.suscripcion != null ? String(cuerpo.suscripcion) : null;
-  if (!usuarioId || (!rol && !suscripcion)) {
+  const verificacion = cuerpo.verificacion != null ? String(cuerpo.verificacion) : null;
+  if (!usuarioId || (!rol && !suscripcion && !verificacion)) {
     return NextResponse.json({ error: 'Datos incompletos.' }, { status: 400 });
   }
 
@@ -54,6 +56,37 @@ export async function PATCH(request: Request) {
         data: { suscripcionHasta: null },
       });
     }
+  }
+
+  // Verificación de titularidad: la decide administración mirando el comprobante.
+  if (verificacion) {
+    if (!['VERIFICADA', 'RECHAZADA'].includes(verificacion)) {
+      return NextResponse.json({ error: 'Estado de verificación desconocido.' }, { status: 400 });
+    }
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { id: true, complejoNombre: true },
+    });
+    if (!usuario) return NextResponse.json({ error: 'Ese usuario no existe.' }, { status: 404 });
+
+    await prisma.usuario.update({ where: { id: usuarioId }, data: { verificacion } });
+
+    const aviso =
+      verificacion === 'VERIFICADA'
+        ? {
+            titulo: 'Tu cuenta de dueño de cancha quedó verificada',
+            cuerpo: `${usuario.complejoNombre ?? 'Tu complejo'} ya sale con el sello Verificada. Gracias por los papeles.`,
+            url: '/perfil',
+          }
+        : {
+            titulo: 'No pudimos verificar tu titularidad',
+            cuerpo: 'El comprobante no alcanzó. Subí otro desde tu perfil (constancia de AFIP o factura de servicio del predio).',
+            url: '/perfil',
+          };
+    await prisma.notificacion.create({
+      data: { usuarioId, tipo: 'VERIFICACION', ...aviso },
+    });
+    await enviarPush(usuarioId, aviso);
   }
 
   return NextResponse.json({ listo: true });

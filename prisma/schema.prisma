@@ -37,6 +37,13 @@ model Usuario {
   tipoCuenta    String   @default("JUGADOR")
   // Suscripción de dueño de cancha: activa mientras esta fecha esté en el futuro.
   suscripcionHasta DateTime?
+  // Datos del dueño de cancha: referencia pública y titular real.
+  complejoNombre String?
+  cuit           String?
+  // 'PENDIENTE' (sin comprobante) | 'EN_REVISION' | 'VERIFICADA' | 'RECHAZADA'
+  verificacion   String   @default("PENDIENTE")
+  // Comprobante de titularidad (constancia de AFIP o factura de servicio).
+  verificacionDocUrl String?
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
 
@@ -107,10 +114,14 @@ model Cancha {
   telefono      String?
   // Fotos: JSON con nombres de archivo subidos (igual que Jugada).
   fotos         String   @default("[]")
+  // Días de la semana en que la cancha está disponible (JSON, 0=domingo … 6=sábado).
+  diasDisponibles String @default("[0,1,2,3,4,5,6]")
   // El dueño la puede pausar sin borrarla.
   activa        Boolean  @default(true)
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
+
+  partidos Partido[]
 
   @@index([deporteId, activa])
 }
@@ -230,6 +241,9 @@ model Partido {
   direccion         String?
   // Teléfono o contacto de la cancha, para reservas y consultas.
   lugarTelefono     String?
+  // Cancha publicada elegida como sede (si la hay).
+  canchaId          String?
+  cancha            Cancha?   @relation(fields: [canchaId], references: [id], onDelete: SetNull)
   ciudad            String?
   provincia         String?
   pais              String    @default("AR")

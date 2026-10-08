@@ -64,3 +64,54 @@ export function AccionesPerfil({ temaActual }: { temaActual: string }) {
     </section>
   );
 }
+
+/** Subir (o volver a subir) el comprobante de titularidad del dueño de cancha. */
+export function SubirComprobante({ nombreUsuario }: { nombreUsuario: string }) {
+  const router = useRouter();
+  const [ocupado, setOcupado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function elegir(evento: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    setOcupado(true);
+    setError(null);
+    const form = new FormData();
+    form.append('archivo', archivo);
+    const subida = await fetch('/api/archivos', { method: 'POST', body: form });
+    const datos = await subida.json().catch(() => ({}));
+    if (!subida.ok) {
+      setError(datos.error ?? 'No pudimos subir el comprobante.');
+      setOcupado(false);
+      return;
+    }
+    const respuesta = await fetch('/api/perfil', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: nombreUsuario, verificacionDoc: datos.nombre }),
+    });
+    setOcupado(false);
+    if (!respuesta.ok) {
+      setError('No pudimos guardar el comprobante. Probá de nuevo.');
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <div>
+      <label className="btn btn-secundario btn-sm cursor-pointer">
+        {ocupado ? 'Subiendo…' : 'Subir comprobante'}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          hidden
+          onChange={elegir}
+          disabled={ocupado}
+        />
+      </label>
+      {error ? <p className="aviso-error mt-2">{error}</p> : null}
+    </div>
+  );
+}
