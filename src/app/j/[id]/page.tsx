@@ -116,7 +116,7 @@ export default async function JugadaPublica({ params }: { params: Promise<{ id: 
             birteam es donde se organiza el juego: partidos, torneos, canchas y tu gente.
           </p>
           {usuarioDeGuardia ? (
-            <Link href="/jugadas" className="btn btn-primario">Ver más jugadas</Link>
+            <Link href="/birtsocial" className="btn btn-primario">Ver BirtSocial</Link>
           ) : (
             <>
               <Link href="/registro" className="btn btn-primario">Sumate a birteam</Link>

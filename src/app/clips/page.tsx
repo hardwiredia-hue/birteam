@@ -23,8 +23,8 @@ export default async function Clips() {
   return (
     <div className="relative bg-black">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-5">
-        <Link href="/jugadas" className="pointer-events-auto rounded-[6px] border border-white/25 bg-black/45 px-3 py-1.5 text-xs font-bold text-white">
-          ← Jugadas
+        <Link href="/birtsocial" className="pointer-events-auto rounded-[6px] border border-white/25 bg-black/45 px-3 py-1.5 text-xs font-bold text-white">
+          ← BirtSocial
         </Link>
         <p className="t-rotulo mr-24 text-white/80">Clips</p>
       </div>
@@ -34,10 +34,10 @@ export default async function Clips() {
           <div className="tarjeta max-w-sm p-5 text-center">
             <p className="t-display text-[20px]">Todavía no hay clips</p>
             <p className="mt-2 text-sm text-tinta-2">
-              Subí el primero: en Jugadas, publicá con un video (el gol, la atajada, el punto del
+              Subí el primero: en BirtSocial, publicá con un video (el gol, la atajada, el punto del
               partido) y aparece acá para toda la comunidad.
             </p>
-            <Link href="/jugadas" className="btn btn-primario mt-4">
+            <Link href="/birtsocial" className="btn btn-primario mt-4">
               Subir mi clip
             </Link>
           </div>

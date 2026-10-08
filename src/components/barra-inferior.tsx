@@ -51,7 +51,7 @@ const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
   { href: '/crear', rotulo: 'Crear', Icono: IconoMas, central: true },
-  { href: '/jugadas', rotulo: 'Jugadas', Icono: IconoJugadas },
+  { href: '/birtsocial', rotulo: 'BirtSocial', Icono: IconoJugadas },
   { href: '/perfil', rotulo: 'Perfil', Icono: IconoPerfil },
 ] as const;
 

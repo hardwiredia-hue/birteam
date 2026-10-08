@@ -101,9 +101,6 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
           {torneo.tokenPublico ? (
             <CompartirTorneo rutaPublica={`/t/${torneo.tokenPublico}`} />
           ) : null}
-          <Link href={`/jugadas?compartir=torneo:${torneo.id}`} className="btn btn-fantasma">
-            Compartir en Jugadas
-          </Link>
           {organizo ? (
             <ArrancarTorneo torneoId={torneo.id} equipos={torneo.equipos.length} />
           ) : null}
@@ -195,6 +192,10 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
           ) : null}
         </>
       )}
+
+      <Link href={`/birtsocial?compartir=torneo:${torneo.id}`} className="btn btn-fantasma">
+        Compartir en BirtSocial
+      </Link>
     </div>
   );
 }

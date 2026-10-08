@@ -128,7 +128,9 @@ cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfi
 - Ajustes: editar perfil, tema claro/oscuro, notificaciones, privacidad,
   usuarios bloqueados, cerrar sesión.
 
-### 3.8 Jugadas — la parte social (fase 2)
+### 3.8 BirtSocial — la red social (fase 2)
+- Sección propia (/birtsocial, pestaña en la barra): el feed de jugadas, Clips
+  y el compartir viven ahí. /jugadas redirige.
 - Se comparte todo el sitio: una jugada puede llevar adjunto un torneo, una
   cancha o un partido como tarjeta enlazada ("Compartir en Jugadas" en cada
   pantalla). Clips es el feed vertical estilo TikTok de todo lo que tiene

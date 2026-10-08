@@ -135,8 +135,8 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
         </a>
       ) : null}
 
-      <Link href={`/jugadas?compartir=cancha:${cancha.id}`} className="btn btn-fantasma">
-        Compartir en Jugadas
+      <Link href={`/birtsocial?compartir=cancha:${cancha.id}`} className="btn btn-fantasma">
+        Compartir en BirtSocial
       </Link>
 
       {esDueno ? (
