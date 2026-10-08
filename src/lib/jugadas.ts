@@ -13,6 +13,8 @@ export interface JugadaParaMostrar {
   totalMeGusta: number;
   meGusta: boolean;
   totalComentarios: number;
+  /** Los últimos comentarios, a la vista como en cualquier red. */
+  ultimosComentarios: { id: string; texto: string; autor: { nombre: string; usuario: string } }[];
   /** Sin grupo: se puede compartir con link público. */
   publica: boolean;
   partido: { id: string; deporte: string; lugar: string } | null;
@@ -91,6 +93,11 @@ async function armarJugadas(
     include: {
       autor: { select: { nombre: true, usuario: true, avatarUrl: true } },
       meGusta: { select: { usuarioId: true } },
+      comentarios: {
+        include: { autor: { select: { nombre: true, usuario: true } } },
+        orderBy: { creadoEn: 'desc' },
+        take: 2,
+      },
       _count: { select: { comentarios: true } },
     },
     orderBy: { creadoEn: 'desc' },
@@ -131,6 +138,13 @@ async function armarJugadas(
       totalMeGusta: jugada.meGusta.length,
       meGusta: jugada.meGusta.some((m) => m.usuarioId === usuarioId),
       totalComentarios: jugada._count.comentarios,
+      ultimosComentarios: [...jugada.comentarios]
+        .reverse()
+        .map((comentario) => ({
+          id: comentario.id,
+          texto: comentario.texto,
+          autor: comentario.autor,
+        })),
       publica: jugada.grupoId === null,
       partido: partido
         ? { id: partido.id, deporte: partido.deporte.nombre, lugar: partido.lugarNombre }

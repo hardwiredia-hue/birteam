@@ -53,6 +53,7 @@ export default async function BirtSocial({
       </div>
 
       <PublicarJugada
+        caja
         invitacion="Subí una jugada"
         torneoId={torneoId}
         canchaId={canchaId}

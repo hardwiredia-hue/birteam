@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { esquemaComentario, erroresDeZod } from '@/lib/validacion';
+import { enviarPush } from '@/lib/push';
 
 export async function GET(_request: Request, contexto: { params: Promise<{ id: string }> }) {
   const usuario = await usuarioActual();
@@ -41,11 +42,30 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
     );
   }
 
-  const jugada = await prisma.jugada.findUnique({ where: { id }, select: { id: true } });
+  const jugada = await prisma.jugada.findUnique({
+    where: { id },
+    select: { id: true, autorId: true },
+  });
   if (!jugada) return NextResponse.json({ error: 'Esa jugada no existe.' }, { status: 404 });
 
   const comentario = await prisma.comentarioJugada.create({
     data: { jugadaId: id, autorId: usuario.id, texto: datos.data.texto },
   });
+
+  // Red social de verdad: al autor le llega que le comentaron.
+  if (jugada.autorId !== usuario.id) {
+    const recorte =
+      datos.data.texto.length > 80 ? `${datos.data.texto.slice(0, 80)}…` : datos.data.texto;
+    const aviso = {
+      titulo: `${usuario.nombre} comentó tu jugada`,
+      cuerpo: `"${recorte}"`,
+      url: `/birtsocial`,
+    };
+    await prisma.notificacion.create({
+      data: { usuarioId: jugada.autorId, tipo: 'COMENTARIO', ...aviso },
+    });
+    await enviarPush(jugada.autorId, aviso);
+  }
+
   return NextResponse.json({ id: comentario.id }, { status: 201 });
 }

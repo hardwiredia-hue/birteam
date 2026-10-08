@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { JugadaParaMostrar } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
 
@@ -13,6 +13,7 @@ export function PublicarJugada({
   torneoId,
   canchaId,
   adjunto,
+  caja = false,
   invitacion = '¿Cómo salió? Subí la jugada.',
 }: {
   partidoId?: string;
@@ -21,11 +22,22 @@ export function PublicarJugada({
   canchaId?: string;
   /** Rótulo de lo que se comparte (p. ej. "Torneo · Copa de los Lunes"). */
   adjunto?: string;
+  /** Caja de red social ("¿Qué pasó en la cancha?" + atajos Foto/Video). */
+  caja?: boolean;
   invitacion?: string;
 }) {
   const router = useRouter();
   // Si viene con algo para compartir, el editor ya arranca abierto.
   const [abierto, setAbierto] = useState(Boolean(adjunto));
+  // Atajo Foto/Video de la caja: abre el editor y dispara el selector.
+  const [autoAbrir, setAutoAbrir] = useState<'foto' | 'video' | null>(null);
+
+  useEffect(() => {
+    if (!abierto || !autoAbrir) return;
+    const id = autoAbrir === 'foto' ? 'fotos-jugada' : 'video-jugada';
+    (document.getElementById(id) as HTMLInputElement | null)?.click();
+    setAutoAbrir(null);
+  }, [abierto, autoAbrir]);
   const [texto, setTexto] = useState('');
   const [fotos, setFotos] = useState<{ nombre: string; url: string }[]>([]);
   const [video, setVideo] = useState<{ nombre: string; url: string } | null>(null);
@@ -101,6 +113,42 @@ export function PublicarJugada({
   }
 
   if (!abierto) {
+    if (caja) {
+      return (
+        <div className="tarjeta flex flex-col gap-3 p-4">
+          <button
+            type="button"
+            onClick={() => setAbierto(true)}
+            className="campo text-left"
+            style={{ color: 'var(--tinta-3)' }}
+          >
+            ¿Qué pasó en la cancha?
+          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="btn btn-fantasma btn-sm flex-1"
+              onClick={() => {
+                setAutoAbrir('foto');
+                setAbierto(true);
+              }}
+            >
+              Subir foto
+            </button>
+            <button
+              type="button"
+              className="btn btn-fantasma btn-sm flex-1"
+              onClick={() => {
+                setAutoAbrir('video');
+                setAbierto(true);
+              }}
+            >
+              Subir video
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <button type="button" className="btn btn-secundario" onClick={() => setAbierto(true)}>
         {invitacion}
@@ -206,11 +254,11 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
   const router = useRouter();
   const [meGusta, setMeGusta] = useState(jugada.meGusta);
   const [total, setTotal] = useState(jugada.totalMeGusta);
-  const [comentariosAbiertos, setComentariosAbiertos] = useState(false);
+  // null = se muestran los últimos que vinieron con el feed; lista = todos.
   const [comentarios, setComentarios] = useState<
     { id: string; texto: string; autor: { nombre: string; usuario: string } }[] | null
   >(null);
-  const [nuevoComentario, setNuevoComentario] = useState(false);
+  const [totalComentarios, setTotalComentarios] = useState(jugada.totalComentarios);
   const [textoComentario, setTextoComentario] = useState('');
   const [enviando, setEnviando] = useState(false);
 
@@ -226,13 +274,10 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
     }
   }
 
-  async function cargarComentarios() {
-    setComentariosAbiertos(!comentariosAbiertos);
-    if (comentarios === null) {
-      const respuesta = await fetch(`/api/jugadas/${jugada.id}/comentarios`);
-      const datos = await respuesta.json().catch(() => ({}));
-      setComentarios(datos.comentarios ?? []);
-    }
+  async function verTodosLosComentarios() {
+    const respuesta = await fetch(`/api/jugadas/${jugada.id}/comentarios`);
+    const datos = await respuesta.json().catch(() => ({}));
+    setComentarios(datos.comentarios ?? []);
   }
 
   async function comentar(evento: React.FormEvent<HTMLFormElement>) {
@@ -250,7 +295,7 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
       setTextoComentario('');
       const datos = await fetch(`/api/jugadas/${jugada.id}/comentarios`).then((r) => r.json());
       setComentarios(datos.comentarios ?? []);
-      setNuevoComentario(false);
+      setTotalComentarios((datos.comentarios ?? []).length);
       router.refresh();
     }
   }
@@ -335,52 +380,50 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
         >
           ▲ {total > 0 ? total : 'Me gusta'}
         </button>
-        <button type="button" onClick={cargarComentarios} className="text-xs font-semibold text-tinta-3">
-          {jugada.totalComentarios > 0 ? `${jugada.totalComentarios} comentarios` : 'Comentar'}
-        </button>
+        <span className="text-xs font-semibold text-tinta-3 tabular">
+          {totalComentarios > 0
+            ? `${totalComentarios} ${totalComentarios === 1 ? 'comentario' : 'comentarios'}`
+            : ''}
+        </span>
         <div className="flex-1" />
         {jugada.publica ? <CompartirJugada jugadaId={jugada.id} /> : null}
       </footer>
 
-      {comentariosAbiertos ? (
-        <div className="flex flex-col gap-2 border-t border-borde pt-3">
-          {comentarios === null ? (
-            <p className="text-xs text-tinta-3">Cargando…</p>
-          ) : (
-            comentarios.map((comentario) => (
-              <p key={comentario.id} className="text-sm">
-                <Link href={`/jugadores/${comentario.autor.usuario}`} className="font-semibold">
-                  {comentario.autor.nombre}
-                </Link>{' '}
-                <span className="text-tinta-2">{comentario.texto}</span>
-              </p>
-            ))
-          )}
-          {nuevoComentario ? (
-            <form onSubmit={comentar} className="flex gap-2">
-              <input
-                id={`comentario-${jugada.id}`}
-                className="campo"
-                placeholder="Escribí un comentario…"
-                maxLength={300}
-                value={textoComentario}
-                onChange={(evento) => setTextoComentario(evento.target.value)}
-              />
-              <button type="submit" className="btn btn-primario btn-sm" disabled={enviando || !textoComentario.trim()}>
-                {enviando ? '…' : 'Enviar'}
-              </button>
-            </form>
-          ) : (
-            <button
-              type="button"
-              className="self-start text-xs font-semibold text-verde-txt"
-              onClick={() => setNuevoComentario(true)}
-            >
-              Escribir un comentario
+      {/* Comentarios a la vista + cajita siempre lista, como en cualquier red. */}
+      <div className="flex flex-col gap-2 border-t border-borde pt-3">
+        {comentarios === null && totalComentarios > jugada.ultimosComentarios.length ? (
+          <button
+            type="button"
+            className="self-start text-xs font-semibold text-tinta-3"
+            onClick={verTodosLosComentarios}
+          >
+            Ver los {totalComentarios} comentarios
+          </button>
+        ) : null}
+        {(comentarios ?? jugada.ultimosComentarios).map((comentario) => (
+          <p key={comentario.id} className="text-sm">
+            <Link href={`/jugadores/${comentario.autor.usuario}`} className="font-semibold">
+              {comentario.autor.nombre}
+            </Link>{' '}
+            <span className="text-tinta-2">{comentario.texto}</span>
+          </p>
+        ))}
+        <form onSubmit={comentar} className="flex gap-2">
+          <input
+            id={`comentario-${jugada.id}`}
+            className="campo"
+            placeholder="Agregá un comentario…"
+            maxLength={300}
+            value={textoComentario}
+            onChange={(evento) => setTextoComentario(evento.target.value)}
+          />
+          {textoComentario.trim() ? (
+            <button type="submit" className="btn btn-primario btn-sm" disabled={enviando}>
+              {enviando ? '…' : 'Mandar'}
             </button>
-          )}
-        </div>
-      ) : null}
+          ) : null}
+        </form>
+      </div>
     </article>
   );
 }
