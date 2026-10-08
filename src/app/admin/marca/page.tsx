@@ -1,14 +1,17 @@
 import { obtenerMarca } from '@/lib/marca';
-import { ImagenDeMarca } from './acciones';
+import { sitioEnConstruccion } from '@/lib/sitio';
+import { ImagenDeMarca, InterruptorConstruccion } from './acciones';
 
 export const metadata = { title: 'Marca' };
 export const dynamic = 'force-dynamic';
 
 export default async function Marca() {
   const marca = await obtenerMarca();
+  const enConstruccion = await sitioEnConstruccion();
 
   return (
     <div className="flex flex-col gap-4">
+      <InterruptorConstruccion activo={enConstruccion} />
       <p className="text-sm text-tinta-2">
         Logo, ícono y favicon del sitio. Lo que subas acá reemplaza a los archivos de fábrica en
         toda la app al instante; con &quot;Restaurar&quot; se vuelve al original. En los teléfonos

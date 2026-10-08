@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { sitioEnConstruccion } from '@/lib/sitio';
+import { PaginaConstruccion } from '@/components/construccion';
 import { formatearPlata } from '@/lib/formato';
 import { Logotipo } from '@/components/marca';
 
@@ -17,6 +19,11 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
  */
 export default async function PartidoPublico({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+  const usuarioDeGuardia = await usuarioActual();
+  if ((await sitioEnConstruccion()) && usuarioDeGuardia?.rol !== 'ADMIN') {
+    return <PaginaConstruccion />;
+  }
+
 
   const partido = await prisma.partido.findUnique({
     where: { tokenPublico: token },

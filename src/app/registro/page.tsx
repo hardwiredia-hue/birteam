@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { sitioEnConstruccion } from '@/lib/sitio';
+import { PaginaConstruccion } from '@/components/construccion';
 import { Logotipo } from '@/components/marca';
 import { FormularioRegistro } from './formulario';
 
@@ -18,6 +20,11 @@ export default async function PaginaRegistro({
   searchParams: Promise<{ puerta?: string; volver?: string }>;
 }) {
   const { puerta, volver } = await searchParams;
+  const usuarioDeGuardia = await usuarioActual();
+  if ((await sitioEnConstruccion()) && usuarioDeGuardia?.rol !== 'ADMIN') {
+    return <PaginaConstruccion />;
+  }
+
   const destino = rutaSegura(volver);
 
   const usuario = await usuarioActual();

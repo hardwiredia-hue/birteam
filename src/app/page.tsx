@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { usuarioActual } from '@/lib/auth';
+import { sitioEnConstruccion } from '@/lib/sitio';
 import { Logotipo } from '@/components/marca';
+import { PaginaConstruccion } from '@/components/construccion';
 
 export default async function Portada() {
   const usuario = await usuarioActual();
+  if ((await sitioEnConstruccion()) && usuario?.rol !== 'ADMIN') {
+    return <PaginaConstruccion />;
+  }
   if (usuario) redirect('/panel');
 
   return (

@@ -4,8 +4,17 @@ import { crearSesion, hashearClave } from '@/lib/auth';
 import { esquemaRegistro, erroresDeZod } from '@/lib/validacion';
 import { permitir, ipDelPedido } from '@/lib/limite';
 import { formatearCuit } from '@/lib/verificacion';
+import { sitioEnConstruccion } from '@/lib/sitio';
 
 export async function POST(request: Request) {
+  // Con el sitio en construcción no se abren cuentas.
+  if (await sitioEnConstruccion()) {
+    return NextResponse.json(
+      { error: 'birteam está en construcción. Muy pronto abrimos las inscripciones.' },
+      { status: 503 }
+    );
+  }
+
   const cuerpo = await request.json().catch(() => null);
 
   // Trampa para robots: el campo "web" está oculto y las personas no lo tocan.

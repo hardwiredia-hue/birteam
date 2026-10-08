@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { usuarioActual } from '@/lib/auth';
+import { sitioEnConstruccion } from '@/lib/sitio';
 import { obtenerClips } from '@/lib/jugadas';
 import { FeedClips } from '@/components/clips';
 import { BarraInferior } from '@/components/barra-inferior';
+import { PaginaConstruccion } from '@/components/construccion';
 
 export const metadata = { title: 'Clips' };
 export const dynamic = 'force-dynamic';
@@ -12,6 +14,9 @@ export const dynamic = 'force-dynamic';
 export default async function Clips() {
   const usuario = await usuarioActual();
   if (!usuario) redirect('/entrar');
+  if (usuario.rol !== 'ADMIN' && (await sitioEnConstruccion())) {
+    return <PaginaConstruccion />;
+  }
 
   const clips = await obtenerClips(usuario.id);
 

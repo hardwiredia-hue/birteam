@@ -108,3 +108,58 @@ export function ImagenDeMarca({
     </div>
   );
 }
+
+/** Modo "En construcción": la obra tapa el sitio para todos menos los admins. */
+export function InterruptorConstruccion({ activo: inicial }: { activo: boolean }) {
+  const router = useRouter();
+  const [activo, setActivo] = useState(inicial);
+  const [ocupado, setOcupado] = useState(false);
+
+  async function alternar() {
+    const nuevo = !activo;
+    if (
+      nuevo &&
+      !confirm('¿Poner el sitio en construcción? Nadie más que los administradores va a poder usarlo.')
+    ) {
+      return;
+    }
+    setOcupado(true);
+    const respuesta = await fetch('/api/admin/sitio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enConstruccion: nuevo }),
+    });
+    setOcupado(false);
+    if (respuesta.ok) {
+      setActivo(nuevo);
+      router.refresh();
+    }
+  }
+
+  return (
+    <div className="tarjeta flex items-center justify-between gap-3 p-4">
+      <div>
+        <p className="text-sm font-semibold">Sitio en construcción</p>
+        <p className="text-xs text-tinta-3">
+          {activo
+            ? 'Activado: el público ve la pantalla de obra. Los admins entran normal.'
+            : 'Apagado: el sitio funciona normal para todo el mundo.'}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={activo}
+        onClick={alternar}
+        disabled={ocupado}
+        className="relative h-[22px] w-10 shrink-0 rounded-[6px] border-0 transition-colors"
+        style={{ background: activo ? 'var(--rojo)' : 'var(--borde-2)' }}
+      >
+        <span
+          className="absolute top-[2px] h-[18px] w-[18px] rounded-[4px] transition-all"
+          style={{ left: activo ? 20 : 2, background: activo ? '#fff' : 'var(--tinta-2)' }}
+        />
+      </button>
+    </div>
+  );
+}

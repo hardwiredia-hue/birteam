@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { sitioEnConstruccion } from '@/lib/sitio';
+import { PaginaConstruccion } from '@/components/construccion';
 import { calcularTabla } from '@/lib/torneos';
 import { Logotipo } from '@/components/marca';
 
@@ -11,6 +13,11 @@ export const dynamic = 'force-dynamic';
 /** El link público del torneo: se abre sin cuenta, para convocar equipos. */
 export default async function TorneoPublico({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+  const usuarioDeGuardia = await usuarioActual();
+  if ((await sitioEnConstruccion()) && usuarioDeGuardia?.rol !== 'ADMIN') {
+    return <PaginaConstruccion />;
+  }
+
 
   const torneo = await prisma.torneo.findUnique({
     where: { tokenPublico: token },

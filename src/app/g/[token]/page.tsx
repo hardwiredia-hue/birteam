@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { sitioEnConstruccion } from '@/lib/sitio';
+import { PaginaConstruccion } from '@/components/construccion';
 import { Logotipo } from '@/components/marca';
 import { BotonUnirse } from './unirse';
 
@@ -11,6 +13,11 @@ export const dynamic = 'force-dynamic';
 /** El link de invitación al grupo: se abre sin cuenta, igual que el del partido. */
 export default async function InvitacionGrupo({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+  const usuarioDeGuardia = await usuarioActual();
+  if ((await sitioEnConstruccion()) && usuarioDeGuardia?.rol !== 'ADMIN') {
+    return <PaginaConstruccion />;
+  }
+
 
   const grupo = await prisma.grupo.findUnique({
     where: { tokenInvitacion: token },
