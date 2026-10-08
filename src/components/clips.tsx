@@ -122,7 +122,9 @@ function Clip({
   }
 
   return (
-    <section className="relative h-dvh w-full snap-start snap-always">
+    <section className="flex h-dvh w-full snap-start snap-always justify-center">
+      {/* En escritorio el clip es una columna centrada, como TikTok web. */}
+      <div className="relative h-full w-full lg:w-[430px]">
       {clip.videoUrl ? (
         <video
           ref={videoRef}
@@ -302,6 +304,7 @@ function Clip({
           </form>
         </div>
       ) : null}
+      </div>
     </section>
   );
 }

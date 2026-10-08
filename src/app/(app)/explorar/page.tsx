@@ -292,7 +292,7 @@ async function Partidos({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
       {lista.map((p) => {
         const voy = p.participaciones.length;
         const faltan = p.cupo - voy;
@@ -430,7 +430,7 @@ async function Canchas({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
       {lista.map((c) => {
         let foto: string | null = null;
         try {

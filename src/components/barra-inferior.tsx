@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation';
 
 const TRAZO = 1.8;
 
-function IconoInicio() {
+export function IconoInicio() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TRAZO} strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
     </svg>
   );
 }
-function IconoExplorar() {
+export function IconoExplorar() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TRAZO} strokeLinecap="round">
       <circle cx="11" cy="11" r="7" />
@@ -20,14 +20,14 @@ function IconoExplorar() {
     </svg>
   );
 }
-function IconoMas() {
+export function IconoMas() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
       <path d="M12 5v14M5 12h14" />
     </svg>
   );
 }
-function IconoJugadas() {
+export function IconoJugadas() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TRAZO} strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -36,7 +36,7 @@ function IconoJugadas() {
     </svg>
   );
 }
-function IconoPerfil() {
+export function IconoPerfil() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TRAZO} strokeLinecap="round">
       <circle cx="12" cy="8" r="4" />
@@ -60,7 +60,7 @@ export function BarraInferior() {
   const ruta = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-borde bg-panel">
+    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-borde bg-panel lg:hidden">
       <div className="mx-auto grid h-16 w-full max-w-md grid-cols-5 items-center px-1">
         {ITEMS.map(({ href, rotulo, Icono, ...item }) => {
           const activo = ruta === href || ruta.startsWith(`${href}/`);
