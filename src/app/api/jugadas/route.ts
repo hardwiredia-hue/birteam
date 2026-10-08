@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaJugada, erroresDeZod } from '@/lib/validacion';
+import { analizarVideoExterno } from '@/lib/video-externo';
 
 /**
  * Publicar una jugada: fotos (ya subidas a /api/archivos) + texto, atada a
@@ -48,6 +49,22 @@ export async function POST(request: Request) {
     }
   }
 
+  // Video por link: solo plataformas de video conocidas.
+  let videoExterno: string | null = null;
+  if (d.videoExterno) {
+    const analizado = analizarVideoExterno(d.videoExterno);
+    if (!analizado) {
+      return NextResponse.json(
+        {
+          error: 'Revisá la publicación.',
+          detalles: { videoExterno: ['Por ahora van links de YouTube, TikTok, Instagram o Vimeo.'] },
+        },
+        { status: 400 }
+      );
+    }
+    videoExterno = analizado.url;
+  }
+
   // Compartir un torneo o una cancha: con que existan alcanza (son públicos).
   if (d.torneoId) {
     const torneo = await prisma.torneo.findUnique({ where: { id: d.torneoId }, select: { id: true } });
@@ -68,6 +85,7 @@ export async function POST(request: Request) {
       texto: d.texto ?? null,
       fotos: JSON.stringify(d.fotos),
       videoUrl: d.video ? `/api/archivos/${d.video}` : null,
+      videoExternoUrl: videoExterno,
       torneoId: d.torneoId ?? null,
       canchaId: d.canchaId ?? null,
     },

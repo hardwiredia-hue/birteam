@@ -220,6 +220,8 @@ export const esquemaJugada = z
       .string()
       .regex(/^[0-9a-f-]{36}\.(mp4|webm|mov)$/, 'Video inválido.')
       .nullish(),
+    // Link de YouTube, TikTok, Instagram o Vimeo (se valida el proveedor).
+    videoExterno: z.string().trim().max(300, 'El link es muy largo.').nullish(),
     partidoId: z.string().nullish(),
     grupoId: z.string().nullish(),
     torneoId: z.string().nullish(),
@@ -230,6 +232,7 @@ export const esquemaJugada = z
       (datos.texto && datos.texto.length > 0) ||
       datos.fotos.length > 0 ||
       datos.video ||
+      datos.videoExterno ||
       datos.torneoId ||
       datos.canchaId,
     { error: 'La jugada necesita una foto, un video, un texto o algo para compartir.' }

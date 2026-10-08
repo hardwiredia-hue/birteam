@@ -446,6 +446,8 @@ model Jugada {
   fotos     String   @default("[]")
   // Clip de video (URL en /api/archivos), para el feed vertical.
   videoUrl  String?
+  // Video por link externo (YouTube, TikTok, Instagram, Vimeo).
+  videoExternoUrl String?
   creadoEn  DateTime @default(now())
 
   comentarios ComentarioJugada[]

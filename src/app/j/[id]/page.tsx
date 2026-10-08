@@ -6,6 +6,7 @@ import { sitioEnConstruccion } from '@/lib/sitio';
 import { Logotipo } from '@/components/marca';
 import { Avatar } from '@/components/avatar';
 import { PaginaConstruccion } from '@/components/construccion';
+import { analizarVideoExterno } from '@/lib/video-externo';
 
 export const metadata = { title: 'Jugada' };
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,8 @@ export default async function JugadaPublica({ params }: { params: Promise<{ id: 
   } catch {
     fotos = [];
   }
+
+  const videoExterno = jugada.videoExternoUrl ? analizarVideoExterno(jugada.videoExternoUrl) : null;
 
   const [torneo, cancha, partido] = await Promise.all([
     jugada.torneoId
@@ -73,6 +76,30 @@ export default async function JugadaPublica({ params }: { params: Promise<{ id: 
               playsInline
               preload="metadata"
             />
+          ) : null}
+
+          {videoExterno ? (
+            videoExterno.embed ? (
+              <iframe
+                src={videoExterno.embed}
+                className="aspect-video w-full rounded-[6px] border border-borde bg-black"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                title={`Video de ${videoExterno.proveedor}`}
+              />
+            ) : (
+              <a
+                href={videoExterno.url}
+                target="_blank"
+                rel="noreferrer"
+                className="tarjeta block p-3"
+              >
+                <span className="t-rotulo text-azul-txt">Video · {videoExterno.proveedor}</span>
+                <span className="mt-0.5 block text-sm font-semibold">
+                  Ver en {videoExterno.proveedor} →
+                </span>
+              </a>
+            )
           ) : null}
 
           {fotos.length > 0 ? (

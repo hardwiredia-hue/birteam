@@ -1,12 +1,14 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { idsBloqueados } from './bloqueos';
+import { analizarVideoExterno, type VideoExterno } from './video-externo';
 
 export interface JugadaParaMostrar {
   id: string;
   texto: string | null;
   fotos: string[];
   videoUrl: string | null;
+  videoExterno: VideoExterno | null;
   creadoEn: string;
   autor: { nombre: string; usuario: string; avatarUrl: string | null };
   mia: boolean;
@@ -132,6 +134,7 @@ async function armarJugadas(
       texto: jugada.texto,
       fotos: JSON.parse(jugada.fotos) as string[],
       videoUrl: jugada.videoUrl,
+      videoExterno: jugada.videoExternoUrl ? analizarVideoExterno(jugada.videoExternoUrl) : null,
       creadoEn: jugada.creadoEn.toISOString(),
       autor: jugada.autor,
       mia: jugada.autorId === usuarioId,

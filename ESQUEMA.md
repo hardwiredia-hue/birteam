@@ -135,6 +135,8 @@ cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfi
   cancha o un partido como tarjeta enlazada ("Compartir en Jugadas" en cada
   pantalla). Clips es el feed vertical estilo TikTok de todo lo que tiene
   media (videos y fotos a pantalla completa, con los enlaces superpuestos).
+- Video por link externo: YouTube y Vimeo embebidos, TikTok e Instagram como
+  tarjeta que abre el video. Solo plataformas de video conocidas.
 - Las jugadas públicas tienen link para afuera (/j/<id>) con la publicación
   y el botón "Sumate a birteam".
 Feed vertical estilo TikTok/Instagram, con una diferencia que nadie más tiene:

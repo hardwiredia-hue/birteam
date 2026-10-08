@@ -29,18 +29,24 @@ export function PublicarJugada({
   const router = useRouter();
   // Si viene con algo para compartir, el editor ya arranca abierto.
   const [abierto, setAbierto] = useState(Boolean(adjunto));
-  // Atajo Foto/Video de la caja: abre el editor y dispara el selector.
-  const [autoAbrir, setAutoAbrir] = useState<'foto' | 'video' | null>(null);
+  // Atajo Foto/Video/Link de la caja: abre el editor y dispara lo elegido.
+  const [autoAbrir, setAutoAbrir] = useState<'foto' | 'video' | 'link' | null>(null);
 
   useEffect(() => {
     if (!abierto || !autoAbrir) return;
-    const id = autoAbrir === 'foto' ? 'fotos-jugada' : 'video-jugada';
-    (document.getElementById(id) as HTMLInputElement | null)?.click();
+    if (autoAbrir === 'link') {
+      setMostrarLink(true);
+    } else {
+      const id = autoAbrir === 'foto' ? 'fotos-jugada' : 'video-jugada';
+      (document.getElementById(id) as HTMLInputElement | null)?.click();
+    }
     setAutoAbrir(null);
   }, [abierto, autoAbrir]);
   const [texto, setTexto] = useState('');
   const [fotos, setFotos] = useState<{ nombre: string; url: string }[]>([]);
   const [video, setVideo] = useState<{ nombre: string; url: string } | null>(null);
+  const [mostrarLink, setMostrarLink] = useState(false);
+  const [linkVideo, setLinkVideo] = useState('');
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +99,7 @@ export function PublicarJugada({
         texto: texto.trim() || null,
         fotos: fotos.map((foto) => foto.nombre),
         video: video?.nombre ?? null,
+        videoExterno: linkVideo.trim() || null,
         partidoId: partidoId ?? null,
         grupoId: grupoId ?? null,
         torneoId: torneoId ?? null,
@@ -102,12 +109,14 @@ export function PublicarJugada({
     setEnviando(false);
     if (!respuesta.ok) {
       const datos = await respuesta.json().catch(() => ({}));
-      setError(datos.error ?? 'No pudimos publicar.');
+      setError(datos.detalles?.videoExterno?.[0] ?? datos.error ?? 'No pudimos publicar.');
       return;
     }
     setTexto('');
     setFotos([]);
     setVideo(null);
+    setLinkVideo('');
+    setMostrarLink(false);
     setAbierto(false);
     router.refresh();
   }
@@ -133,7 +142,7 @@ export function PublicarJugada({
                 setAbierto(true);
               }}
             >
-              Subir foto
+              Foto
             </button>
             <button
               type="button"
@@ -143,7 +152,17 @@ export function PublicarJugada({
                 setAbierto(true);
               }}
             >
-              Subir video
+              Video
+            </button>
+            <button
+              type="button"
+              className="btn btn-fantasma btn-sm flex-1"
+              onClick={() => {
+                setAutoAbrir('link');
+                setAbierto(true);
+              }}
+            >
+              Link
             </button>
           </div>
         </div>
@@ -201,6 +220,16 @@ export function PublicarJugada({
         </div>
       ) : null}
 
+      {mostrarLink ? (
+        <input
+          id="link-video-jugada"
+          className="campo"
+          placeholder="Link de YouTube, TikTok, Instagram o Vimeo"
+          value={linkVideo}
+          onChange={(evento) => setLinkVideo(evento.target.value)}
+        />
+      ) : null}
+
       <div className="flex items-center gap-3">
         <label className="btn btn-fantasma btn-sm cursor-pointer" htmlFor="fotos-jugada">
           {subiendo ? 'Subiendo…' : `Fotos (${fotos.length}/5)`}
@@ -227,6 +256,15 @@ export function PublicarJugada({
             />
           </label>
         ) : null}
+        {!video && !mostrarLink ? (
+          <button
+            type="button"
+            className="btn btn-fantasma btn-sm"
+            onClick={() => setMostrarLink(true)}
+          >
+            Link
+          </button>
+        ) : null}
         <div className="flex-1" />
         <button type="button" className="btn btn-fantasma btn-sm" onClick={() => setAbierto(false)}>
           Cancelar
@@ -238,7 +276,12 @@ export function PublicarJugada({
           disabled={
             enviando ||
             subiendo ||
-            (fotos.length === 0 && !video && !texto.trim() && !torneoId && !canchaId)
+            (fotos.length === 0 &&
+              !video &&
+              !linkVideo.trim() &&
+              !texto.trim() &&
+              !torneoId &&
+              !canchaId)
           }
         >
           {enviando ? 'Publicando…' : 'Publicar'}
@@ -353,6 +396,30 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
           playsInline
           preload="metadata"
         />
+      ) : null}
+
+      {jugada.videoExterno ? (
+        jugada.videoExterno.embed ? (
+          <iframe
+            src={jugada.videoExterno.embed}
+            className="aspect-video w-full rounded-[6px] border border-borde bg-black"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            title={`Video de ${jugada.videoExterno.proveedor}`}
+          />
+        ) : (
+          <a
+            href={jugada.videoExterno.url}
+            target="_blank"
+            rel="noreferrer"
+            className="tarjeta block p-3 transition-colors hover:border-borde-2"
+          >
+            <span className="t-rotulo text-azul-txt">Video · {jugada.videoExterno.proveedor}</span>
+            <span className="mt-0.5 block truncate text-sm font-semibold">
+              Ver en {jugada.videoExterno.proveedor} →
+            </span>
+          </a>
+        )
       ) : null}
 
       {jugada.fotos.length > 0 ? (
