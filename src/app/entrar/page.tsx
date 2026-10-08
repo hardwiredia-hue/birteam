@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { usuarioActual } from '@/lib/auth';
+import { googleHabilitado } from '@/lib/google';
 import { Logotipo } from '@/components/marca';
+import { BotonGoogle, SeparadorO } from '@/components/boton-google';
 import { FormularioEntrar } from './formulario';
 
 export const metadata = { title: 'Entrar' };
@@ -13,9 +15,9 @@ function rutaSegura(volver?: string) {
 export default async function PaginaEntrar({
   searchParams,
 }: {
-  searchParams: Promise<{ volver?: string }>;
+  searchParams: Promise<{ volver?: string; google?: string }>;
 }) {
-  const { volver } = await searchParams;
+  const { volver, google } = await searchParams;
   const destino = rutaSegura(volver);
 
   const usuario = await usuarioActual();
@@ -30,6 +32,21 @@ export default async function PaginaEntrar({
       <div className="flex flex-1 flex-col justify-center py-8">
         <h1 className="t-display text-[32px]">Entrá</h1>
         <p className="mt-2 text-tinta-2">Tu gente ya debe estar armando el próximo partido.</p>
+        {google ? (
+          <p className="aviso-error mt-4">
+            {google === 'vencido'
+              ? 'El ingreso con Google venció. Probá de nuevo.'
+              : google === 'sin-email'
+                ? 'Tu cuenta de Google no tiene el email verificado.'
+                : 'No pudimos completar el ingreso con Google. Probá de nuevo.'}
+          </p>
+        ) : null}
+        {googleHabilitado() ? (
+          <div className="mt-6">
+            <BotonGoogle />
+            <SeparadorO />
+          </div>
+        ) : null}
         <FormularioEntrar volver={destino} />
       </div>
 

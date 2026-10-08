@@ -259,17 +259,20 @@ export function FormularioRegistro({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="rotulo-campo" htmlFor="usuario">
-            Usuario
+            Nombre de usuario
           </label>
-          <input
-            id="usuario"
-            name="usuario"
-            className="campo"
-            placeholder="tuusuario"
-            pattern="[A-Za-z0-9._]+"
-            autoComplete="username"
-            required
-          />
+          <div className="flex items-center gap-1.5">
+            <span className="t-display text-[18px] text-verde-txt">@</span>
+            <input
+              id="usuario"
+              name="usuario"
+              className="campo"
+              placeholder="tuusuario"
+              pattern="[A-Za-z0-9._]+"
+              autoComplete="username"
+              required
+            />
+          </div>
           <ErrorDeCampo mensajes={errores.usuario} />
         </div>
         <div>

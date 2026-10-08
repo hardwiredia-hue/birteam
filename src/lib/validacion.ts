@@ -69,6 +69,51 @@ export const esquemaRegistro = z.object({
   }
 });
 
+// Completar el registro que arrancó con Google: todo menos email y contraseña.
+export const esquemaCompletarGoogle = z.object({
+  token: z.string({ error: 'Falta el token.' }).min(1),
+  nombre: z
+    .string({ error: 'Contanos tu nombre.' })
+    .trim()
+    .min(2, 'El nombre es muy corto.')
+    .max(60, 'El nombre es muy largo.'),
+  usuario: z
+    .string({ error: 'Elegí un nombre de usuario.' })
+    .trim()
+    .toLowerCase()
+    .min(3, 'El usuario necesita al menos 3 caracteres.')
+    .max(24, 'El usuario puede tener hasta 24 caracteres.')
+    .regex(/^[a-z0-9._]+$/, 'Solo letras, números, punto y guion bajo.'),
+  deporteIds: z.array(z.string()).max(5, 'Elegí hasta 5 deportes.').default([]),
+  ciudad: z.string().trim().max(80).nullish(),
+  provincia: z.string().trim().max(80).nullish(),
+  pais: z.string().trim().length(2).default('AR'),
+  latitud: z.number().min(-90).max(90).nullish(),
+  longitud: z.number().min(-180).max(180).nullish(),
+  aceptaTerminos: z.literal(true, {
+    error: 'Para crear la cuenta tenés que aceptar los términos.',
+  }),
+  tipoCuenta: z.enum(['JUGADOR', 'CANCHA']).default('JUGADOR'),
+  complejoNombre: z.string().trim().max(80, 'El nombre es muy largo.').nullish(),
+  complejoDireccion: z.string().trim().max(160, 'La dirección es muy larga.').nullish(),
+  telefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
+  cuit: z.string().trim().max(15).nullish(),
+}).superRefine((datos, contexto) => {
+  if (datos.tipoCuenta !== 'CANCHA') return;
+  if (!datos.complejoNombre || datos.complejoNombre.length < 2) {
+    contexto.addIssue({ code: 'custom', path: ['complejoNombre'], message: 'Poné el nombre del complejo o la cancha.' });
+  }
+  if (!datos.complejoDireccion || datos.complejoDireccion.length < 2) {
+    contexto.addIssue({ code: 'custom', path: ['complejoDireccion'], message: 'Poné la dirección del complejo.' });
+  }
+  if (!datos.telefono || datos.telefono.length < 6) {
+    contexto.addIssue({ code: 'custom', path: ['telefono'], message: 'Poné un teléfono de contacto.' });
+  }
+  if (!datos.cuit || !validarCuit(datos.cuit)) {
+    contexto.addIssue({ code: 'custom', path: ['cuit'], message: 'Ese CUIT/CUIL no es válido. Revisá los 11 números.' });
+  }
+});
+
 export const esquemaEntrar = z.object({
   usuarioOEmail: z.string({ error: 'Ingresá tu usuario o email.' }).trim().toLowerCase().min(1, 'Ingresá tu usuario o email.'),
   clave: z.string({ error: 'Ingresá tu contraseña.' }).min(1, 'Ingresá tu contraseña.'),

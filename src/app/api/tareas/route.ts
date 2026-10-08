@@ -25,6 +25,9 @@ export async function POST(request: Request) {
   const ahora = new Date();
   const en2h = new Date(ahora.getTime() + 2 * 3600 * 1000);
   const en24h = new Date(ahora.getTime() + 24 * 3600 * 1000);
+
+  // Limpieza: registros con Google que quedaron a medio camino.
+  await prisma.tokenGoogle.deleteMany({ where: { expiraEn: { lt: ahora } } });
   const resumen = { invitacionesVencidas: 0, recordatorios24h: 0, reconfirmaciones: 0 };
 
   // ---- 1. Invitaciones vencidas ----

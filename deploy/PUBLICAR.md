@@ -220,6 +220,29 @@ client_max_body_size 80m;
 
 y recargar: `nginx -t && systemctl reload nginx`.
 
+## Ingreso con Google
+
+El botón "Continuar con Google" aparece solo si el ambiente tiene credenciales.
+Una sola vez:
+
+1. En Google Cloud Console (console.cloud.google.com) → APIs y servicios →
+   Pantalla de consentimiento OAuth: tipo Externo, nombre "birteam", dominio
+   birteam.com, y publicarla (no hace falta verificación para login básico).
+2. Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación web:
+   - Orígenes autorizados: https://birteam.com y https://staging.birteam.com
+   - URIs de redireccionamiento autorizados:
+     https://birteam.com/api/auth/google/volver
+     https://staging.birteam.com/api/auth/google/volver
+3. Agregar a CADA .env.production (sin mostrarlos):
+   GOOGLE_CLIENT_ID="<id>.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="<secreto>"
+   URL_PUBLICA="https://birteam.com"        (en staging: https://staging.birteam.com)
+4. systemctl restart birteam birteam-staging
+
+El mismo par de credenciales sirve para los dos ambientes (las dos URIs están
+autorizadas). Cuentas nuevas por Google completan @usuario y datos en
+/registro/completar; si el email ya existía, Google queda vinculado y entra.
+
 ## Reglas fijas
 
 - Nunca abrir 3000/3001 a internet.

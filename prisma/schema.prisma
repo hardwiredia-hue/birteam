@@ -18,7 +18,10 @@ model Usuario {
   nombre        String
   usuario       String   @unique
   email         String   @unique
-  hashClave     String
+  // Nula en cuentas que entran solo con Google (pueden crearse una después).
+  hashClave     String?
+  // Cuenta de Google vinculada (sub de OpenID).
+  googleId      String?  @unique
   telefono      String?
   bio           String?
   avatarUrl     String?
@@ -138,6 +141,19 @@ model SuscripcionPush {
   creadoEn  DateTime @default(now())
 
   @@index([usuarioId])
+}
+
+// Registro con Google a medio camino: la cuenta se crea recién cuando el
+// usuario completa sus datos (@usuario, deportes, ciudad, términos).
+model TokenGoogle {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  googleId  String
+  email     String
+  nombre    String
+  foto      String?
+  expiraEn  DateTime
+  creadoEn  DateTime @default(now())
 }
 
 model TokenRecuperacion {

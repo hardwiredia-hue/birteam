@@ -4,7 +4,9 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { sitioEnConstruccion } from '@/lib/sitio';
 import { PaginaConstruccion } from '@/components/construccion';
+import { googleHabilitado } from '@/lib/google';
 import { Logotipo } from '@/components/marca';
+import { BotonGoogle, SeparadorO } from '@/components/boton-google';
 import { FormularioRegistro } from './formulario';
 
 export const metadata = { title: 'Creá tu cuenta' };
@@ -55,6 +57,13 @@ export default async function PaginaRegistro({
                 ? 'Después publicás tu cancha para que la alquilen.'
                 : 'Lo justo y necesario para empezar a jugar.'}
         </p>
+
+        {googleHabilitado() ? (
+          <div className="mt-6">
+            <BotonGoogle rotulo="Registrarme con Google" />
+            <SeparadorO />
+          </div>
+        ) : null}
 
         <FormularioRegistro deportes={deportes} volver={destino} puerta={puerta} />
       </div>
