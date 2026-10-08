@@ -76,6 +76,14 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           {partido.lugarNombre}
           {partido.direccion ? ` · ${partido.direccion}` : ''}
         </p>
+        {partido.lugarTelefono ? (
+          <a
+            href={`tel:${partido.lugarTelefono.replace(/[^+0-9]/g, '')}`}
+            className="text-[13px] font-semibold text-verde-txt"
+          >
+            Cancha: {partido.lugarTelefono}
+          </a>
+        ) : null}
         <p className="text-[13px] text-tinta-3">
           Organiza {partido.organizador.nombre} (@{partido.organizador.usuario})
           {partido.grupo ? (

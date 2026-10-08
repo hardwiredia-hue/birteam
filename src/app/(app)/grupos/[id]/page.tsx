@@ -5,7 +5,7 @@ import { usuarioActual } from '@/lib/auth';
 import { Chat } from '@/components/chat';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
-import { CopiarInvitacion } from './acciones';
+import { AccionesMiembro, CopiarInvitacion, EditarGrupo } from './acciones';
 import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'Grupo' };
@@ -40,6 +40,7 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
   const membresia = grupo.miembros.find((miembro) => miembro.usuarioId === usuario.id);
   // Los grupos son de sus miembros; el link de invitación es la puerta.
   if (!membresia) redirect(`/g/${grupo.tokenInvitacion}`);
+  const soyAdmin = membresia.rol === 'ADMIN';
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,6 +58,13 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
         <Link href={`/crear?grupo=${grupo.id}`} className="btn btn-primario">Armar partido</Link>
         <CopiarInvitacion ruta={`/g/${grupo.tokenInvitacion}`} />
       </div>
+
+      {soyAdmin ? (
+        <EditarGrupo
+          grupoId={grupo.id}
+          inicial={{ nombre: grupo.nombre, descripcion: grupo.descripcion, abierto: grupo.abierto }}
+        />
+      ) : null}
 
       <section>
         <p className="t-rotulo mb-2">Próximos partidos</p>
@@ -117,6 +125,16 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
                 </p>
               </div>
               {miembro.rol === 'ADMIN' ? <span className="t-rotulo">admin</span> : null}
+              {soyAdmin &&
+              miembro.usuarioId !== usuario.id &&
+              miembro.usuarioId !== grupo.creadorId ? (
+                <AccionesMiembro
+                  grupoId={grupo.id}
+                  usuarioId={miembro.usuarioId}
+                  nombre={miembro.usuario.nombre}
+                  esAdmin={miembro.rol === 'ADMIN'}
+                />
+              ) : null}
             </div>
           ))}
         </div>

@@ -55,6 +55,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       fecha: d.fecha,
       lugarNombre: d.lugarNombre,
       direccion: d.direccion ?? null,
+      lugarTelefono: d.lugarTelefono ?? null,
       cupo: d.cupo,
       minimo: d.minimo,
       costoPorJugador: d.costoPorJugador ?? null,

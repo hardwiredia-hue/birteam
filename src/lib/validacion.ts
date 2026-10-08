@@ -51,6 +51,9 @@ export const esquemaPartido = z.object({
     .min(2, 'El lugar es muy corto.')
     .max(120, 'El lugar es muy largo.'),
   direccion: z.string().trim().max(160).nullish(),
+  lugarTelefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
+  // Invitados elegidos a mano (seguidores o buscados) al crear el partido.
+  invitadoIds: z.array(z.string()).max(50, 'Hasta 50 invitados.').default([]),
   ciudad: z.string().trim().max(80).nullish(),
   provincia: z.string().trim().max(80).nullish(),
   cupo: z
@@ -184,6 +187,7 @@ export const esquemaEditarPartido = z.object({
     .min(2, 'El lugar es muy corto.')
     .max(120, 'El lugar es muy largo.'),
   direccion: z.string().trim().max(160).nullish(),
+  lugarTelefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
   cupo: z.number({ error: 'Definí el cupo.' }).int().min(2).max(200),
   minimo: z.number().int().min(2).max(200),
   costoPorJugador: z.number().min(0).max(10_000_000).nullish(),

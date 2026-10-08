@@ -14,6 +14,7 @@ export function FormularioEditarPartido({
     fecha: string;
     lugarNombre: string;
     direccion: string | null;
+    lugarTelefono: string | null;
     cupo: number;
     minimo: number;
     costoPorJugador: number | null;
@@ -44,6 +45,7 @@ export function FormularioEditarPartido({
         fecha: fecha.toISOString(),
         lugarNombre: form.get('lugarNombre'),
         direccion: form.get('direccion') || null,
+        lugarTelefono: form.get('lugarTelefono') || null,
         cupo: Number(form.get('cupo')),
         minimo: Number(form.get('minimo')),
         costoPorJugador: String(form.get('costoPorJugador') ?? '').trim()
@@ -80,6 +82,16 @@ export function FormularioEditarPartido({
       <div>
         <label className="rotulo-campo" htmlFor="direccion">Dirección · opcional</label>
         <input id="direccion" name="direccion" className="campo" defaultValue={inicial.direccion ?? ''} />
+      </div>
+
+      <div>
+        <label className="rotulo-campo" htmlFor="lugarTelefono">Teléfono de la cancha · opcional</label>
+        <input
+          id="lugarTelefono"
+          name="lugarTelefono"
+          className="campo"
+          defaultValue={inicial.lugarTelefono ?? ''}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

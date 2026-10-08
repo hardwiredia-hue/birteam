@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 interface Deporte {
   id: string;
@@ -10,23 +10,102 @@ interface Deporte {
 
 const TOTAL_PASOS = 6;
 const HORAS = ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
-const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
 
-/** Los próximos 7 días como opciones rápidas. */
-function proximosDias() {
+function claveDeFecha(fecha: Date) {
+  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(
+    fecha.getDate()
+  ).padStart(2, '0')}`;
+}
+
+/** Almanaque para elegir el día: cualquier fecha futura, los pasados bloqueados. */
+function Almanaque({ valor, alElegir }: { valor: string | null; alElegir: (valor: string) => void }) {
   const hoy = new Date();
-  return Array.from({ length: 7 }, (_, indice) => {
-    const fecha = new Date(hoy);
-    fecha.setDate(hoy.getDate() + indice);
-    const rotulo =
-      indice === 0 ? 'Hoy' : indice === 1 ? 'Mañana' : DIAS_LARGOS[fecha.getDay()];
-    return {
-      valor: `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`,
-      rotulo,
-      detalle: `${DIAS_CORTOS[fecha.getDay()]} ${fecha.getDate()}`,
-    };
-  });
+  hoy.setHours(0, 0, 0, 0);
+  const [vista, setVista] = useState(() => new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+
+  const esMesActual =
+    vista.getFullYear() === hoy.getFullYear() && vista.getMonth() === hoy.getMonth();
+  // Hasta un año para adelante alcanza y sobra para organizar un partido.
+  const puedeAvanzar = vista < new Date(hoy.getFullYear(), hoy.getMonth() + 11, 1);
+  const diasEnMes = new Date(vista.getFullYear(), vista.getMonth() + 1, 0).getDate();
+  // La semana arranca el lunes, como los calendarios de acá.
+  const corrimiento = (new Date(vista.getFullYear(), vista.getMonth(), 1).getDay() + 6) % 7;
+  const hoyClave = claveDeFecha(hoy);
+
+  function moverMes(saltos: number) {
+    setVista(new Date(vista.getFullYear(), vista.getMonth() + saltos, 1));
+  }
+
+  return (
+    <div className="tarjeta p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => moverMes(-1)}
+          disabled={esMesActual}
+          aria-label="Mes anterior"
+          className="chip-sel px-3 disabled:opacity-35"
+        >
+          ‹
+        </button>
+        <span className="text-sm font-bold capitalize">
+          {MESES[vista.getMonth()]} {vista.getFullYear()}
+        </span>
+        <button
+          type="button"
+          onClick={() => moverMes(1)}
+          disabled={!puedeAvanzar}
+          aria-label="Mes siguiente"
+          className="chip-sel px-3 disabled:opacity-35"
+        >
+          ›
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((letra, indice) => (
+          <span key={indice} className="t-rotulo py-1 text-[10px]">
+            {letra}
+          </span>
+        ))}
+        {Array.from({ length: corrimiento }, (_, indice) => (
+          <span key={`vacio-${indice}`} />
+        ))}
+        {Array.from({ length: diasEnMes }, (_, indice) => {
+          const fecha = new Date(vista.getFullYear(), vista.getMonth(), indice + 1);
+          const clave = claveDeFecha(fecha);
+          const pasado = fecha < hoy;
+          const elegido = valor === clave;
+          const esHoy = clave === hoyClave;
+          return (
+            <button
+              key={clave}
+              type="button"
+              disabled={pasado}
+              onClick={() => alElegir(clave)}
+              className="aspect-square rounded-[6px] border text-sm font-semibold tabular"
+              style={
+                elegido
+                  ? { background: 'var(--verde)', borderColor: 'var(--verde)', color: 'var(--sobre-verde)' }
+                  : pasado
+                    ? { borderColor: 'transparent', color: 'var(--tinta-3)', opacity: 0.35 }
+                    : esHoy
+                      ? { borderColor: 'var(--verde-txt)', color: 'var(--verde-txt)' }
+                      : { borderColor: 'var(--borde)', color: 'var(--tinta)' }
+              }
+            >
+              {indice + 1}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -36,18 +115,22 @@ function proximosDias() {
 export function Asistente({
   deportes,
   grupos,
+  lugares,
+  seguidores,
   grupoInicial,
   deporteInicial,
 }: {
   deportes: Deporte[];
   grupos: { id: string; nombre: string; deporteId: string }[];
+  lugares: { id: string; nombre: string; direccion: string | null; telefono: string | null }[];
+  seguidores: { id: string; nombre: string; usuario: string }[];
   grupoInicial: string | null;
   deporteInicial?: string | null;
 }) {
   const router = useRouter();
-  const dias = useMemo(proximosDias, []);
 
   const [paso, setPaso] = useState(1);
+  const [listaGrupos, setListaGrupos] = useState(grupos);
   const [grupoId, setGrupoId] = useState<string | null>(grupoInicial);
   const [deporteId, setDeporteId] = useState<string | null>(
     grupos.find((g) => g.id === grupoInicial)?.deporteId ?? deporteInicial ?? null
@@ -57,6 +140,13 @@ export function Asistente({
   const [repite, setRepite] = useState(false);
   const [lugarNombre, setLugarNombre] = useState('');
   const [direccion, setDireccion] = useState('');
+  const [lugarTelefono, setLugarTelefono] = useState('');
+  const [invitados, setInvitados] = useState<{ id: string; nombre: string }[]>([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [resultados, setResultados] = useState<{ id: string; nombre: string; usuario: string }[]>([]);
+  const [grupoNuevoAbierto, setGrupoNuevoAbierto] = useState(false);
+  const [grupoNuevoNombre, setGrupoNuevoNombre] = useState('');
+  const [creandoGrupo, setCreandoGrupo] = useState(false);
   const [cupo, setCupo] = useState(10);
   const [minimo, setMinimo] = useState(8);
   const [costo, setCosto] = useState('');
@@ -89,6 +179,8 @@ export function Asistente({
         recurrenteSemanal: repite,
         lugarNombre: lugarNombre.trim(),
         direccion: direccion.trim() || null,
+        lugarTelefono: lugarTelefono.trim() || null,
+        invitadoIds: invitados.map((i) => i.id),
         cupo,
         minimo,
         costoPorJugador: costo.trim() ? Number(costo) : null,
@@ -104,6 +196,51 @@ export function Asistente({
     }
     router.push(`/partidos/${datos.id}`);
     router.refresh();
+  }
+
+  function alternarInvitado(persona: { id: string; nombre: string }) {
+    setInvitados((actuales) =>
+      actuales.some((i) => i.id === persona.id)
+        ? actuales.filter((i) => i.id !== persona.id)
+        : [...actuales, persona]
+    );
+  }
+
+  async function buscarPersonas(texto: string) {
+    setBusqueda(texto);
+    if (texto.trim().length < 2) {
+      setResultados([]);
+      return;
+    }
+    try {
+      const respuesta = await fetch(`/api/jugadores?q=${encodeURIComponent(texto.trim())}`);
+      const datos = await respuesta.json();
+      setResultados(datos.jugadores ?? []);
+    } catch {
+      setResultados([]);
+    }
+  }
+
+  async function crearGrupoNuevo() {
+    const nombre = grupoNuevoNombre.trim();
+    if (nombre.length < 2 || !deporteId) return;
+    setCreandoGrupo(true);
+    setError(null);
+    const respuesta = await fetch('/api/grupos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, deporteId }),
+    });
+    const datos = await respuesta.json().catch(() => ({}));
+    setCreandoGrupo(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos crear el grupo.');
+      return;
+    }
+    setListaGrupos([...listaGrupos, { id: datos.id, nombre, deporteId }]);
+    setGrupoId(datos.id);
+    setGrupoNuevoAbierto(false);
+    setGrupoNuevoNombre('');
   }
 
   return (
@@ -145,18 +282,17 @@ export function Asistente({
           <h1 className="t-display text-[32px]">¿Cuándo<br />juegan?</h1>
           <div>
             <span className="rotulo-campo">Día</span>
-            <div className="flex flex-wrap gap-2">
-              {dias.map((opcion) => (
-                <button
-                  key={opcion.valor}
-                  type="button"
-                  onClick={() => setDia(opcion.valor)}
-                  className={dia === opcion.valor ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-                >
-                  {opcion.rotulo} · {opcion.detalle}
-                </button>
-              ))}
-            </div>
+            <Almanaque valor={dia} alElegir={setDia} />
+            {dia ? (
+              <p className="mt-2 text-sm font-semibold text-verde-txt">
+                {(() => {
+                  const fecha = new Date(`${dia}T00:00:00`);
+                  return `${DIAS_LARGOS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
+                })()}
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-tinta-3">Tocá el día en el almanaque.</p>
+            )}
           </div>
           <div>
             <span className="rotulo-campo">Hora</span>
@@ -204,6 +340,39 @@ export function Asistente({
       ) : paso === 3 ? (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Dónde<br />juegan?</h1>
+          {lugares.length > 0 ? (
+            <div>
+              <span className="rotulo-campo">Tus lugares · un toque y listo</span>
+              <div className="flex flex-col gap-2">
+                {lugares.map((lugar) => {
+                  const elegido = lugarNombre === lugar.nombre;
+                  return (
+                    <button
+                      key={lugar.id}
+                      type="button"
+                      onClick={() => {
+                        setLugarNombre(lugar.nombre);
+                        setDireccion(lugar.direccion ?? '');
+                        setLugarTelefono(lugar.telefono ?? '');
+                      }}
+                      className="tarjeta p-3.5 text-left"
+                      style={elegido ? { borderColor: 'var(--verde)' } : undefined}
+                    >
+                      <span className="block text-sm font-semibold">{lugar.nombre}</span>
+                      {lugar.direccion || lugar.telefono ? (
+                        <span className="mt-0.5 block text-xs text-tinta-3">
+                          {lugar.direccion ?? ''}
+                          {lugar.direccion && lugar.telefono ? ' · ' : ''}
+                          {lugar.telefono ? `tel. ${lugar.telefono}` : ''}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-tinta-3">O cargá uno nuevo acá abajo: queda guardado para la próxima.</p>
+            </div>
+          ) : null}
           <div>
             <label className="rotulo-campo" htmlFor="lugar">Cancha o lugar</label>
             <input
@@ -223,6 +392,19 @@ export function Asistente({
               value={direccion}
               onChange={(evento) => setDireccion(evento.target.value)}
             />
+          </div>
+          <div>
+            <label className="rotulo-campo" htmlFor="lugar-telefono">Teléfono o contacto de la cancha · opcional</label>
+            <input
+              id="lugar-telefono"
+              className="campo"
+              placeholder="+54 9 11 5555-1234"
+              value={lugarTelefono}
+              onChange={(evento) => setLugarTelefono(evento.target.value)}
+            />
+            <p className="mt-1 text-xs text-tinta-3">
+              Se muestra en el partido, para reservar o avisar cualquier cosa.
+            </p>
           </div>
         </section>
       ) : paso === 4 ? (
@@ -283,25 +465,109 @@ export function Asistente({
       ) : (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Quién puede<br />verlo?</h1>
-          {grupos.length > 0 ? (
-            <div>
-              <label className="rotulo-campo" htmlFor="sel-grupo">¿Es de un grupo?</label>
-              <select
-                id="sel-grupo"
-                className="campo"
-                value={grupoId ?? ''}
-                onChange={(evento) => setGrupoId(evento.target.value || null)}
-              >
-                <option value="">No, partido suelto</option>
-                {grupos.map((grupo) => (
-                  <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-tinta-3">
-                Si es del grupo, todos los miembros reciben la invitación al crearlo.
+          <div>
+            <label className="rotulo-campo" htmlFor="sel-grupo">¿Es de un grupo?</label>
+            <select
+              id="sel-grupo"
+              className="campo"
+              value={grupoNuevoAbierto ? 'nuevo' : (grupoId ?? '')}
+              onChange={(evento) => {
+                if (evento.target.value === 'nuevo') {
+                  setGrupoNuevoAbierto(true);
+                  setGrupoId(null);
+                } else {
+                  setGrupoNuevoAbierto(false);
+                  setGrupoId(evento.target.value || null);
+                }
+              }}
+            >
+              <option value="">No, partido suelto</option>
+              {listaGrupos.map((grupo) => (
+                <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
+              ))}
+              <option value="nuevo">+ Crear un grupo nuevo</option>
+            </select>
+            <p className="mt-1 text-xs text-tinta-3">
+              Si es del grupo, todos los miembros reciben la invitación al crearlo.
+            </p>
+            {grupoNuevoAbierto ? (
+              <div className="mt-2 flex gap-2">
+                <input
+                  className="campo flex-1"
+                  placeholder="Nombre del grupo (Los pibes del lunes)"
+                  value={grupoNuevoNombre}
+                  maxLength={60}
+                  onChange={(evento) => setGrupoNuevoNombre(evento.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secundario btn-sm"
+                  onClick={crearGrupoNuevo}
+                  disabled={creandoGrupo || grupoNuevoNombre.trim().length < 2}
+                >
+                  {creandoGrupo ? '…' : 'Crear'}
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <span className="rotulo-campo">Invitá gente · opcional</span>
+            {seguidores.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {seguidores.map((persona) => {
+                  const elegido = invitados.some((i) => i.id === persona.id);
+                  return (
+                    <button
+                      key={persona.id}
+                      type="button"
+                      onClick={() => alternarInvitado(persona)}
+                      className={elegido ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                    >
+                      {persona.nombre}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+            <input
+              id="buscar-invitados"
+              className="campo mt-2"
+              placeholder="Buscar a alguien por nombre o usuario…"
+              value={busqueda}
+              onChange={(evento) => buscarPersonas(evento.target.value)}
+            />
+            {resultados.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {resultados
+                  .filter((persona) => !seguidores.some((s) => s.id === persona.id))
+                  .map((persona) => {
+                    const elegido = invitados.some((i) => i.id === persona.id);
+                    return (
+                      <button
+                        key={persona.id}
+                        type="button"
+                        onClick={() => alternarInvitado(persona)}
+                        className={elegido ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                      >
+                        {persona.nombre} · @{persona.usuario}
+                      </button>
+                    );
+                  })}
+              </div>
+            ) : null}
+            {invitados.length > 0 ? (
+              <p className="mt-2 text-xs font-semibold text-verde-txt">
+                {invitados.length === 1
+                  ? `Se invita a ${invitados[0].nombre} al crear el partido.`
+                  : `Se invita a ${invitados.length} personas al crear el partido.`}
               </p>
-            </div>
-          ) : null}
+            ) : (
+              <p className="mt-1 text-xs text-tinta-3">
+                Los que siguen tu perfil aparecen arriba; al resto, buscalos.
+              </p>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setVisibilidad('ABIERTO')}

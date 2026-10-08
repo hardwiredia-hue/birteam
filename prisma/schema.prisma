@@ -64,6 +64,20 @@ model Usuario {
   tokensRecuperacion TokenRecuperacion[]
   suscripcionesPush SuscripcionPush[]
   canchas          Cancha[]
+  lugares          LugarGuardado[]
+}
+
+// Lugares donde el usuario ya organizó: se eligen de una y guardan el contacto.
+model LugarGuardado {
+  id        String   @id @default(cuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre    String
+  direccion String?
+  telefono  String?
+  ultimaVez DateTime @default(now())
+
+  @@unique([usuarioId, nombre])
 }
 
 
@@ -214,6 +228,8 @@ model Partido {
   recurrenteSemanal Boolean   @default(false)
   lugarNombre       String
   direccion         String?
+  // Teléfono o contacto de la cancha, para reservas y consultas.
+  lugarTelefono     String?
   ciudad            String?
   provincia         String?
   pais              String    @default("AR")

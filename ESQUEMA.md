@@ -90,9 +90,13 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   asistencia), resultado opcional, y "Subí la jugada" → publicación social (fase 2).
 
 ### 3.5 Crear partido — un paso por pantalla (6 pasos)
-1. Deporte · 2. Cuándo (chips de día y hora + "se repite todas las semanas")
-3. Dónde (autocompletado + dirección) · 4. Cupo y mínimo · 5. Costo total o por jugador
-6. Visibilidad (solo mi grupo / abierto a cercanos) + invitar (grupo, usuarios, link).
+1. Deporte · 2. Cuándo (almanaque con los días pasados bloqueados, chips de hora +
+"se repite todas las semanas") · 3. Dónde (tus lugares guardados de un toque, o
+cargar uno nuevo con dirección y teléfono de la cancha — queda guardado y el
+teléfono se ve en el partido) · 4. Cupo y mínimo · 5. Costo total o por jugador
+6. Visibilidad (solo mi grupo / abierto a cercanos) + grupo (elegir, o crear uno
+nuevo ahí mismo) + invitar gente (tus seguidores de un toque, o buscar a
+cualquiera por nombre o usuario).
 
 **Reglas del partido:** estados `Armándose → Confirmado (llegó al mínimo) → Jugado →
 Cancelado`. Si a las 24 h del inicio no llega al mínimo, avisa a todos. Recurrente:
@@ -103,7 +107,10 @@ cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfi
 ### 3.6 Grupos
 - Mis grupos → **Grupo**: miembros y roles (admin), próximos partidos, historial,
   chat, link de invitación.
-- Crear grupo: nombre, deporte, zona, foto.
+- Administradores: editan el grupo (nombre, descripción, abierto/cerrado), nombran
+  o quitan otros admins y sacan miembros. Quien creó el grupo no se toca.
+- Crear grupo: nombre, deporte, zona, foto. También se crea al vuelo desde el
+  paso 6 de crear partido.
 - "Competir como equipo" (escudo, plantel formal): apagado con sello "Próximamente"
   hasta la fase de torneos.
 

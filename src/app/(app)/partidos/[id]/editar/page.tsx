@@ -40,6 +40,7 @@ export default async function EditarPartido({ params }: { params: Promise<{ id: 
           fecha: valorFecha,
           lugarNombre: partido.lugarNombre,
           direccion: partido.direccion,
+          lugarTelefono: partido.lugarTelefono,
           cupo: partido.cupo,
           minimo: partido.minimo,
           costoPorJugador: partido.costoPorJugador,

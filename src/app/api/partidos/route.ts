@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaPartido, erroresDeZod } from '@/lib/validacion';
 import { enviarPush } from '@/lib/push';
+import { idsBloqueados } from '@/lib/bloqueos';
 
 export async function POST(request: Request) {
   const usuario = await usuarioActual();
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
       recurrenteSemanal: d.recurrenteSemanal,
       lugarNombre: d.lugarNombre,
       direccion: d.direccion ?? null,
+      lugarTelefono: d.lugarTelefono ?? null,
       ciudad: d.ciudad ?? usuario.ciudad,
       provincia: d.provincia ?? usuario.provincia,
       cupo: d.cupo,
@@ -54,8 +56,36 @@ export async function POST(request: Request) {
     },
   });
 
-  // "Invitar a los integrantes": todos los del grupo se enteran al toque.
-  const invitados = miembrosDelGrupo.filter((miembro) => miembro.usuarioId !== usuario.id);
+  // El lugar queda guardado para la próxima: se elige de una, con su contacto.
+  await prisma.lugarGuardado.upsert({
+    where: { usuarioId_nombre: { usuarioId: usuario.id, nombre: d.lugarNombre } },
+    create: {
+      usuarioId: usuario.id,
+      nombre: d.lugarNombre,
+      direccion: d.direccion ?? null,
+      telefono: d.lugarTelefono ?? null,
+    },
+    update: {
+      direccion: d.direccion ?? null,
+      telefono: d.lugarTelefono ?? null,
+      ultimaVez: new Date(),
+    },
+  });
+
+  // Invitaciones: los integrantes del grupo + los elegidos a mano, sin repetir.
+  let idsElegidos: string[] = [];
+  if (d.invitadoIds.length > 0) {
+    const ocultos = await idsBloqueados(usuario.id);
+    const existentes = await prisma.usuario.findMany({
+      where: { id: { in: d.invitadoIds, not: usuario.id, notIn: ocultos } },
+      select: { id: true },
+    });
+    idsElegidos = existentes.map((u) => u.id);
+  }
+  const paraInvitar = [
+    ...new Set([...miembrosDelGrupo.map((m) => m.usuarioId), ...idsElegidos]),
+  ].filter((usuarioId) => usuarioId !== usuario.id);
+  const invitados = paraInvitar.map((usuarioId) => ({ usuarioId }));
   if (invitados.length > 0) {
     const hora = d.fecha.toLocaleTimeString('es-AR', {
       hour: '2-digit',

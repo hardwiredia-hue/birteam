@@ -13,7 +13,7 @@ export default async function Crear({
   const { grupo, deporte } = await searchParams;
   const usuario = (await usuarioActual())!;
 
-  const [deportes, membresias] = await Promise.all([
+  const [deportes, membresias, lugares, seguimientos] = await Promise.all([
     prisma.deporte.findMany({
       orderBy: { orden: 'asc' },
       select: { id: true, nombre: true, slug: true },
@@ -21,6 +21,18 @@ export default async function Crear({
     prisma.miembroGrupo.findMany({
       where: { usuarioId: usuario.id },
       include: { grupo: { select: { id: true, nombre: true, deporteId: true } } },
+    }),
+    prisma.lugarGuardado.findMany({
+      where: { usuarioId: usuario.id },
+      orderBy: { ultimaVez: 'desc' },
+      take: 8,
+      select: { id: true, nombre: true, direccion: true, telefono: true },
+    }),
+    prisma.seguimiento.findMany({
+      where: { seguidoId: usuario.id },
+      include: { seguidor: { select: { id: true, nombre: true, usuario: true } } },
+      orderBy: { creadoEn: 'desc' },
+      take: 50,
     }),
   ]);
 
@@ -32,6 +44,8 @@ export default async function Crear({
     <Asistente
       deportes={deportes}
       grupos={grupos}
+      lugares={lugares}
+      seguidores={seguimientos.map((s) => s.seguidor)}
       grupoInicial={grupoInicial?.id ?? null}
       deporteInicial={deporteInicial}
     />
