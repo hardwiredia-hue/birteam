@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { usuarioActual } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { obtenerFeed } from '@/lib/jugadas';
+import { idsBloqueados } from '@/lib/bloqueos';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
+import { BotonSeguir } from '@/components/seguir';
+import { Avatar } from '@/components/avatar';
 
 export const metadata = { title: 'BirtSocial' };
 export const dynamic = 'force-dynamic';
@@ -15,6 +18,20 @@ export default async function BirtSocial({
   const { compartir } = await searchParams;
   const usuario = (await usuarioActual())!;
   const { red, comunidad } = await obtenerFeed(usuario.id);
+
+  // "A quién seguir": lo que toda red necesita para arrancar la bola.
+  const [siguiendo, ocultos] = await Promise.all([
+    prisma.seguimiento.findMany({ where: { seguidorId: usuario.id }, select: { seguidoId: true } }),
+    idsBloqueados(usuario.id),
+  ]);
+  const sugeridos = await prisma.usuario.findMany({
+    where: { id: { not: usuario.id, notIn: [...siguiendo.map((s) => s.seguidoId), ...ocultos] } },
+    include: {
+      deportes: { include: { deporte: true }, orderBy: { principal: 'desc' }, take: 1 },
+    },
+    orderBy: { creadoEn: 'desc' },
+    take: 6,
+  });
 
   // ?compartir=torneo:<id> o cancha:<id>: el editor arranca con eso adjunto.
   let torneoId: string | undefined;
@@ -60,11 +77,33 @@ export default async function BirtSocial({
         adjunto={adjunto}
       />
 
+      {sugeridos.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <p className="t-rotulo">Jugadores para seguir</p>
+          {sugeridos.map((sugerido) => (
+            <div key={sugerido.id} className="flex items-center gap-3 border-b border-borde py-2.5 last:border-b-0">
+              <Link href={`/jugadores/${sugerido.usuario}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <Avatar nombre={sugerido.nombre} avatarUrl={sugerido.avatarUrl} tam={36} />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">{sugerido.nombre}</span>
+                  <span className="block text-xs text-tinta-3">
+                    @{sugerido.usuario}
+                    {sugerido.deportes[0] ? ` · ${sugerido.deportes[0].deporte.nombre}` : ''}
+                    {sugerido.ciudad ? ` · ${sugerido.ciudad}` : ''}
+                  </span>
+                </span>
+              </Link>
+              <BotonSeguir usuarioId={sugerido.id} siguiendoInicial={false} />
+            </div>
+          ))}
+        </section>
+      ) : null}
+
       {red.length === 0 && comunidad.length === 0 ? (
         <div className="tarjeta p-5">
           <p className="text-sm text-tinta-2">
-            Acá van a aparecer las jugadas de tu gente: los que seguís, tus grupos y tus partidos.
-            Arrancá subiendo la primera, o seguí jugadores desde sus perfiles.
+            Tu feed arranca acá: subí la primera jugada con la caja de arriba, o seguí a los
+            jugadores de la lista y sus publicaciones aparecen solas.
           </p>
         </div>
       ) : (
