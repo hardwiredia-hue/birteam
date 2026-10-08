@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -100,6 +101,9 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
           {torneo.tokenPublico ? (
             <CompartirTorneo rutaPublica={`/t/${torneo.tokenPublico}`} />
           ) : null}
+          <Link href={`/jugadas?compartir=torneo:${torneo.id}`} className="btn btn-fantasma">
+            Compartir en Jugadas
+          </Link>
           {organizo ? (
             <ArrancarTorneo torneoId={torneo.id} equipos={torneo.equipos.length} />
           ) : null}

@@ -123,16 +123,41 @@ function Clip({
 
   return (
     <section className="relative h-dvh w-full snap-start snap-always">
-      <video
-        ref={videoRef}
-        src={clip.videoUrl!}
-        className="h-full w-full object-contain"
-        loop
-        muted
-        playsInline
-        preload="metadata"
-        onClick={alternarReproduccion}
-      />
+      {clip.videoUrl ? (
+        <video
+          ref={videoRef}
+          src={clip.videoUrl}
+          className="h-full w-full object-contain"
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          onClick={alternarReproduccion}
+        />
+      ) : clip.fotos.length > 1 ? (
+        <div className="flex h-full w-full snap-x snap-mandatory overflow-x-auto">
+          {clip.fotos.map((foto) => (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              key={foto}
+              src={`/api/archivos/${foto}`}
+              alt=""
+              className="h-full w-full flex-shrink-0 snap-start object-contain"
+            />
+          ))}
+        </div>
+      ) : clip.fotos.length === 1 ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={`/api/archivos/${clip.fotos[0]}`}
+          alt=""
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center px-10">
+          <p className="t-display text-center text-[26px] text-white">{clip.texto}</p>
+        </div>
+      )}
 
       {/* Degradé para que el texto se lea sobre cualquier video. */}
       <div
@@ -171,6 +196,24 @@ function Clip({
             {totalComentarios > 0 ? totalComentarios : ''}
           </span>
         </button>
+        {clip.publica ? (
+          <button
+            type="button"
+            onClick={async () => {
+              const url = `${window.location.origin}/j/${clip.id}`;
+              try {
+                if (navigator.share) await navigator.share({ title: 'Mirá esta jugada en birteam', url });
+                else await navigator.clipboard.writeText(url);
+              } catch {
+                // Canceló el share: nada que hacer.
+              }
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-[6px] border border-white/25 bg-black/45 text-lg text-white"
+            aria-label="Compartir"
+          >
+            ↗
+          </button>
+        ) : null}
       </div>
 
       {/* Autor y texto abajo, por encima de la barra de navegación. */}
@@ -191,7 +234,27 @@ function Clip({
             {clip.partido.deporte} · {clip.partido.lugar} →
           </Link>
         ) : null}
-        {clip.texto ? <p className="text-sm text-white/90">{clip.texto}</p> : null}
+        {clip.torneo ? (
+          <Link
+            href={`/torneos/${clip.torneo.id}`}
+            className="t-rotulo"
+            style={{ color: '#f59e1e' }}
+          >
+            Torneo · {clip.torneo.nombre} →
+          </Link>
+        ) : null}
+        {clip.cancha ? (
+          <Link
+            href={`/canchas/${clip.cancha.id}`}
+            className="t-rotulo"
+            style={{ color: '#f59e1e' }}
+          >
+            Cancha · {clip.cancha.nombre} →
+          </Link>
+        ) : null}
+        {clip.texto && (clip.videoUrl || clip.fotos.length > 0) ? (
+          <p className="text-sm text-white/90">{clip.texto}</p>
+        ) : null}
       </div>
 
       {comentariosAbiertos ? (

@@ -436,9 +436,11 @@ model Jugada {
   id        String   @id @default(cuid())
   autorId   String
   autor     Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
-  // Atada a un partido real: el diferencial de birteam.
+  // Atada a lo que pasa de verdad en birteam: partido, torneo o cancha.
   partidoId String?
   grupoId   String?
+  torneoId  String?
+  canchaId  String?
   texto     String?
   // Nombres de archivo subidos, como JSON (SQLite no tiene arrays).
   fotos     String   @default("[]")

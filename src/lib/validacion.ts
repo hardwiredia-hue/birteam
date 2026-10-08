@@ -222,10 +222,17 @@ export const esquemaJugada = z
       .nullish(),
     partidoId: z.string().nullish(),
     grupoId: z.string().nullish(),
+    torneoId: z.string().nullish(),
+    canchaId: z.string().nullish(),
   })
   .refine(
-    (datos) => (datos.texto && datos.texto.length > 0) || datos.fotos.length > 0 || datos.video,
-    { error: 'La jugada necesita una foto, un video o un texto.' }
+    (datos) =>
+      (datos.texto && datos.texto.length > 0) ||
+      datos.fotos.length > 0 ||
+      datos.video ||
+      datos.torneoId ||
+      datos.canchaId,
+    { error: 'La jugada necesita una foto, un video, un texto o algo para compartir.' }
   );
 
 export const esquemaComentario = z.object({

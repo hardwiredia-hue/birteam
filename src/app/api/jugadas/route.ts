@@ -48,6 +48,18 @@ export async function POST(request: Request) {
     }
   }
 
+  // Compartir un torneo o una cancha: con que existan alcanza (son públicos).
+  if (d.torneoId) {
+    const torneo = await prisma.torneo.findUnique({ where: { id: d.torneoId }, select: { id: true } });
+    if (!torneo) return NextResponse.json({ error: 'Ese torneo no existe.' }, { status: 404 });
+  }
+  if (d.canchaId) {
+    const cancha = await prisma.cancha.findUnique({ where: { id: d.canchaId }, select: { id: true, activa: true } });
+    if (!cancha || !cancha.activa) {
+      return NextResponse.json({ error: 'Esa cancha no está publicada.' }, { status: 404 });
+    }
+  }
+
   const jugada = await prisma.jugada.create({
     data: {
       autorId: usuario.id,
@@ -56,6 +68,8 @@ export async function POST(request: Request) {
       texto: d.texto ?? null,
       fotos: JSON.stringify(d.fotos),
       videoUrl: d.video ? `/api/archivos/${d.video}` : null,
+      torneoId: d.torneoId ?? null,
+      canchaId: d.canchaId ?? null,
     },
   });
 

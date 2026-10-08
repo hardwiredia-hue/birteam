@@ -13,7 +13,11 @@ export interface JugadaParaMostrar {
   totalMeGusta: number;
   meGusta: boolean;
   totalComentarios: number;
+  /** Sin grupo: se puede compartir con link público. */
+  publica: boolean;
   partido: { id: string; deporte: string; lugar: string } | null;
+  torneo: { id: string; nombre: string; deporte: string } | null;
+  cancha: { id: string; nombre: string; deporte: string } | null;
 }
 
 /**
@@ -93,18 +97,29 @@ async function armarJugadas(
     take: limite,
   });
 
-  // Los datos del partido, en una sola pasada.
+  // Los datos de lo compartido (partidos, torneos, canchas), en una sola pasada.
   const idsPartidos = [...new Set(jugadas.map((j) => j.partidoId).filter(Boolean))] as string[];
-  const partidos = idsPartidos.length
-    ? await prisma.partido.findMany({
-        where: { id: { in: idsPartidos } },
-        include: { deporte: true },
-      })
-    : [];
+  const idsTorneos = [...new Set(jugadas.map((j) => j.torneoId).filter(Boolean))] as string[];
+  const idsCanchas = [...new Set(jugadas.map((j) => j.canchaId).filter(Boolean))] as string[];
+  const [partidos, torneos, canchas] = await Promise.all([
+    idsPartidos.length
+      ? prisma.partido.findMany({ where: { id: { in: idsPartidos } }, include: { deporte: true } })
+      : [],
+    idsTorneos.length
+      ? prisma.torneo.findMany({ where: { id: { in: idsTorneos } }, include: { deporte: true } })
+      : [],
+    idsCanchas.length
+      ? prisma.cancha.findMany({ where: { id: { in: idsCanchas } }, include: { deporte: true } })
+      : [],
+  ]);
   const porId = new Map(partidos.map((p) => [p.id, p]));
+  const torneoPorId = new Map(torneos.map((t) => [t.id, t]));
+  const canchaPorId = new Map(canchas.map((c) => [c.id, c]));
 
   return jugadas.map((jugada) => {
     const partido = jugada.partidoId ? porId.get(jugada.partidoId) : null;
+    const torneo = jugada.torneoId ? torneoPorId.get(jugada.torneoId) : null;
+    const cancha = jugada.canchaId ? canchaPorId.get(jugada.canchaId) : null;
     return {
       id: jugada.id,
       texto: jugada.texto,
@@ -116,14 +131,21 @@ async function armarJugadas(
       totalMeGusta: jugada.meGusta.length,
       meGusta: jugada.meGusta.some((m) => m.usuarioId === usuarioId),
       totalComentarios: jugada._count.comentarios,
+      publica: jugada.grupoId === null,
       partido: partido
         ? { id: partido.id, deporte: partido.deporte.nombre, lugar: partido.lugarNombre }
+        : null,
+      torneo: torneo
+        ? { id: torneo.id, nombre: torneo.nombre, deporte: torneo.deporte.nombre }
+        : null,
+      cancha: cancha
+        ? { id: cancha.id, nombre: cancha.nombre, deporte: cancha.deporte.nombre }
         : null,
     };
   });
 }
 
-/** Clips: jugadas con video, de lo público y de tus grupos, para el feed vertical. */
+/** Clips: jugadas con video o fotos, de lo público y de tus grupos, para el feed vertical. */
 export async function obtenerClips(usuarioId: string, limite = 30): Promise<JugadaParaMostrar[]> {
   const [membresias, ocultos] = await Promise.all([
     prisma.miembroGrupo.findMany({ where: { usuarioId }, select: { grupoId: true } }),
@@ -134,8 +156,10 @@ export async function obtenerClips(usuarioId: string, limite = 30): Promise<Juga
   return armarJugadas(
     usuarioId,
     {
-      videoUrl: { not: null },
-      OR: [{ grupoId: null }, ...(misGrupos.length > 0 ? [{ grupoId: { in: misGrupos } }] : [])],
+      AND: [
+        { OR: [{ videoUrl: { not: null } }, { fotos: { not: '[]' } }] },
+        { OR: [{ grupoId: null }, ...(misGrupos.length > 0 ? [{ grupoId: { in: misGrupos } }] : [])] },
+      ],
       ...(ocultos.length > 0 ? { autorId: { notIn: ocultos } } : {}),
     },
     limite

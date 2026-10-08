@@ -129,6 +129,12 @@ cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfi
   usuarios bloqueados, cerrar sesión.
 
 ### 3.8 Jugadas — la parte social (fase 2)
+- Se comparte todo el sitio: una jugada puede llevar adjunto un torneo, una
+  cancha o un partido como tarjeta enlazada ("Compartir en Jugadas" en cada
+  pantalla). Clips es el feed vertical estilo TikTok de todo lo que tiene
+  media (videos y fotos a pantalla completa, con los enlaces superpuestos).
+- Las jugadas públicas tienen link para afuera (/j/<id>) con la publicación
+  y el botón "Sumate a birteam".
 Feed vertical estilo TikTok/Instagram, con una diferencia que nadie más tiene:
 **cada jugada puede estar atada a un partido real** — el video del gol linkea al
 partido, al grupo y a los que estuvieron.

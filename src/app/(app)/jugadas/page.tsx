@@ -1,14 +1,45 @@
 import Link from 'next/link';
 import { usuarioActual } from '@/lib/auth';
+import { prisma } from '@/lib/db';
 import { obtenerFeed } from '@/lib/jugadas';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 
 export const metadata = { title: 'Jugadas' };
 export const dynamic = 'force-dynamic';
 
-export default async function Jugadas() {
+export default async function Jugadas({
+  searchParams,
+}: {
+  searchParams: Promise<{ compartir?: string }>;
+}) {
+  const { compartir } = await searchParams;
   const usuario = (await usuarioActual())!;
   const { red, comunidad } = await obtenerFeed(usuario.id);
+
+  // ?compartir=torneo:<id> o cancha:<id>: el editor arranca con eso adjunto.
+  let torneoId: string | undefined;
+  let canchaId: string | undefined;
+  let adjunto: string | undefined;
+  const [tipoAdjunto, idAdjunto] = (compartir ?? '').split(':');
+  if (tipoAdjunto === 'torneo' && idAdjunto) {
+    const torneo = await prisma.torneo.findUnique({
+      where: { id: idAdjunto },
+      include: { deporte: true },
+    });
+    if (torneo) {
+      torneoId = torneo.id;
+      adjunto = `Torneo · ${torneo.nombre} (${torneo.deporte.nombre})`;
+    }
+  } else if (tipoAdjunto === 'cancha' && idAdjunto) {
+    const cancha = await prisma.cancha.findUnique({
+      where: { id: idAdjunto },
+      include: { deporte: true },
+    });
+    if (cancha) {
+      canchaId = cancha.id;
+      adjunto = `Cancha · ${cancha.nombre} (${cancha.deporte.nombre})`;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -19,7 +50,12 @@ export default async function Jugadas() {
         </Link>
       </div>
 
-      <PublicarJugada invitacion="Subí una jugada" />
+      <PublicarJugada
+        invitacion="Subí una jugada"
+        torneoId={torneoId}
+        canchaId={canchaId}
+        adjunto={adjunto}
+      />
 
       {red.length === 0 && comunidad.length === 0 ? (
         <div className="tarjeta p-5">

@@ -10,14 +10,22 @@ import { Avatar } from '@/components/avatar';
 export function PublicarJugada({
   partidoId,
   grupoId,
+  torneoId,
+  canchaId,
+  adjunto,
   invitacion = '¿Cómo salió? Subí la jugada.',
 }: {
   partidoId?: string;
   grupoId?: string;
+  torneoId?: string;
+  canchaId?: string;
+  /** Rótulo de lo que se comparte (p. ej. "Torneo · Copa de los Lunes"). */
+  adjunto?: string;
   invitacion?: string;
 }) {
   const router = useRouter();
-  const [abierto, setAbierto] = useState(false);
+  // Si viene con algo para compartir, el editor ya arranca abierto.
+  const [abierto, setAbierto] = useState(Boolean(adjunto));
   const [texto, setTexto] = useState('');
   const [fotos, setFotos] = useState<{ nombre: string; url: string }[]>([]);
   const [video, setVideo] = useState<{ nombre: string; url: string } | null>(null);
@@ -75,6 +83,8 @@ export function PublicarJugada({
         video: video?.nombre ?? null,
         partidoId: partidoId ?? null,
         grupoId: grupoId ?? null,
+        torneoId: torneoId ?? null,
+        canchaId: canchaId ?? null,
       }),
     });
     setEnviando(false);
@@ -100,6 +110,7 @@ export function PublicarJugada({
 
   return (
     <div className="tarjeta flex flex-col gap-3 p-4">
+      {adjunto ? <p className="t-rotulo text-naranja-txt">Compartís: {adjunto}</p> : null}
       <textarea
         id="texto-jugada"
         className="campo min-h-16 resize-y"
@@ -176,7 +187,11 @@ export function PublicarJugada({
           type="button"
           className="btn btn-primario btn-sm"
           onClick={publicar}
-          disabled={enviando || subiendo || (fotos.length === 0 && !video && !texto.trim())}
+          disabled={
+            enviando ||
+            subiendo ||
+            (fotos.length === 0 && !video && !texto.trim() && !torneoId && !canchaId)
+          }
         >
           {enviando ? 'Publicando…' : 'Publicar'}
         </button>
@@ -262,6 +277,26 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
         </Link>
       ) : null}
 
+      {jugada.torneo ? (
+        <Link
+          href={`/torneos/${jugada.torneo.id}`}
+          className="tarjeta block p-3 transition-colors hover:border-borde-2"
+        >
+          <span className="t-rotulo text-naranja-txt">Torneo · {jugada.torneo.deporte}</span>
+          <span className="mt-0.5 block text-sm font-semibold">{jugada.torneo.nombre} →</span>
+        </Link>
+      ) : null}
+
+      {jugada.cancha ? (
+        <Link
+          href={`/canchas/${jugada.cancha.id}`}
+          className="tarjeta block p-3 transition-colors hover:border-borde-2"
+        >
+          <span className="t-rotulo text-naranja-txt">Cancha · {jugada.cancha.deporte}</span>
+          <span className="mt-0.5 block text-sm font-semibold">{jugada.cancha.nombre} →</span>
+        </Link>
+      ) : null}
+
       {jugada.texto ? <p className="text-sm">{jugada.texto}</p> : null}
 
       {jugada.videoUrl ? (
@@ -303,6 +338,8 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
         <button type="button" onClick={cargarComentarios} className="text-xs font-semibold text-tinta-3">
           {jugada.totalComentarios > 0 ? `${jugada.totalComentarios} comentarios` : 'Comentar'}
         </button>
+        <div className="flex-1" />
+        {jugada.publica ? <CompartirJugada jugadaId={jugada.id} /> : null}
       </footer>
 
       {comentariosAbiertos ? (
@@ -345,5 +382,31 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
         </div>
       ) : null}
     </article>
+  );
+}
+
+/** Compartir la jugada afuera (WhatsApp y demás) con su link público. */
+function CompartirJugada({ jugadaId }: { jugadaId: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function compartir() {
+    const url = `${window.location.origin}/j/${jugadaId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Mirá esta jugada en birteam', url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    } catch {
+      // Canceló el share: nada que hacer.
+    }
+  }
+
+  return (
+    <button type="button" onClick={compartir} className="text-xs font-semibold text-tinta-3">
+      {copiado ? 'Link copiado ✓' : 'Compartir'}
+    </button>
   );
 }

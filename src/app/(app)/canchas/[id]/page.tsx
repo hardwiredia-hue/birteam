@@ -135,6 +135,10 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
         </a>
       ) : null}
 
+      <Link href={`/jugadas?compartir=cancha:${cancha.id}`} className="btn btn-fantasma">
+        Compartir en Jugadas
+      </Link>
+
       {esDueno ? (
         <Link href={`/canchas/${cancha.id}/editar`} className="btn btn-secundario">
           Editar la cancha
