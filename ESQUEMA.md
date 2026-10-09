@@ -137,6 +137,12 @@ cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfi
   hasta la fase de torneos.
 
 ### 3.7 Perfil
+
+**Perfil deportivo** (/perfil/deportes): hasta 5 deportes, uno principal, y por
+cada uno la posición (sugeridas por deporte o escrita a mano) y el nivel
+autodeclarado (Inicial, Intermedio, Avanzado, Competitivo). Se ve en el perfil
+propio y en el público. Los partidos pueden llevar un **nivel sugerido**
+(paso 4 del asistente) que se muestra en el partido y en Explorar.
 - Propio: avatar, @usuario, ciudad, **92% asistencia · 47 jugados · 3 grupos**,
   deportes, historial, jugadas publicadas (fase 2), ajustes.
 - Ajeno: lo mismo + "Invitar a un partido". El % de asistencia es lo que mirás antes

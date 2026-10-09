@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { prisma } from '@/lib/db';
+import { FichaDeportiva } from '@/components/ficha-deportiva';
 import { usuarioActual } from '@/lib/auth';
 import { AccionesPerfil, SubirComprobante } from './acciones';
 import { ESTADOS_VERIFICACION } from '@/lib/verificacion';
@@ -116,22 +118,21 @@ export default async function Perfil() {
         </section>
       ) : null}
 
-      {usuario.deportes.length > 0 ? (
-        <section>
-          <p className="t-rotulo mb-2">Deportes</p>
-          <div className="flex flex-wrap gap-2">
-            {usuario.deportes.map((relacion) => (
-              <span
-                key={relacion.deporteId}
-                className={relacion.principal ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {relacion.deporte.nombre}
-                {relacion.principal ? ' · principal' : ''}
-              </span>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <section>
+        <div className="mb-2 flex items-baseline justify-between">
+          <p className="t-rotulo">Perfil deportivo</p>
+          <Link href="/perfil/deportes" className="text-xs font-semibold text-verde-txt">
+            {usuario.deportes.length > 0 ? 'Editar' : 'Completar'}
+          </Link>
+        </div>
+        {usuario.deportes.length > 0 ? (
+          <FichaDeportiva deportes={usuario.deportes} />
+        ) : (
+          <Link href="/perfil/deportes" className="tarjeta block p-4 text-sm text-tinta-2">
+            Contá qué jugás, en qué posición y a qué nivel: así te invitan a partidos parejos.
+          </Link>
+        )}
+      </section>
 
       {historial.length > 0 ? (
         <section>

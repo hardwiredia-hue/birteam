@@ -52,3 +52,26 @@ export const RADIOS_KM = [5, 10, 15, 25, 50] as const;
 
 /** Tipos de cuenta: jugador (por defecto) o dueño de cancha para alquilar. */
 export const TIPOS_CUENTA = ['JUGADOR', 'CANCHA'] as const;
+
+/** Niveles de juego (autodeclarados en el perfil, sugeridos en los partidos). */
+export const NIVELES = ['INICIAL', 'INTERMEDIO', 'AVANZADO', 'COMPETITIVO'] as const;
+export type Nivel = (typeof NIVELES)[number];
+export const ROTULOS_NIVEL: Record<string, string> = {
+  INICIAL: 'Inicial',
+  INTERMEDIO: 'Intermedio',
+  AVANZADO: 'Avanzado',
+  COMPETITIVO: 'Competitivo',
+};
+
+/** Posiciones sugeridas por deporte (se puede escribir otra). */
+export const POSICIONES_POR_DEPORTE: Record<string, string[]> = {
+  'Fútbol 5': ['Arquero', 'Defensor', 'Mediocampista', 'Delantero', 'Comodín'],
+  'Fútbol 11': ['Arquero', 'Central', 'Lateral', 'Volante', 'Enganche', 'Delantero'],
+  Básquet: ['Base', 'Escolta', 'Alero', 'Ala-pívot', 'Pívot'],
+  Vóley: ['Armador', 'Opuesto', 'Central', 'Punta', 'Líbero'],
+  Rugby: ['Pilar', 'Hooker', 'Segunda línea', 'Ala', 'Octavo', 'Medio scrum', 'Apertura', 'Centro', 'Wing', 'Fullback'],
+  Tenis: ['Singles', 'Dobles'],
+  Pádel: ['Drive', 'Revés'],
+  Hockey: ['Arco', 'Defensa', 'Volante', 'Delantera'],
+  Handball: ['Arquero', 'Central', 'Lateral', 'Extremo', 'Pivote'],
+};

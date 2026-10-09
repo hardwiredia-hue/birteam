@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
 
 interface Deporte {
   id: string;
@@ -137,6 +138,8 @@ interface TurnoInicial {
   dia: string;
   hora: string;
   deporteId: string;
+  /** Lo que sale el turno, para sugerir el costo por jugador. */
+  precio: number | null;
 }
 
 /**
@@ -194,6 +197,7 @@ export function Asistente({
   const [cupo, setCupo] = useState(10);
   const [minimo, setMinimo] = useState(8);
   const [costo, setCosto] = useState('');
+  const [nivel, setNivel] = useState<string | null>(null);
   const [visibilidad, setVisibilidad] = useState<'GRUPO' | 'ABIERTO'>('ABIERTO');
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -243,6 +247,7 @@ export function Asistente({
         cupo,
         minimo,
         costoPorJugador: costo.trim() ? Number(costo) : null,
+        nivel,
         visibilidad,
       }),
     });
@@ -550,6 +555,28 @@ export function Asistente({
             Lleno el cupo, los siguientes entran a la lista de espera. Si alguien se baja, sube el
             primero de la lista.
           </p>
+          <div>
+            <span className="rotulo-campo">Nivel sugerido · opcional</span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setNivel(null)}
+                className={nivel === null ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                Cualquiera
+              </button>
+              {NIVELES.map((opcion) => (
+                <button
+                  key={opcion}
+                  type="button"
+                  onClick={() => setNivel(opcion)}
+                  className={nivel === opcion ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                >
+                  {ROTULOS_NIVEL[opcion]}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
       ) : paso === 5 ? (
         <section className="flex flex-col gap-4">
@@ -567,6 +594,16 @@ export function Asistente({
               onChange={(evento) => setCosto(evento.target.value)}
             />
           </div>
+          {turnoInicial?.precio && cupo > 0 ? (
+            <button
+              type="button"
+              className="chip-sel self-start"
+              onClick={() => setCosto(String(Math.ceil(turnoInicial.precio! / cupo / 100) * 100))}
+            >
+              El turno sale ${turnoInicial.precio.toLocaleString('es-AR')}: dividir entre {cupo} → $
+              {(Math.ceil(turnoInicial.precio / cupo / 100) * 100).toLocaleString('es-AR')} c/u
+            </button>
+          ) : null}
           <p className="text-sm text-tinta-3">
             birteam no cobra nada: la plata se arregla entre ustedes. El organizador marca quién
             pagó.

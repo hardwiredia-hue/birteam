@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { ROTULOS_NIVEL } from '@/lib/constantes';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { Chat } from '@/components/chat';
@@ -102,6 +103,13 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           ) : null}
         </p>
       </header>
+
+      {partido.nivel ? (
+        <p className="text-sm text-tinta-2">
+          <span className="t-rotulo text-naranja-txt">Nivel sugerido</span>{' '}
+          <span className="font-semibold text-tinta">{ROTULOS_NIVEL[partido.nivel]}</span>
+        </p>
+      ) : null}
 
       <section className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between">

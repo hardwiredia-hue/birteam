@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { validarCuit } from './verificacion';
+import { NIVELES } from './constantes';
 
 // Mensajes en castellano, concretos, como manda el diseño.
 
@@ -137,6 +138,8 @@ export const esquemaPartido = z.object({
   canchaId: z.string().nullish(),
   // Turno confirmado del que sale el partido (opcional): quedan vinculados.
   reservaId: z.string().nullish(),
+  // Nivel sugerido para sumarse (null = cualquiera).
+  nivel: z.enum(NIVELES).nullish(),
   // Invitados elegidos a mano (seguidores o buscados) al crear el partido.
   invitadoIds: z.array(z.string()).max(50, 'Hasta 50 invitados.').default([]),
   ciudad: z.string().trim().max(80).nullish(),

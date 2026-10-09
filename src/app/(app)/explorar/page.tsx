@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
+import { ROTULOS_NIVEL } from '@/lib/constantes';
 import { usuarioActual } from '@/lib/auth';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
 import { formatearPlata } from '@/lib/formato';
@@ -331,6 +332,9 @@ async function Partidos({
             <p className="text-[13px] text-tinta-2">
               {p.lugarNombre}
               {p.ciudad ? ` · ${p.ciudad}` : ''}
+              {p.nivel ? (
+                <span className="text-naranja-txt"> · Nivel {ROTULOS_NIVEL[p.nivel]?.toLowerCase()}</span>
+              ) : null}
             </p>
             <div className="flex items-baseline justify-between">
               <span

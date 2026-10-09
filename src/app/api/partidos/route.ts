@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       cupo: d.cupo,
       minimo: d.minimo,
       costoPorJugador: d.costoPorJugador ?? null,
+      nivel: d.nivel ?? null,
       visibilidad: d.visibilidad,
       // El organizador ocupa el primer lugar, confirmado.
       participaciones: { create: { usuarioId: usuario.id, estado: 'VOY' } },

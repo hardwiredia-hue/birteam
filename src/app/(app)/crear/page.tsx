@@ -113,6 +113,7 @@ export default async function Crear({
               dia: reserva.fecha,
               hora: reserva.hora,
               deporteId: reserva.cancha.deporteId,
+              precio: reserva.precio,
             }
           : null
       }

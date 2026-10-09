@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { FichaDeportiva } from '@/components/ficha-deportiva';
 import { usuarioActual } from '@/lib/auth';
 import { Moderacion } from '@/components/moderacion';
 import { BotonSeguir } from '@/components/seguir';
@@ -111,17 +112,8 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
 
       {jugador.deportes.length > 0 ? (
         <section>
-          <p className="t-rotulo mb-2">Deportes</p>
-          <div className="flex flex-wrap gap-2">
-            {jugador.deportes.map((relacion) => (
-              <span
-                key={relacion.deporteId}
-                className={relacion.principal ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {relacion.deporte.nombre}
-              </span>
-            ))}
-          </div>
+          <p className="t-rotulo mb-2">Perfil deportivo</p>
+          <FichaDeportiva deportes={jugador.deportes} />
         </section>
       ) : null}
 

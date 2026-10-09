@@ -262,6 +262,8 @@ model UsuarioDeporte {
   deporte   Deporte @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   principal Boolean @default(false)
   posicion  String?
+  // 'INICIAL' | 'INTERMEDIO' | 'AVANZADO' | 'COMPETITIVO' (autodeclarado)
+  nivel     String?
 
   @@id([usuarioId, deporteId])
 }
@@ -324,6 +326,8 @@ model Partido {
   // Cancha publicada elegida como sede (si la hay).
   canchaId          String?
   cancha            Cancha?   @relation(fields: [canchaId], references: [id], onDelete: SetNull)
+  // Nivel sugerido para sumarse (null = cualquier nivel).
+  nivel             String?
   ciudad            String?
   provincia         String?
   pais              String    @default("AR")
