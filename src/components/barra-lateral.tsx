@@ -17,14 +17,12 @@ const ITEMS = [
 ] as const;
 
 /** Navegación de escritorio: columna fija a la izquierda (en móvil manda la barra inferior). */
-export function BarraLateral({ logo }: { logo: React.ReactNode }) {
+export function BarraLateral() {
   const ruta = usePathname();
 
   return (
     <aside className="hidden lg:block lg:w-56 lg:flex-shrink-0">
       <div className="sticky top-8 flex flex-col gap-6">
-        <Link href="/panel">{logo}</Link>
-
         <nav className="flex flex-col gap-1">
           {ITEMS.map(({ href, rotulo, Icono }) => {
             const activo = ruta === href || ruta.startsWith(`${href}/`);

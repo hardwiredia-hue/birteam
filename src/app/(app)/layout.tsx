@@ -19,20 +19,25 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   // Móvil: columna única con barra inferior. Escritorio: barra lateral + pie de página.
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-24 pt-6 lg:max-w-5xl lg:px-8 lg:pb-0 lg:pt-6">
-      {/* Cabecera de escritorio: crear partido y el usuario, arriba a la derecha. */}
-      <header className="mb-8 hidden items-center justify-end gap-5 lg:flex">
-        <Link href="/crear" className="btn btn-primario btn-sm">
-          + Crear partido
+      {/* Cabecera de escritorio: logo a la izquierda; crear partido y usuario a la derecha. */}
+      <header className="mb-8 hidden items-center justify-between lg:flex">
+        <Link href="/panel">
+          <Logotipo ancho={120} />
         </Link>
-        <Link href="/perfil" className="flex items-center gap-2.5">
-          <span className="text-sm font-semibold">{usuario.nombre}</span>
-          <Avatar nombre={usuario.nombre} avatarUrl={usuario.avatarUrl} tam={36} />
-        </Link>
+        <div className="flex items-center gap-5">
+          <Link href="/crear" className="btn btn-primario btn-sm">
+            + Crear partido
+          </Link>
+          <Link href="/perfil" className="flex items-center gap-2.5">
+            <span className="text-sm font-semibold">{usuario.nombre}</span>
+            <Avatar nombre={usuario.nombre} avatarUrl={usuario.avatarUrl} tam={36} />
+          </Link>
+        </div>
       </header>
 
       {/* El contenido estira y el pie queda siempre pegado al fondo. */}
       <div className="w-full flex-1 lg:flex lg:items-start lg:gap-12">
-        <BarraLateral logo={<Logotipo ancho={120} />} />
+        <BarraLateral />
         <main className="min-w-0 flex-1 lg:max-w-2xl">{children}</main>
       </div>
       <PieDePagina />
