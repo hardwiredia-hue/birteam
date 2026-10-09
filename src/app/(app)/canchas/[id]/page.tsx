@@ -7,6 +7,7 @@ import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
 import { GrillaTurnos } from '@/components/turnos';
 import { grillaDeTurnos, precioDelTurno } from '@/lib/reservas';
+import { duenoCobraOnline } from '@/lib/mercadopago';
 import { formatearPuntaje, jugoEnLaCancha } from '@/lib/resenas';
 import { Estrellas, FormularioResena, ResponderResena } from '@/components/resenas';
 
@@ -178,6 +179,11 @@ export default async function DetalleCancha({
           precioTurno={precioTurno != null ? formatearPlata(precioTurno) : null}
           precioBase={precioTurno}
           inicial={fecha && hora ? { fecha, hora } : null}
+          cobro={
+            cancha.cobroOnline !== 'NO' && precioTurno != null && (await duenoCobraOnline(cancha.duenoId))
+              ? { tipo: cancha.cobroOnline as 'SENA' | 'TOTAL', porcentaje: cancha.senaPorcentaje }
+              : null
+          }
           duracion={cancha.duracionTurno}
           telefono={cancha.telefono}
         />

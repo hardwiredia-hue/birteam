@@ -25,6 +25,8 @@ interface CanchaExistente {
   horaCierre: number;
   duracionTurno: number;
   reservasOnline: boolean;
+  cobroOnline: string;
+  senaPorcentaje: number;
   activa: boolean;
 }
 
@@ -47,11 +49,14 @@ export function FormularioCancha({
   deportes,
   cancha,
   predeterminados,
+  mercadoPago,
 }: {
   deportes: Deporte[];
   cancha?: CanchaExistente;
   /** Dirección y teléfono del complejo (del registro), para no tipear dos veces. */
   predeterminados?: { direccion?: string | null; telefono?: string | null };
+  /** Estado de Mercado Pago del dueño: habilita el cobro online. */
+  mercadoPago?: { conectada: boolean; comision: number };
 }) {
   const router = useRouter();
   const [deporteId, setDeporteId] = useState(cancha?.deporteId ?? deportes[0]?.id ?? '');
@@ -64,6 +69,8 @@ export function FormularioCancha({
   const [cierre, setCierre] = useState(cancha?.horaCierre ?? 23);
   const [duracion, setDuracion] = useState(cancha?.duracionTurno ?? 60);
   const [reservasOnline, setReservasOnline] = useState(cancha?.reservasOnline ?? true);
+  const [cobroOnline, setCobroOnline] = useState(cancha?.cobroOnline ?? 'NO');
+  const [senaPorcentaje, setSenaPorcentaje] = useState(cancha?.senaPorcentaje ?? 30);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -120,6 +127,8 @@ export function FormularioCancha({
       horaCierre: cierre,
       duracionTurno: duracion,
       reservasOnline,
+      cobroOnline: mercadoPago?.conectada ? cobroOnline : 'NO',
+      senaPorcentaje,
       ...(cancha ? { activa } : {}),
     };
 
@@ -335,6 +344,59 @@ export function FormularioCancha({
             className="h-5 w-5 shrink-0 accent-[#a8e617]"
           />
         </label>
+        {reservasOnline ? (
+          <div className="flex flex-col gap-2 border-t border-borde pt-3">
+            <p className="text-sm font-semibold">Cobro online con Mercado Pago</p>
+            {mercadoPago?.conectada ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { valor: 'NO', rotulo: 'No, se paga allá' },
+                    { valor: 'SENA', rotulo: 'Seña' },
+                    { valor: 'TOTAL', rotulo: 'Turno completo' },
+                  ].map((opcion) => (
+                    <button
+                      key={opcion.valor}
+                      type="button"
+                      onClick={() => setCobroOnline(opcion.valor)}
+                      className={cobroOnline === opcion.valor ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                    >
+                      {opcion.rotulo}
+                    </button>
+                  ))}
+                </div>
+                {cobroOnline === 'SENA' ? (
+                  <label className="flex items-center gap-2 text-sm">
+                    Seña del
+                    <input
+                      type="number"
+                      min={10}
+                      max={90}
+                      step={5}
+                      value={senaPorcentaje}
+                      onChange={(evento) => setSenaPorcentaje(Number(evento.target.value) || 30)}
+                      className="campo w-20 tabular"
+                    />
+                    % del precio
+                  </label>
+                ) : null}
+                <p className="text-xs text-tinta-3">
+                  {cobroOnline === 'NO'
+                    ? 'Los pedidos te llegan para confirmar y se paga en el complejo.'
+                    : `El turno se confirma solo cuando el jugador paga; la plata va directo a tu Mercado Pago.${
+                        mercadoPago.comision > 0 ? ` birteam retiene un ${mercadoPago.comision}% de lo cobrado online.` : ''
+                      } Si cancelás vos, o el jugador con tiempo, se le devuelve automáticamente.`}
+                </p>
+                <ErrorDeCampo mensajes={errores.precioPorHora} />
+              </>
+            ) : (
+              <p className="text-xs text-tinta-3">
+                Conectá tu cuenta de Mercado Pago desde “Mi complejo” para cobrar seña o el turno
+                completo al reservar.
+              </p>
+            )}
+          </div>
+        ) : null}
       </div>
 
       <div>

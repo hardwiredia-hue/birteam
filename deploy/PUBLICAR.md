@@ -243,6 +243,48 @@ El mismo par de credenciales sirve para los dos ambientes (las dos URIs están
 autorizadas). Cuentas nuevas por Google completan @usuario y datos en
 /registro/completar; si el email ya existía, Google queda vinculado y entra.
 
+## Cobros con Mercado Pago
+
+Modelo marketplace (Checkout Pro + OAuth): cada complejo conecta SU cuenta de
+Mercado Pago desde "Mi complejo"; los cobros van directo a esa cuenta y birteam
+retiene solo su comisión (`marketplace_fee`, se fija en Backoffice › Pagos, por
+defecto 0 %). birteam no guarda datos de tarjetas ni retiene plata de terceros.
+Sin estas variables el cobro online no aparece y todo sigue como antes.
+
+Una sola vez:
+
+1. Con la cuenta de Mercado Pago de birteam, en Mercado Pago Developers → Tus
+   integraciones → Crear aplicación (producto: pagos online / Checkout Pro,
+   con OAuth habilitado para operar a nombre de vendedores). Confirmar con
+   Mercado Pago que la cuenta tenga habilitado el modelo marketplace / split
+   de pagos en Argentina y sus condiciones vigentes antes de cobrar comisión.
+2. En la aplicación → OAuth / URL de redireccionamiento:
+     https://birteam.com/api/mercadopago/volver
+     https://staging.birteam.com/api/mercadopago/volver
+   Habilitar el permiso de acceso sin conexión (offline_access) para poder
+   renovar los tokens sin que el dueño vuelva a conectarse.
+3. Webhooks → Configurar notificaciones → copiar la clave secreta (las URLs
+   de aviso las manda birteam en cada pago, no hace falta cargarlas).
+4. Agregar a CADA .env.production (sin mostrarlos):
+   MP_CLIENT_ID="<client id / app id>"
+   MP_CLIENT_SECRET="<client secret>"
+   MP_WEBHOOK_SECRET="<clave secreta de webhooks>"
+   MP_CLAVE_CIFRADO="<salida de: openssl rand -hex 32>"   (una distinta por ambiente)
+   URL_PUBLICA="https://birteam.com"        (en staging: https://staging.birteam.com)
+5. systemctl restart birteam birteam-staging
+6. Backoffice › Pagos muestra ✓/✗ por variable (nunca sus valores).
+
+Cómo funciona: el jugador elige el turno → queda retenido 15 minutos → paga en
+Mercado Pago → birteam consulta el pago a la API de Mercado Pago (con el token
+del complejo) y recién ahí confirma. El aviso (webhook) se valida con la firma
+`x-signature`; aunque llegue, nada se confirma sin la consulta a la API. Si el
+pago llega tarde y el turno ya no está, o el jugador ya había cancelado, se
+devuelve solo. Cancelaciones del complejo, o del jugador con más de 6 h de
+anticipación, devuelven el pago antes de cancelar (si Mercado Pago no acepta
+la devolución, el turno sigue en pie y queda registrado). Todo queda en el
+registro de eventos de Backoffice › Pagos. MP_CLAVE_CIFRADO cifra los tokens
+de los dueños: si se pierde, los dueños tienen que volver a conectar.
+
 ## Reglas fijas
 
 - Nunca abrir 3000/3001 a internet.

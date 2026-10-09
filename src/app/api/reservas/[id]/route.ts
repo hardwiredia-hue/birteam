@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { reembolsarReserva } from '@/lib/cobros';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaAccionReserva, erroresDeZod } from '@/lib/validacion';
 import { HORAS_CANCELACION, avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
@@ -90,7 +91,10 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       if (count === 0) return yaCambio;
       return NextResponse.json({ listo: true });
     }
-    const { count } = await cambiar(['SOLICITADA', 'CONFIRMADA'], {
+    // Si estaba pagado, primero se devuelve: nunca un turno cancelado con la plata cobrada.
+    const devolucion = await devolverSiPago(reserva.id, 'el complejo canceló el turno');
+    if (devolucion) return devolucion;
+    const { count } = await cambiar(['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA'], {
       estado: 'CANCELADA',
       ocupa: null,
       motivo,
@@ -100,7 +104,9 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       reserva.usuarioId,
       'RESERVA_CANCELADA',
       `Turno cancelado · ${reserva.cancha.nombre}`,
-      `El complejo canceló tu turno del ${turno}.${motivo ? ` Motivo: ${motivo.replace(/\.?$/, '.')}` : ''}`,
+      `El complejo canceló tu turno del ${turno}.${motivo ? ` Motivo: ${motivo.replace(/\.?$/, '.')}` : ''}${
+        reserva.pagoEstado === 'APROBADO' ? ' Te devolvemos todo lo pagado por Mercado Pago.' : ''
+      }`,
       `/canchas/${reserva.cancha.id}`
     );
     return NextResponse.json({ listo: true });
@@ -120,12 +126,15 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       { status: 409 }
     );
   }
-  const { count } = await cambiar(['SOLICITADA', 'CONFIRMADA'], {
+  const devolucion = await devolverSiPago(reserva.id, 'cancelaste con tiempo');
+  if (devolucion) return devolucion;
+  const { count } = await cambiar(['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA'], {
     estado: 'CANCELADA',
     ocupa: null,
     motivo,
   });
   if (count === 0) return yaCambio;
+  if (reserva.estado === 'PENDIENTE_PAGO') return NextResponse.json({ listo: true });
   await avisarReserva(
     reserva.cancha.duenoId,
     'RESERVA_CANCELADA',
@@ -134,4 +143,17 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     '/reservas'
   );
   return NextResponse.json({ listo: true });
+}
+
+/** Devuelve lo pagado antes de cancelar; si Mercado Pago falla, corta con error. */
+async function devolverSiPago(reservaId: string, motivo: string) {
+  try {
+    await reembolsarReserva(reservaId, motivo);
+    return null;
+  } catch {
+    return NextResponse.json(
+      { error: 'No pudimos devolver el pago por Mercado Pago, así que el turno sigue en pie. Probá de nuevo en un rato.' },
+      { status: 502 }
+    );
+  }
 }

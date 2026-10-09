@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { suscripcionActiva } from '@/lib/suscripcion';
+import { comisionPorcentaje, mercadoPagoHabilitado } from '@/lib/mercadopago';
+import { DesconectarMercadoPago } from './mercadopago';
 import { formatearPuntaje } from '@/lib/resenas';
 import {
   ESTADOS_ACTIVOS,
@@ -26,7 +28,18 @@ export const dynamic = 'force-dynamic';
  * próximos 7 días, pedidos sin responder, lo cobrado en el complejo por
  * turnos confirmados y los huecos que conviene publicar en el Radar.
  */
-export default async function MiComplejo() {
+const MENSAJES_MP: Record<string, { texto: string; error?: boolean }> = {
+  conectada: { texto: '¡Listo! Tu cuenta de Mercado Pago quedó conectada. Elegí en cada cancha si cobrás seña o el turno completo.' },
+  error: { texto: 'No se pudo conectar Mercado Pago. Probá de nuevo.', error: true },
+  no_disponible: { texto: 'El cobro online todavía no está habilitado en birteam.', error: true },
+};
+
+export default async function MiComplejo({
+  searchParams,
+}: {
+  searchParams: Promise<{ mp?: string }>;
+}) {
+  const { mp } = await searchParams;
   const usuario = (await usuarioActual())!;
   if (usuario.tipoCuenta !== 'CANCHA') redirect('/perfil');
   await liberarVencidas();
@@ -108,6 +121,15 @@ export default async function MiComplejo() {
   const porRadar = jugadas.filter((r) => r.ofertaId).length;
   const canceladas = ultimas.filter((r) => r.estado === 'CANCELADA').length;
   const activa = suscripcionActiva(usuario);
+  const [cuentaMp, comision] = await Promise.all([
+    prisma.cuentaMercadoPago.findUnique({
+      where: { usuarioId: usuario.id },
+      select: { conectadoEn: true, expiraEn: true, refreshToken: true },
+    }),
+    comisionPorcentaje(),
+  ]);
+  const mpVigente = Boolean(cuentaMp && (cuentaMp.expiraEn > ahora || cuentaMp.refreshToken));
+  const cobrando = canchas.filter((c) => c.cobroOnline !== 'NO').length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -121,6 +143,48 @@ export default async function MiComplejo() {
           {usuario.verificacion === 'VERIFICADA' ? ' · titularidad verificada ✓' : ''}
         </p>
       </header>
+
+      {mp && MENSAJES_MP[mp] ? (
+        <p className={MENSAJES_MP[mp].error ? 'aviso-error' : 'aviso-ok'}>{MENSAJES_MP[mp].texto}</p>
+      ) : null}
+
+      {mercadoPagoHabilitado() ? (
+        <section className="tarjeta flex flex-col gap-3 p-4">
+          <div>
+            <p className="t-rotulo text-verde-txt">Cobro online · Mercado Pago</p>
+            {mpVigente ? (
+              <p className="mt-1 text-sm">
+                Cuenta conectada
+                {cuentaMp
+                  ? ` desde el ${cuentaMp.conectadoEn.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', timeZone: 'America/Argentina/Buenos_Aires' })}`
+                  : ''}
+                . {cobrando > 0
+                  ? `${cobrando} ${cobrando === 1 ? 'cancha cobra' : 'canchas cobran'} online.`
+                  : 'Elegí en cada cancha (Editar) si cobrás seña o el turno completo.'}
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-tinta-2">
+                {cuentaMp
+                  ? 'La conexión venció: volvé a conectar tu cuenta para seguir cobrando online.'
+                  : 'Cobrá la seña o el turno completo al reservar: el turno se confirma solo y se acaban los “después te aviso”. La plata va directo a tu cuenta de Mercado Pago.'}
+              </p>
+            )}
+            <p className="mt-1 text-xs text-tinta-3">
+              {comision > 0
+                ? `birteam retiene un ${comision}% de cada cobro online; la comisión de Mercado Pago la descuenta Mercado Pago.`
+                : 'Por ahora birteam no cobra comisión; la comisión de Mercado Pago la descuenta Mercado Pago.'}{' '}
+              Cancelaciones del complejo, o del jugador con más de 6 h, se devuelven automáticamente.
+            </p>
+          </div>
+          {mpVigente ? (
+            <DesconectarMercadoPago />
+          ) : (
+            <a href="/api/mercadopago/conectar" className="btn btn-primario btn-sm self-start">
+              {cuentaMp ? 'Volver a conectar' : 'Conectar Mercado Pago'}
+            </a>
+          )}
+        </section>
+      ) : null}
 
       {canchas.length === 0 ? (
         <div className="tarjeta flex flex-col gap-3 p-5">
@@ -153,12 +217,12 @@ export default async function MiComplejo() {
             <p className="t-rotulo">Últimos 30 días</p>
             <div className="grid grid-cols-3 gap-2">
               <Dato valor={String(jugadas.length)} rotulo="Turnos jugados" />
-              <Dato valor={cobrado > 0 ? formatearPlata(cobrado) : '$0'} rotulo="Cobrado allá" />
+              <Dato valor={cobrado > 0 ? formatearPlata(cobrado) : '$0'} rotulo="Cobrado" />
               <Dato valor={String(porRadar)} rotulo="Vendidos por Radar" />
             </div>
             <p className="text-xs text-tinta-3">
-              “Cobrado allá” suma el precio de los turnos confirmados que ya pasaron: se pagan en el
-              complejo, birteam no procesa pagos todavía.
+              “Cobrado” suma el precio de los turnos confirmados que ya pasaron, pagados en el
+              complejo o por Mercado Pago.
               {canceladas > 0 ? ` Cancelaciones en el período: ${canceladas}.` : ''}
             </p>
           </section>

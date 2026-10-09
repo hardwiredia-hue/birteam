@@ -18,10 +18,11 @@ export const MINUTOS_ANTICIPACION = 30;
 export const DURACIONES = [60, 90, 120] as const;
 
 /** Estados que ocupan el turno. */
-export const ESTADOS_ACTIVOS = ['SOLICITADA', 'CONFIRMADA', 'BLOQUEO'];
+export const ESTADOS_ACTIVOS = ['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA', 'BLOQUEO'];
 
 export const ROTULOS_ESTADO: Record<string, string> = {
   SOLICITADA: 'Esperando confirmación',
+  PENDIENTE_PAGO: 'Esperando el pago',
   CONFIRMADA: 'Confirmada',
   RECHAZADA: 'Rechazada',
   CANCELADA: 'Cancelada',
@@ -109,6 +110,32 @@ export function seSuperponen(inicioA: number, duracionA: number, inicioB: number
  * así nunca queda un turno trabado por una solicitud olvidada.
  */
 export async function liberarVencidas(canchaId?: string) {
+  // Turnos retenidos para pagar que no se pagaron a tiempo: se liberan.
+  const sinPagar = await prisma.reserva.findMany({
+    where: {
+      estado: 'PENDIENTE_PAGO',
+      venceEn: { lt: new Date() },
+      ...(canchaId ? { canchaId } : {}),
+    },
+    include: { cancha: { select: { id: true, nombre: true } } },
+  });
+  for (const reserva of sinPagar) {
+    const { count } = await prisma.reserva.updateMany({
+      where: { id: reserva.id, estado: 'PENDIENTE_PAGO' },
+      data: { estado: 'VENCIDA', ocupa: null },
+    });
+    if (count === 0) continue;
+    await prisma.notificacion.create({
+      data: {
+        usuarioId: reserva.usuarioId,
+        tipo: 'RESERVA_VENCIDA',
+        titulo: 'Se liberó el turno que estabas pagando',
+        cuerpo: `No se completó el pago del ${rotuloDia(reserva.fecha)} a las ${reserva.hora} en ${reserva.cancha.nombre}. Si todavía está libre, podés pedirlo de nuevo.`,
+        url: `/canchas/${reserva.cancha.id}`,
+      },
+    });
+  }
+
   const vencidas = await prisma.reserva.findMany({
     where: {
       estado: 'SOLICITADA',
@@ -136,7 +163,7 @@ export async function liberarVencidas(canchaId?: string) {
     });
     await enviarPush(reserva.usuarioId, { titulo, cuerpo, url: `/canchas/${reserva.cancha.id}` });
   }
-  return vencidas.length;
+  return vencidas.length + sinPagar.length;
 }
 
 export interface TurnoDeGrilla {
@@ -149,8 +176,10 @@ export interface TurnoDeGrilla {
   pendiente?: boolean;
   estadoMio?: string;
   reservaId?: string;
+  /** Turno propio retenido para pagar: el link de Mercado Pago. */
+  linkPago?: string | null;
   /** Solo para el dueño: quién lo tiene y en qué estado. */
-  detalle?: { estado: string; nombre: string; usuario: string; nota: string | null };
+  detalle?: { estado: string; nombre: string; usuario: string; nota: string | null; pagado: boolean };
 }
 
 export interface DiaDeGrilla {
@@ -197,13 +226,19 @@ export async function grillaDeTurnos(
             seSuperponen(inicio, cancha.duracionTurno, reserva.inicio.getTime(), reserva.duracion)
           );
           if (tomada && tomada.usuarioId === usuarioId && !esDueno) {
-            return { hora, estado: 'MIA', estadoMio: tomada.estado, reservaId: tomada.id };
+            return {
+              hora,
+              estado: 'MIA',
+              estadoMio: tomada.estado,
+              reservaId: tomada.id,
+              linkPago: tomada.estado === 'PENDIENTE_PAGO' ? tomada.mpLinkPago : null,
+            };
           }
           if (tomada) {
             return {
               hora,
               estado: 'OCUPADO',
-              pendiente: tomada.estado === 'SOLICITADA',
+              pendiente: tomada.estado === 'SOLICITADA' || tomada.estado === 'PENDIENTE_PAGO',
               ...(esDueno
                 ? {
                     reservaId: tomada.id,
@@ -212,6 +247,7 @@ export async function grillaDeTurnos(
                       nombre: tomada.usuario.nombre,
                       usuario: tomada.usuario.usuario,
                       nota: tomada.nota,
+                      pagado: tomada.pagoEstado === 'APROBADO',
                     },
                   }
                 : {}),

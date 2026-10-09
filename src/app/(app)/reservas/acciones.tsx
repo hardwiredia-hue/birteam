@@ -66,9 +66,13 @@ export function AccionesReserva({
           </Link>
         ) : null}
         {(esDueno && ['CONFIRMADA', 'BLOQUEO'].includes(estado)) ||
-        (!esDueno && cancelable && ['SOLICITADA', 'CONFIRMADA'].includes(estado)) ? (
+        (!esDueno && cancelable && ['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA'].includes(estado)) ? (
           <button type="button" className="btn btn-secundario btn-sm" disabled={enviando} onClick={() => hacer('cancelar')}>
-            {estado === 'BLOQUEO' ? 'Liberar' : estado === 'SOLICITADA' ? 'Cancelar el pedido' : 'Cancelar'}
+            {estado === 'BLOQUEO'
+              ? 'Liberar'
+              : estado === 'SOLICITADA' || estado === 'PENDIENTE_PAGO'
+                ? 'Cancelar el pedido'
+                : 'Cancelar'}
           </button>
         ) : null}
       </div>

@@ -52,6 +52,8 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       horaCierre: d.horaCierre,
       duracionTurno: d.duracionTurno,
       reservasOnline: d.reservasOnline,
+      cobroOnline: d.cobroOnline,
+      senaPorcentaje: d.senaPorcentaje,
       activa: d.activa,
     },
   });

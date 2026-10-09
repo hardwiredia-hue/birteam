@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { suscripcionActiva } from '@/lib/suscripcion';
+import { comisionPorcentaje, duenoCobraOnline } from '@/lib/mercadopago';
 import { FormularioCancha } from '@/components/formulario-cancha';
 
 export const metadata = { title: 'Publicar cancha' };
@@ -62,6 +63,10 @@ export default async function NuevaCancha() {
       <FormularioCancha
         deportes={deportes}
         predeterminados={{ direccion: usuario.complejoDireccion, telefono: usuario.telefono }}
+        mercadoPago={{
+          conectada: await duenoCobraOnline(usuario.id),
+          comision: await comisionPorcentaje(),
+        }}
       />
     </div>
   );

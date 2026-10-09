@@ -54,6 +54,8 @@ export async function POST(request: Request) {
       horaCierre: d.horaCierre,
       duracionTurno: d.duracionTurno,
       reservasOnline: d.reservasOnline,
+      cobroOnline: d.cobroOnline,
+      senaPorcentaje: d.senaPorcentaje,
     },
   });
 

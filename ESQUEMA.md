@@ -91,6 +91,12 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   recordatorio 3 h antes. Con el turno confirmado, "Armar el partido" abre el
   asistente con cancha, día y hora ya puestos y deja la reserva vinculada.
   Todo en **Reservas** (jugador: sus turnos; dueño: pedidos y agenda).
+- **Cobro online con Mercado Pago** (marketplace): el dueño conecta su cuenta
+  (OAuth) y elige por cancha: sin cobro, seña (%) o turno completo. Con cobro,
+  el turno queda retenido 15 min mientras el jugador paga y se confirma solo
+  cuando la API de Mercado Pago informa el pago aprobado. La plata va directo
+  al complejo; birteam retiene la comisión configurada. Devoluciones
+  automáticas al cancelar (complejo, o jugador con más de 6 h).
 - **Radar de turnos libres**: el dueño toca un turno libre de su grilla y lo
   publica más barato (−10 % a −50 % o precio a mano). El Radar lista solo lo
   que sigue libre de verdad y no empezó, por deporte, ordenado por lo más
@@ -234,6 +240,8 @@ SOLICITADA/CONFIRMADA/RECHAZADA/CANCELADA/VENCIDA/BLOQUEO, precio, `ocupa`
 único mientras el turno está tomado, partido vinculado, oferta) ·
 `OfertaTurno` (cancha, fecha+hora, precio original y de oferta) ·
 `ResenaCancha` (cancha, usuario, puntaje, texto, respuesta del dueño) ·
+`CuentaMercadoPago` (dueño, tokens cifrados) · `PagoMercadoPago` (id de MP
+único, estado, monto, comisión, devolución) · `EventoPago` (auditoría) ·
 `Desafio` (grupo retador, grupo rival o abierto, fecha, lugar, jugadores por
 lado, nivel, estado, partido que salió).
 

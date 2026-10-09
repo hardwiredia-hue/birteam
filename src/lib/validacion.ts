@@ -331,6 +331,8 @@ const camposCancha = z.object({
   horaCierre: z.number().int().min(1).max(24).default(23),
   duracionTurno: z.union([z.literal(60), z.literal(90), z.literal(120)]).default(60),
   reservasOnline: z.boolean().default(true),
+  cobroOnline: z.enum(['NO', 'SENA', 'TOTAL']).default('NO'),
+  senaPorcentaje: z.number().int().min(10, 'La seña va del 10 al 90%.').max(90, 'La seña va del 10 al 90%.').default(30),
 });
 
 const horarioAlcanza = {
@@ -339,7 +341,15 @@ const horarioAlcanza = {
   mensaje: { message: 'El horario no alcanza para un turno.', path: ['horaCierre'] },
 };
 
-export const esquemaCancha = camposCancha.refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje);
+const cobroConPrecio = {
+  chequeo: (cancha: { cobroOnline: string; precioPorHora?: number | null }) =>
+    cancha.cobroOnline === 'NO' || (cancha.precioPorHora != null && cancha.precioPorHora > 0),
+  mensaje: { message: 'Para cobrar online poné el precio por hora.', path: ['precioPorHora'] },
+};
+
+export const esquemaCancha = camposCancha
+  .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje)
+  .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje);
 
 export const esquemaCanchaEditar = camposCancha
   .extend({
@@ -348,7 +358,8 @@ export const esquemaCanchaEditar = camposCancha
     // Las fotos ya guardadas llegan como URL completa; las nuevas, como nombre.
     fotos: z.array(z.string().max(120)).max(5, 'Hasta 5 fotos.').default([]),
   })
-  .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje);
+  .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje)
+  .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje);
 
 export const esquemaReserva = z.object({
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.'),

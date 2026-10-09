@@ -9,6 +9,7 @@ export const metadata = { title: 'Reservas' };
 export const dynamic = 'force-dynamic';
 
 const COLOR_ESTADO: Record<string, string> = {
+  PENDIENTE_PAGO: 'var(--naranja-txt)',
   SOLICITADA: 'var(--naranja-txt)',
   CONFIRMADA: 'var(--verde-txt)',
   BLOQUEO: 'var(--azul-txt)',
@@ -31,7 +32,7 @@ export default async function Reservas() {
     prisma.reserva.findMany({
       where: {
         usuarioId: usuario.id,
-        estado: { in: ['SOLICITADA', 'CONFIRMADA'] },
+        estado: { in: ['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA'] },
         inicio: { gte: desde },
         cancha: { duenoId: { not: usuario.id } },
       },
@@ -171,10 +172,24 @@ export default async function Reservas() {
                 </p>
                 <p className="mt-1 text-xs" style={{ color: COLOR_ESTADO[reserva.estado] }}>
                   {ROTULOS_ESTADO[reserva.estado]}
-                  {reserva.precio != null ? (
+                  {reserva.pagoEstado === 'APROBADO' && reserva.montoOnline != null ? (
+                    <span className="text-tinta-3">
+                      {' '}· pagaste {formatearPlata(reserva.montoOnline)} online
+                      {reserva.precio != null && reserva.precio > reserva.montoOnline
+                        ? `, faltan ${formatearPlata(reserva.precio - reserva.montoOnline)} en el complejo`
+                        : ''}
+                    </span>
+                  ) : reserva.pagoEstado === 'REEMBOLSADO' ? (
+                    <span className="text-tinta-3"> · pago devuelto</span>
+                  ) : reserva.precio != null && reserva.estado !== 'PENDIENTE_PAGO' ? (
                     <span className="text-tinta-3"> · {formatearPlata(reserva.precio)}, se paga en el complejo</span>
                   ) : null}
                 </p>
+                {reserva.estado === 'PENDIENTE_PAGO' && reserva.mpLinkPago ? (
+                  <a href={reserva.mpLinkPago} className="btn btn-primario btn-sm mt-2 inline-flex">
+                    Pagar {reserva.montoOnline != null ? formatearPlata(reserva.montoOnline) : ''} con Mercado Pago
+                  </a>
+                ) : null}
                 <p className="mt-0.5 text-xs text-tinta-3">
                   {reserva.cancha.direccion}
                   {reserva.cancha.telefono ? ` · ${reserva.cancha.telefono}` : ''}

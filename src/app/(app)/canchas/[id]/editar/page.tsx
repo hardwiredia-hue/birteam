@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { FormularioCancha } from '@/components/formulario-cancha';
+import { comisionPorcentaje, duenoCobraOnline } from '@/lib/mercadopago';
 
 export const metadata = { title: 'Editar cancha' };
 export const dynamic = 'force-dynamic';
@@ -37,6 +38,10 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
       <h1 className="t-pantalla">Editar cancha</h1>
       <FormularioCancha
         deportes={deportes}
+        mercadoPago={{
+          conectada: await duenoCobraOnline(cancha.duenoId),
+          comision: await comisionPorcentaje(),
+        }}
         cancha={{
           id: cancha.id,
           nombre: cancha.nombre,
@@ -53,6 +58,8 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
           horaCierre: cancha.horaCierre,
           duracionTurno: cancha.duracionTurno,
           reservasOnline: cancha.reservasOnline,
+          cobroOnline: cancha.cobroOnline,
+          senaPorcentaje: cancha.senaPorcentaje,
           activa: cancha.activa,
         }}
       />

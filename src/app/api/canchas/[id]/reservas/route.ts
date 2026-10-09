@@ -7,6 +7,16 @@ import { permitir } from '@/lib/limite';
 import { esquemaReserva, erroresDeZod } from '@/lib/validacion';
 import { formatearPlata } from '@/lib/formato';
 import {
+  MINUTOS_PARA_PAGAR,
+  comisionPorcentaje,
+  crearPreferencia,
+  duenoCobraOnline,
+  montoOnline,
+  registrarEvento,
+  tokenDelDueno,
+  urlPublica,
+} from '@/lib/mercadopago';
+import {
   ESTADOS_ACTIVOS,
   HORAS_RESPUESTA,
   MINUTOS_ANTICIPACION,
@@ -95,7 +105,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
 
   if (!esDueno) {
     const pendientes = await prisma.reserva.count({
-      where: { canchaId: cancha.id, usuarioId: usuario.id, estado: 'SOLICITADA' },
+      where: { canchaId: cancha.id, usuarioId: usuario.id, estado: { in: ['SOLICITADA', 'PENDIENTE_PAGO'] } },
     });
     if (pendientes >= MAXIMO_PENDIENTES) {
       return NextResponse.json(
@@ -127,9 +137,15 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   const precio = oferta
     ? oferta.precioOferta
     : precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
-  const venceEn = new Date(
-    Math.min(Date.now() + HORAS_RESPUESTA * 3600_000, inicio.getTime())
-  );
+  // Cobro online: el turno queda retenido unos minutos mientras se paga y se
+  // confirma solo cuando Mercado Pago informa el pago aprobado.
+  const aCobrar =
+    !esDueno && precio != null && cancha.cobroOnline !== 'NO' && (await duenoCobraOnline(cancha.duenoId))
+      ? montoOnline(precio, cancha.cobroOnline, cancha.senaPorcentaje)
+      : null;
+  const venceEn = aCobrar
+    ? new Date(Math.min(Date.now() + MINUTOS_PARA_PAGAR * 60_000, inicio.getTime()))
+    : new Date(Math.min(Date.now() + HORAS_RESPUESTA * 3600_000, inicio.getTime()));
 
   let reserva;
   try {
@@ -141,12 +157,13 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
         hora,
         inicio,
         duracion: cancha.duracionTurno,
-        estado: esDueno ? 'BLOQUEO' : 'SOLICITADA',
+        estado: esDueno ? 'BLOQUEO' : aCobrar ? 'PENDIENTE_PAGO' : 'SOLICITADA',
         precio: esDueno ? null : precio,
         nota,
         ocupa: claveOcupa(cancha.id, fecha, hora),
         venceEn: esDueno ? null : venceEn,
         ofertaId: oferta?.id ?? null,
+        ...(aCobrar ? { montoOnline: aCobrar, pagoEstado: 'PENDIENTE' } : {}),
       },
     });
   } catch (error) {
@@ -155,6 +172,43 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Ese turno ya está tomado.' }, { status: 409 });
     }
     throw error;
+  }
+
+  if (aCobrar) {
+    try {
+      const token = await tokenDelDueno(cancha.duenoId);
+      if (!token) throw new Error('Cuenta de Mercado Pago del complejo sin conectar.');
+      const comision = Math.round((aCobrar * (await comisionPorcentaje())) / 100);
+      const preferencia = await crearPreferencia(token, {
+        reservaId: reserva.id,
+        titulo: `${cancha.nombre} · ${rotuloDia(fecha)} ${hora}${cancha.cobroOnline === 'SENA' ? ' (seña)' : ''}`,
+        monto: aCobrar,
+        comision,
+        venceEn,
+        email: usuario.email,
+        base: urlPublica(request),
+      });
+      await prisma.reserva.update({
+        where: { id: reserva.id },
+        data: { mpPreferenciaId: preferencia.id, mpLinkPago: preferencia.linkPago },
+      });
+      await registrarEvento(reserva.id, 'LINK_CREADO', `${aCobrar} ARS, comisión ${comision}`);
+      return NextResponse.json(
+        { id: reserva.id, estado: reserva.estado, pagarUrl: preferencia.linkPago },
+        { status: 201 }
+      );
+    } catch (error) {
+      // Sin link de pago no hay reserva: se libera el turno al instante.
+      await prisma.reserva.update({
+        where: { id: reserva.id },
+        data: { estado: 'CANCELADA', ocupa: null, venceEn: null, pagoEstado: null },
+      });
+      await registrarEvento(reserva.id, 'LINK_FALLIDO', (error as Error).message);
+      return NextResponse.json(
+        { error: 'No pudimos generar el pago con Mercado Pago. Probá de nuevo en un rato.' },
+        { status: 502 }
+      );
+    }
   }
 
   if (!esDueno) {

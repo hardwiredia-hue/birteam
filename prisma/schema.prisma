@@ -82,6 +82,7 @@ model Usuario {
   avisosSociales   Boolean @default(true)
   avisosRadar      Boolean @default(true)
   avisosDesafios   Boolean @default(true)
+  cuentaMercadoPago CuentaMercadoPago?
 }
 
 // Lugares donde el usuario ya organizó: se eligen de una y guardan el contacto.
@@ -133,6 +134,10 @@ model Cancha {
   duracionTurno Int      @default(60)
   // Sin reservas online la cancha se publica igual, pero se reserva por teléfono.
   reservasOnline Boolean @default(true)
+  // Cobro online con Mercado Pago: 'NO' | 'SENA' | 'TOTAL'. Con seña se cobra
+  // senaPorcentaje del precio y el resto se paga en el complejo.
+  cobroOnline    String  @default("NO")
+  senaPorcentaje Int     @default(30)
   // El dueño la puede pausar sin borrarla.
   activa        Boolean  @default(true)
   creadoEn      DateTime @default(now())
@@ -159,7 +164,7 @@ model Reserva {
   hora        String
   inicio      DateTime
   duracion    Int       @default(60)
-  // 'SOLICITADA' | 'CONFIRMADA' | 'RECHAZADA' | 'CANCELADA' | 'VENCIDA' | 'BLOQUEO'
+  // 'SOLICITADA' | 'PENDIENTE_PAGO' | 'CONFIRMADA' | 'RECHAZADA' | 'CANCELADA' | 'VENCIDA' | 'BLOQUEO'
   estado      String    @default("SOLICITADA")
   // Precio al momento de pedirla (se paga en el complejo).
   precio      Float?
@@ -174,6 +179,13 @@ model Reserva {
   partidoId   String?
   // Pedida desde el Radar: el precio es el de la oferta.
   ofertaId    String?
+  // Cobro online: lo que se paga por Mercado Pago (seña o total) y su estado
+  // ('PENDIENTE' | 'APROBADO' | 'REEMBOLSADO'). El resto, en el complejo.
+  montoOnline     Float?
+  pagoEstado      String?
+  mpPreferenciaId String?
+  mpLinkPago      String?
+  pagos           PagoMercadoPago[]
   creadoEn    DateTime  @default(now())
   actualizadoEn DateTime @updatedAt
 
@@ -247,6 +259,51 @@ model Desafio {
   @@index([deporteId, estado, fecha])
   @@index([retadorId])
   @@index([rivalId])
+}
+
+// Cuenta de Mercado Pago del dueño, conectada por OAuth: los cobros van
+// directo a su cuenta y birteam solo retiene su comisión (marketplace_fee).
+// Los tokens se guardan cifrados (AES-256-GCM con MP_CLAVE_CIFRADO).
+model CuentaMercadoPago {
+  id           String   @id @default(cuid())
+  usuarioId    String   @unique
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  mpUserId     String
+  accessToken  String
+  refreshToken String?
+  expiraEn     DateTime
+  conectadoEn  DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+// Un pago de Mercado Pago tal como lo informa su API (nunca el navegador).
+// mpPaymentId único: el mismo aviso procesado dos veces no duplica nada.
+model PagoMercadoPago {
+  id            String    @id @default(cuid())
+  reservaId     String
+  reserva       Reserva   @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+  mpPaymentId   String    @unique
+  estado        String
+  estadoDetalle String?
+  monto         Float
+  moneda        String
+  comision      Float?
+  reembolsadoEn DateTime?
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  @@index([reservaId])
+}
+
+// Registro de lo que pasó con cobros y reembolsos (auditoría e incidencias).
+model EventoPago {
+  id        String   @id @default(cuid())
+  reservaId String?
+  tipo      String
+  detalle   String?
+  creadoEn  DateTime @default(now())
+
+  @@index([reservaId, creadoEn])
 }
 
 // Suscripción del navegador a notificaciones push (una por dispositivo).

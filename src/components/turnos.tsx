@@ -10,11 +10,13 @@ const DESCUENTOS = [10, 20, 30, 40, 50];
 
 const ROTULO_MIO: Record<string, string> = {
   SOLICITADA: 'Pedido',
+  PENDIENTE_PAGO: 'A pagar',
   CONFIRMADA: 'Tuyo',
 };
 
 const ROTULO_DETALLE: Record<string, string> = {
   SOLICITADA: 'Pide el turno (sin confirmar)',
+  PENDIENTE_PAGO: 'Lo está pagando ahora (retenido unos minutos)',
   CONFIRMADA: 'Turno confirmado',
   BLOQUEO: 'Bloqueado por vos',
 };
@@ -33,6 +35,7 @@ export function GrillaTurnos({
   duracion,
   telefono,
   inicial,
+  cobro,
 }: {
   canchaId: string;
   dias: DiaDeGrilla[];
@@ -45,6 +48,8 @@ export function GrillaTurnos({
   telefono: string | null;
   /** Llegando desde el Radar: el turno ya viene elegido. */
   inicial?: { fecha: string; hora: string } | null;
+  /** Cobro online con Mercado Pago (seña o total), si la cancha lo tiene activo. */
+  cobro?: { tipo: 'SENA' | 'TOTAL'; porcentaje: number } | null;
 }) {
   const router = useRouter();
   const primerDiaConLibres = dias.findIndex((dia) => dia.turnos.some((t) => t.estado === 'LIBRE'));
@@ -94,6 +99,11 @@ export function GrillaTurnos({
     if (!respuesta.ok) {
       setError(datos.error ?? 'No pudimos pedir el turno.');
       router.refresh();
+      return;
+    }
+    if (datos.pagarUrl) {
+      setAviso('Te llevamos a Mercado Pago…');
+      window.location.href = datos.pagarUrl;
       return;
     }
     setAviso(
@@ -174,6 +184,15 @@ export function GrillaTurnos({
     router.refresh();
   }
 
+  // Lo que se paga online por el turno elegido (seña o total), con el precio del Radar si aplica.
+  const precioElegido = elegido?.oferta ? elegido.oferta.precio : precioBase;
+  const montoAhora =
+    cobro && precioElegido != null
+      ? cobro.tipo === 'TOTAL'
+        ? Math.round(precioElegido)
+        : Math.max(1, Math.round((precioElegido * cobro.porcentaje) / 100))
+      : null;
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-0.5">
@@ -181,7 +200,14 @@ export function GrillaTurnos({
           Turnos de {duracion === 60 ? '1 hora' : duracion === 90 ? '1 h 30' : '2 horas'}
         </p>
         {precioTurno ? (
-          <p className="text-xs text-tinta-3">{precioTurno} el turno · se paga en el complejo</p>
+          <p className="text-xs text-tinta-3">
+            {precioTurno} el turno ·{' '}
+            {cobro
+              ? cobro.tipo === 'TOTAL'
+                ? 'se paga online al reservar'
+                : `seña del ${cobro.porcentaje}% online, el resto en el complejo`
+              : 'se paga en el complejo'}
+          </p>
         ) : null}
       </div>
 
@@ -281,7 +307,13 @@ export function GrillaTurnos({
               <p className="text-xs text-tinta-3">
                 {esDueno
                   ? 'Bloquealo si lo reservaron por teléfono o la cancha no va a estar disponible.'
-                  : `El complejo confirma el pedido (tiene hasta 12 h). ${
+                  : montoAhora != null
+                    ? `Pagás ${formatearPlata(montoAhora)} ahora con Mercado Pago${
+                        cobro?.tipo === 'SENA' && precioElegido != null
+                          ? ` (seña); el resto, ${formatearPlata(precioElegido - montoAhora)}, en el complejo`
+                          : ''
+                      }. El turno queda confirmado apenas se aprueba el pago. Si cancelás con más de 6 h, te lo devolvemos.`
+                    : `El complejo confirma el pedido (tiene hasta 12 h). ${
                       elegido.oferta
                         ? `${formatearPlata(elegido.oferta.precio)}, `
                         : precioTurno
@@ -297,7 +329,13 @@ export function GrillaTurnos({
                 placeholder={esDueno ? 'Nota (ej: reservó Juan por teléfono)' : 'Nota para el complejo (opcional)'}
               />
               <button type="button" className="btn btn-primario" disabled={enviando} onClick={pedir}>
-                {enviando ? 'Enviando…' : esDueno ? 'Bloquear el turno' : 'Pedir este turno'}
+                {enviando
+                  ? 'Enviando…'
+                  : esDueno
+                    ? 'Bloquear el turno'
+                    : montoAhora != null
+                      ? `Reservar y pagar ${formatearPlata(montoAhora)}`
+                      : 'Pedir este turno'}
               </button>
               {esDueno ? (
                 <div className="flex flex-col gap-2 border-t border-borde pt-3">
@@ -369,9 +407,16 @@ export function GrillaTurnos({
               <p className="text-xs text-tinta-3">
                 {elegido.estadoMio === 'CONFIRMADA'
                   ? 'Turno confirmado. Si no van, cancelalo con tiempo así lo aprovecha otro.'
-                  : 'Esperando que el complejo confirme.'}
+                  : elegido.estadoMio === 'PENDIENTE_PAGO'
+                    ? 'Te lo guardamos unos minutos mientras pagás. Si no se completa el pago, se libera.'
+                    : 'Esperando que el complejo confirme.'}
               </p>
               <div className="flex flex-wrap gap-2">
+                {elegido.estadoMio === 'PENDIENTE_PAGO' && elegido.linkPago ? (
+                  <a href={elegido.linkPago} className="btn btn-primario btn-sm">
+                    Pagar con Mercado Pago
+                  </a>
+                ) : null}
                 {elegido.estadoMio === 'CONFIRMADA' ? (
                   <Link
                     href={`/crear?cancha=${canchaId}&fecha=${dia.fecha}&hora=${elegido.hora}&reserva=${elegido.reservaId}`}
@@ -396,6 +441,7 @@ export function GrillaTurnos({
             <>
               <p className="text-xs text-tinta-3">
                 {ROTULO_DETALLE[elegido.detalle.estado] ?? elegido.detalle.estado}
+                {elegido.detalle.pagado ? ' · pagado online' : ''}
                 {elegido.detalle.estado !== 'BLOQUEO' ? (
                   <>
                     {' · '}
