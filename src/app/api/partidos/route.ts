@@ -85,6 +85,20 @@ export async function POST(request: Request) {
     },
   });
 
+  // Partido armado sobre un turno confirmado propio: la reserva apunta al partido.
+  if (d.reservaId && canchaId) {
+    await prisma.reserva.updateMany({
+      where: {
+        id: d.reservaId,
+        usuarioId: usuario.id,
+        canchaId,
+        estado: 'CONFIRMADA',
+        partidoId: null,
+      },
+      data: { partidoId: partido.id },
+    });
+  }
+
   // El lugar queda guardado para la próxima: se elige de una, con su contacto.
   await prisma.lugarGuardado.upsert({
     where: { usuarioId_nombre: { usuarioId: usuario.id, nombre: d.lugarNombre } },

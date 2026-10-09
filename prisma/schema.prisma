@@ -76,6 +76,7 @@ model Usuario {
   suscripcionesPush SuscripcionPush[]
   canchas          Cancha[]
   lugares          LugarGuardado[]
+  reservas         Reserva[]
 }
 
 // Lugares donde el usuario ya organizó: se eligen de una y guardan el contacto.
@@ -120,14 +121,56 @@ model Cancha {
   fotos         String   @default("[]")
   // Días de la semana en que la cancha está disponible (JSON, 0=domingo … 6=sábado).
   diasDisponibles String @default("[0,1,2,3,4,5,6]")
+  // Horario de los turnos: de horaApertura a horaCierre (horas enteras, 24 = medianoche),
+  // en turnos de duracionTurno minutos (60, 90 o 120).
+  horaApertura  Int      @default(9)
+  horaCierre    Int      @default(23)
+  duracionTurno Int      @default(60)
+  // Sin reservas online la cancha se publica igual, pero se reserva por teléfono.
+  reservasOnline Boolean @default(true)
   // El dueño la puede pausar sin borrarla.
   activa        Boolean  @default(true)
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
 
   partidos Partido[]
+  reservas Reserva[]
 
   @@index([deporteId, activa])
+}
+
+// Un turno de cancha. El jugador lo solicita, el dueño lo confirma o rechaza.
+// El dueño también bloquea turnos (reservas telefónicas, mantenimiento).
+model Reserva {
+  id          String    @id @default(cuid())
+  canchaId    String
+  cancha      Cancha    @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  usuarioId   String
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  // Día y hora en horario argentino ("2026-10-09", "21:00"); inicio es el instante exacto.
+  fecha       String
+  hora        String
+  inicio      DateTime
+  duracion    Int       @default(60)
+  // 'SOLICITADA' | 'CONFIRMADA' | 'RECHAZADA' | 'CANCELADA' | 'VENCIDA' | 'BLOQUEO'
+  estado      String    @default("SOLICITADA")
+  // Precio al momento de pedirla (se paga en el complejo).
+  precio      Float?
+  nota        String?
+  motivo      String?
+  // "canchaId|fecha|hora" mientras el turno está tomado, null al liberarse:
+  // la base impide que dos reservas activas ocupen el mismo turno.
+  ocupa       String?   @unique
+  // Una solicitud sin respuesta vence y libera el turno.
+  venceEn     DateTime?
+  recordadaEn DateTime?
+  partidoId   String?
+  creadoEn    DateTime  @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([canchaId, fecha])
+  @@index([usuarioId, inicio])
+  @@index([estado, venceEn])
 }
 
 // Suscripción del navegador a notificaciones push (una por dispositivo).

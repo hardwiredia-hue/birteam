@@ -50,6 +50,10 @@ export async function POST(request: Request) {
       telefono: d.telefono ?? null,
       fotos: JSON.stringify(d.fotos.map((nombre) => `/api/archivos/${nombre}`)),
       diasDisponibles: JSON.stringify([...new Set(d.diasDisponibles)].sort()),
+      horaApertura: d.horaApertura,
+      horaCierre: d.horaCierre,
+      duracionTurno: d.duracionTurno,
+      reservasOnline: d.reservasOnline,
     },
   });
 

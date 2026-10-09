@@ -49,6 +49,10 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
           precioPorHora: cancha.precioPorHora,
           fotos,
           diasDisponibles,
+          horaApertura: cancha.horaApertura,
+          horaCierre: cancha.horaCierre,
+          duracionTurno: cancha.duracionTurno,
+          reservasOnline: cancha.reservasOnline,
           activa: cancha.activa,
         }}
       />

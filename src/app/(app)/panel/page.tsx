@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
+import { rotuloDia } from '@/lib/reservas';
 import iso from '../../../../public/birteam-iso.png';
 
 export const metadata = { title: 'Inicio' };
@@ -43,6 +44,25 @@ export default async function Inicio() {
   const mensajesSinLeer = await prisma.mensaje.count({
     where: { destinatarioId: usuario.id, leidoEn: null },
   });
+
+  // Turnos de cancha: el próximo propio y, para dueños, los pedidos sin responder.
+  const [proximoTurno, pedidosSinResponder] = await Promise.all([
+    prisma.reserva.findFirst({
+      where: {
+        usuarioId: usuario.id,
+        estado: { in: ['SOLICITADA', 'CONFIRMADA'] },
+        inicio: { gte: hoy },
+        cancha: { duenoId: { not: usuario.id } },
+      },
+      orderBy: { inicio: 'asc' },
+      include: { cancha: { select: { nombre: true } } },
+    }),
+    usuario.tipoCuenta === 'CANCHA'
+      ? prisma.reserva.count({
+          where: { cancha: { duenoId: usuario.id }, estado: 'SOLICITADA', inicio: { gte: hoy } },
+        })
+      : 0,
+  ]);
 
   const primerNombre = usuario.nombre.split(' ')[0];
   const deportePrincipal =
@@ -117,6 +137,34 @@ export default async function Inicio() {
           </div>
         )}
       </section>
+
+      {pedidosSinResponder > 0 ? (
+        <Link href="/reservas" className="tarjeta flex items-center justify-between gap-3 p-4" style={{ borderColor: 'var(--naranja-txt)' }}>
+          <div>
+            <p className="t-rotulo text-naranja-txt">Pedidos de turno</p>
+            <p className="mt-0.5 text-sm font-semibold">
+              {pedidosSinResponder === 1
+                ? 'Tenés 1 pedido esperando que lo confirmes'
+                : `Tenés ${pedidosSinResponder} pedidos esperando que los confirmes`}
+            </p>
+          </div>
+          <span className="t-display text-[16px] text-naranja-txt">→</span>
+        </Link>
+      ) : null}
+
+      <Link href="/reservas" className="tarjeta flex items-center justify-between gap-3 p-4">
+        <div>
+          <p className="t-rotulo text-verde-txt">Turnos de cancha</p>
+          <p className="mt-0.5 text-sm font-semibold">
+            {proximoTurno
+              ? `${rotuloDia(proximoTurno.fecha)} · ${proximoTurno.hora} en ${proximoTurno.cancha.nombre}${
+                  proximoTurno.estado === 'SOLICITADA' ? ' (esperando confirmación)' : ''
+                }`
+              : 'Pedí turno en una cancha y el complejo te lo confirma'}
+          </p>
+        </div>
+        <span className="t-display text-[16px] text-verde-txt">→</span>
+      </Link>
 
       <Link
         href={deportePrincipal ? `/comunidades/${deportePrincipal.slug}` : '/comunidades'}

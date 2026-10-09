@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
-import { esquemaCancha, erroresDeZod } from '@/lib/validacion';
-
-const esquemaEditar = esquemaCancha.extend({
-  // El dueño puede pausar la publicación sin borrarla.
-  activa: z.boolean().default(true),
-  // Las fotos ya guardadas llegan como URL completa; las nuevas, como nombre.
-  fotos: z.array(z.string().max(120)).max(5, 'Hasta 5 fotos.').default([]),
-});
+import { esquemaCanchaEditar as esquemaEditar, erroresDeZod } from '@/lib/validacion';
 
 /** Editar (o pausar) la cancha. Solo el dueño. */
 export async function PATCH(request: Request, contexto: { params: Promise<{ id: string }> }) {
@@ -56,6 +48,10 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       telefono: d.telefono ?? null,
       fotos: JSON.stringify(fotos),
       diasDisponibles: JSON.stringify([...new Set(d.diasDisponibles)].sort()),
+      horaApertura: d.horaApertura,
+      horaCierre: d.horaCierre,
+      duracionTurno: d.duracionTurno,
+      reservasOnline: d.reservasOnline,
       activa: d.activa,
     },
   });

@@ -135,6 +135,8 @@ export const esquemaPartido = z.object({
   lugarTelefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
   // Cancha publicada elegida como sede (opcional): valida sus días disponibles.
   canchaId: z.string().nullish(),
+  // Turno confirmado del que sale el partido (opcional): quedan vinculados.
+  reservaId: z.string().nullish(),
   // Invitados elegidos a mano (seguidores o buscados) al crear el partido.
   invitadoIds: z.array(z.string()).max(50, 'Hasta 50 invitados.').default([]),
   ciudad: z.string().trim().max(80).nullish(),
@@ -292,7 +294,7 @@ export const esquemaRsvp = z.object({
   estado: z.enum(['VOY', 'TALVEZ', 'NOVOY'], { error: 'Estado desconocido.' }),
 });
 
-export const esquemaCancha = z.object({
+const camposCancha = z.object({
   nombre: z
     .string({ error: 'Poné el nombre de la cancha.' })
     .trim()
@@ -322,6 +324,38 @@ export const esquemaCancha = z.object({
     .min(1, 'Marcá al menos un día disponible.')
     .max(7)
     .default([0, 1, 2, 3, 4, 5, 6]),
+  horaApertura: z.number().int().min(0).max(23).default(9),
+  horaCierre: z.number().int().min(1).max(24).default(23),
+  duracionTurno: z.union([z.literal(60), z.literal(90), z.literal(120)]).default(60),
+  reservasOnline: z.boolean().default(true),
+});
+
+const horarioAlcanza = {
+  chequeo: (cancha: { horaApertura: number; horaCierre: number; duracionTurno: number }) =>
+    cancha.horaCierre * 60 - cancha.horaApertura * 60 >= cancha.duracionTurno,
+  mensaje: { message: 'El horario no alcanza para un turno.', path: ['horaCierre'] },
+};
+
+export const esquemaCancha = camposCancha.refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje);
+
+export const esquemaCanchaEditar = camposCancha
+  .extend({
+    // El dueño puede pausar la publicación sin borrarla.
+    activa: z.boolean().default(true),
+    // Las fotos ya guardadas llegan como URL completa; las nuevas, como nombre.
+    fotos: z.array(z.string().max(120)).max(5, 'Hasta 5 fotos.').default([]),
+  })
+  .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje);
+
+export const esquemaReserva = z.object({
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.'),
+  hora: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora inválida.'),
+  nota: z.string().trim().max(200, 'La nota es muy larga.').nullish(),
+});
+
+export const esquemaAccionReserva = z.object({
+  accion: z.enum(['confirmar', 'rechazar', 'cancelar']),
+  motivo: z.string().trim().max(200, 'El motivo es muy largo.').nullish(),
 });
 
 export const esquemaSuscripcionPush = z.object({

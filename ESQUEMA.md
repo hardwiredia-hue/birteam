@@ -81,6 +81,16 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
 - Vista **Lista / Mapa** en Partidos y Canchas: OpenStreetMap (sin claves de
   terceros), pines verdes (partidos) y naranjas (canchas) con popup al detalle,
   centrado en el usuario y tiles oscurecidos en el tema oscuro.
+- **Turnos y reservas**: el dueño define horario (abre/cierra) y duración del
+  turno (1 h, 1 h 30, 2 h). La cancha muestra una grilla de 14 días con lo que
+  de verdad está libre en la base. El jugador pide el turno → el dueño lo
+  confirma o rechaza (si no responde en 12 h o antes de que empiece, se libera
+  solo). El dueño bloquea turnos (reserva telefónica, mantenimiento). Sin
+  dobles reservas: una clave única en la base por turno ocupado. Se paga en el
+  complejo (sin pago online por ahora). El jugador cancela hasta 6 h antes;
+  recordatorio 3 h antes. Con el turno confirmado, "Armar el partido" abre el
+  asistente con cancha, día y hora ya puestos y deja la reserva vinculada.
+  Todo en **Reservas** (jugador: sus turnos; dueño: pedidos y agenda).
 
 ### 3.4 Partido (la pantalla más importante)
 - Cabecera: deporte, horario, lugar, organizador, sello "se repite".
@@ -183,7 +193,10 @@ invitación, pagó, asistió) · `Jugada` (autor, partido?, media, texto) ·
 `Notificación` (tipo, vencimiento) · `Denuncia` · `Bloqueo` ·
 `SuscripciónPush` (endpoint por dispositivo) · `Cancha` (dueño, deporte,
 dirección+coords, precio/hora, fotos, activa; visible solo con suscripción
-del dueño al día — `Usuario.tipoCuenta` + `Usuario.suscripcionHasta`).
+del dueño al día — `Usuario.tipoCuenta` + `Usuario.suscripcionHasta`) ·
+`Reserva` (cancha, usuario, fecha+hora en horario argentino, estado
+SOLICITADA/CONFIRMADA/RECHAZADA/CANCELADA/VENCIDA/BLOQUEO, precio, `ocupa`
+único mientras el turno está tomado, partido vinculado).
 
 ---
 

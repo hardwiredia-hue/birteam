@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ofrecerLugarLibre } from '@/lib/espera';
 import { enviarPush } from '@/lib/push';
+import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 
 /**
  * Tareas programadas (las corre el cron del servidor cada 10 minutos, ver
@@ -28,7 +29,13 @@ export async function POST(request: Request) {
 
   // Limpieza: registros con Google que quedaron a medio camino.
   await prisma.tokenGoogle.deleteMany({ where: { expiraEn: { lt: ahora } } });
-  const resumen = { invitacionesVencidas: 0, recordatorios24h: 0, reconfirmaciones: 0 };
+  const resumen = {
+    invitacionesVencidas: 0,
+    recordatorios24h: 0,
+    reconfirmaciones: 0,
+    pedidosVencidos: 0,
+    recordatoriosTurno: 0,
+  };
 
   // ---- 1. Invitaciones vencidas ----
   const vencidas = await prisma.participacion.findMany({
@@ -127,6 +134,31 @@ export async function POST(request: Request) {
         if (mando) resumen.reconfirmaciones++;
       }
     }
+  }
+
+  // ---- 4. Turnos de cancha ----
+  // Pedidos que el dueño no contestó a tiempo: se liberan.
+  resumen.pedidosVencidos = await liberarVencidas();
+  // Recordatorio 3 h antes de un turno confirmado (una sola vez).
+  const en3h = new Date(ahora.getTime() + 3 * 3600 * 1000);
+  const turnosCerca = await prisma.reserva.findMany({
+    where: { estado: 'CONFIRMADA', recordadaEn: null, inicio: { gt: ahora, lte: en3h } },
+    include: { cancha: { select: { id: true, nombre: true, direccion: true } } },
+  });
+  for (const reserva of turnosCerca) {
+    const { count } = await prisma.reserva.updateMany({
+      where: { id: reserva.id, recordadaEn: null },
+      data: { recordadaEn: ahora },
+    });
+    if (count === 0) continue;
+    await avisarReserva(
+      reserva.usuarioId,
+      'RESERVA_RECORDATORIO',
+      `Hoy jugás · ${reserva.cancha.nombre}`,
+      `Tu turno es ${rotuloDia(reserva.fecha)} a las ${reserva.hora} en ${reserva.cancha.direccion}.`,
+      reserva.partidoId ? `/partidos/${reserva.partidoId}` : '/reservas'
+    );
+    resumen.recordatoriosTurno++;
   }
 
   return NextResponse.json(resumen);

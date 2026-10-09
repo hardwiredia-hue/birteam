@@ -5,6 +5,8 @@ import { usuarioActual } from '@/lib/auth';
 import { suscripcionActiva } from '@/lib/suscripcion';
 import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
+import { GrillaTurnos } from '@/components/turnos';
+import { grillaDeTurnos, precioDelTurno } from '@/lib/reservas';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +37,11 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
   const visible = cancha.activa && suscripcionActiva(cancha.dueno);
   // Pausada o con suscripción vencida: la ve solo el dueño (y administración).
   if (!visible && !esDueno && usuario.rol !== 'ADMIN') notFound();
+
+  // La grilla: la ve el dueño siempre; los jugadores, si la cancha toma pedidos online.
+  const conGrilla = esDueno || (visible && cancha.reservasOnline);
+  const dias = conGrilla ? await grillaDeTurnos(cancha, usuario.id) : [];
+  const precioTurno = precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
 
   let fotos: string[] = [];
   try {
@@ -129,7 +136,25 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
         ) : null}
       </section>
 
-      {!esDueno && cancha.telefono ? (
+      {conGrilla ? (
+        <GrillaTurnos
+          canchaId={cancha.id}
+          dias={dias}
+          esDueno={esDueno}
+          precioTurno={precioTurno != null ? formatearPlata(precioTurno) : null}
+          duracion={cancha.duracionTurno}
+          telefono={cancha.telefono}
+        />
+      ) : null}
+
+      {esDueno && !cancha.reservasOnline ? (
+        <p className="text-xs text-tinta-3">
+          Los jugadores no ven esta grilla: tenés apagados los pedidos online. Prendelos desde
+          “Editar la cancha”.
+        </p>
+      ) : null}
+
+      {!esDueno && !conGrilla && cancha.telefono ? (
         <a href={`tel:${cancha.telefono.replace(/[^+0-9]/g, '')}`} className="btn btn-primario">
           Llamar para reservar · {cancha.telefono}
         </a>

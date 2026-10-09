@@ -127,7 +127,16 @@ interface CanchaElegible {
   telefono: string | null;
   ciudad: string | null;
   deporte: string;
+  deporteId: string;
   diasDisponibles: number[];
+}
+
+interface TurnoInicial {
+  reservaId: string;
+  canchaId: string;
+  dia: string;
+  hora: string;
+  deporteId: string;
 }
 
 /**
@@ -142,6 +151,7 @@ export function Asistente({
   seguidores,
   grupoInicial,
   deporteInicial,
+  turnoInicial,
 }: {
   deportes: Deporte[];
   grupos: { id: string; nombre: string; deporteId: string }[];
@@ -150,23 +160,31 @@ export function Asistente({
   seguidores: { id: string; nombre: string; usuario: string }[];
   grupoInicial: string | null;
   deporteInicial?: string | null;
+  turnoInicial?: TurnoInicial | null;
 }) {
   const router = useRouter();
 
   const [paso, setPaso] = useState(1);
   const [listaGrupos, setListaGrupos] = useState(grupos);
   const [grupoId, setGrupoId] = useState<string | null>(grupoInicial);
+  // Partido sobre un turno confirmado: cancha, día y hora vienen puestos.
+  const canchaDelTurno = turnoInicial
+    ? (canchas.find((cancha) => cancha.id === turnoInicial.canchaId) ?? null)
+    : null;
   const [deporteId, setDeporteId] = useState<string | null>(
-    grupos.find((g) => g.id === grupoInicial)?.deporteId ?? deporteInicial ?? null
+    turnoInicial?.deporteId ??
+      grupos.find((g) => g.id === grupoInicial)?.deporteId ??
+      deporteInicial ??
+      null
   );
-  const [dia, setDia] = useState<string | null>(null);
-  const [hora, setHora] = useState('21:00');
+  const [dia, setDia] = useState<string | null>(turnoInicial?.dia ?? null);
+  const [hora, setHora] = useState(turnoInicial?.hora ?? '21:00');
   const [repite, setRepite] = useState(false);
-  const [lugarNombre, setLugarNombre] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [lugarTelefono, setLugarTelefono] = useState('');
+  const [lugarNombre, setLugarNombre] = useState(canchaDelTurno?.nombre ?? '');
+  const [direccion, setDireccion] = useState(canchaDelTurno?.direccion ?? '');
+  const [lugarTelefono, setLugarTelefono] = useState(canchaDelTurno?.telefono ?? '');
   // Cancha publicada elegida como sede: su gestión define qué días se puede jugar.
-  const [canchaElegida, setCanchaElegida] = useState<CanchaElegible | null>(null);
+  const [canchaElegida, setCanchaElegida] = useState<CanchaElegible | null>(canchaDelTurno);
   const [invitados, setInvitados] = useState<{ id: string; nombre: string }[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [resultados, setResultados] = useState<{ id: string; nombre: string; usuario: string }[]>([]);
@@ -219,6 +237,8 @@ export function Asistente({
         direccion: direccion.trim() || null,
         lugarTelefono: lugarTelefono.trim() || null,
         canchaId: canchaElegida?.id ?? null,
+        reservaId:
+          turnoInicial && canchaElegida?.id === turnoInicial.canchaId ? turnoInicial.reservaId : null,
         invitadoIds: invitados.map((i) => i.id),
         cupo,
         minimo,
@@ -298,6 +318,12 @@ export function Asistente({
             />
           ))}
         </div>
+        {turnoInicial && canchaElegida?.id === turnoInicial.canchaId ? (
+          <p className="aviso-ok">
+            Partido para tu turno en {canchaElegida.nombre}: la cancha, el día y la hora ya están
+            puestos. Revisá y seguí.
+          </p>
+        ) : null}
       </header>
 
       {paso === 1 ? (

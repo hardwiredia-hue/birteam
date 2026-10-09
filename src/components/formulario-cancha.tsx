@@ -21,8 +21,15 @@ interface CanchaExistente {
   precioPorHora: number | null;
   fotos: string[];
   diasDisponibles: number[];
+  horaApertura: number;
+  horaCierre: number;
+  duracionTurno: number;
+  reservasOnline: boolean;
   activa: boolean;
 }
+
+const HORAS = Array.from({ length: 25 }, (_, hora) => hora);
+const rotuloHora = (hora: number) => (hora === 24 ? '24:00 (medianoche)' : `${String(hora).padStart(2, '0')}:00`);
 
 // Semana de lunes a domingo, con el índice que usa Date.getDay().
 const DIAS_SEMANA = [
@@ -53,6 +60,10 @@ export function FormularioCancha({
   );
   const [activa, setActiva] = useState(cancha?.activa ?? true);
   const [dias, setDias] = useState<number[]>(cancha?.diasDisponibles ?? [0, 1, 2, 3, 4, 5, 6]);
+  const [apertura, setApertura] = useState(cancha?.horaApertura ?? 9);
+  const [cierre, setCierre] = useState(cancha?.horaCierre ?? 23);
+  const [duracion, setDuracion] = useState(cancha?.duracionTurno ?? 60);
+  const [reservasOnline, setReservasOnline] = useState(cancha?.reservasOnline ?? true);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -105,6 +116,10 @@ export function FormularioCancha({
       telefono: String(form.get('telefono') ?? '').trim() || null,
       fotos: fotos.map((foto) => foto.valor),
       diasDisponibles: dias,
+      horaApertura: apertura,
+      horaCierre: cierre,
+      duracionTurno: duracion,
+      reservasOnline,
       ...(cancha ? { activa } : {}),
     };
 
@@ -244,6 +259,82 @@ export function FormularioCancha({
           <p className="mt-1 text-xs text-rojo">Marcá al menos un día.</p>
         ) : null}
         <ErrorDeCampo mensajes={errores.diasDisponibles} />
+      </div>
+
+      <div className="tarjeta flex flex-col gap-3 p-4">
+        <div>
+          <p className="text-sm font-semibold">Turnos</p>
+          <p className="text-xs text-tinta-3">
+            Con esto se arma la grilla de horarios que ven los jugadores para pedir turno.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="rotulo-campo" htmlFor="horaApertura">
+              Abre
+            </label>
+            <select
+              id="horaApertura"
+              className="campo"
+              value={apertura}
+              onChange={(evento) => setApertura(Number(evento.target.value))}
+            >
+              {HORAS.slice(0, 24).map((hora) => (
+                <option key={hora} value={hora}>
+                  {rotuloHora(hora)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="rotulo-campo" htmlFor="horaCierre">
+              Cierra
+            </label>
+            <select
+              id="horaCierre"
+              className="campo"
+              value={cierre}
+              onChange={(evento) => setCierre(Number(evento.target.value))}
+            >
+              {HORAS.slice(1).map((hora) => (
+                <option key={hora} value={hora}>
+                  {rotuloHora(hora)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <ErrorDeCampo mensajes={errores.horaCierre} />
+        <div>
+          <span className="rotulo-campo">Duración de cada turno</span>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {[60, 90, 120].map((minutos) => (
+              <button
+                key={minutos}
+                type="button"
+                onClick={() => setDuracion(minutos)}
+                className={duracion === minutos ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {minutos === 60 ? '1 hora' : minutos === 90 ? '1 h 30' : '2 horas'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <label className="flex items-center justify-between gap-3">
+          <span>
+            <span className="block text-sm font-semibold">Recibir pedidos de turno online</span>
+            <span className="block text-xs text-tinta-3">
+              Cada pedido te llega como aviso y lo confirmás o rechazás vos. Apagado, se
+              reserva solo por teléfono.
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={reservasOnline}
+            onChange={(evento) => setReservasOnline(evento.target.checked)}
+            className="h-5 w-5 shrink-0 accent-[#a8e617]"
+          />
+        </label>
       </div>
 
       <div>

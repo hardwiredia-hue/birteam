@@ -9,10 +9,20 @@ import {
   IconoPerfil,
 } from '@/components/barra-inferior';
 
+function IconoReservas() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 10h17M8 3v4M16 3v4M8.5 14.5l2.2 2.2 4.3-4.4" />
+    </svg>
+  );
+}
+
 const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
   { href: '/birtsocial', rotulo: 'BirtSocial', Icono: IconoJugadas },
+  { href: '/reservas', rotulo: 'Reservas', Icono: IconoReservas },
   { href: '/perfil', rotulo: 'Perfil', Icono: IconoPerfil },
 ] as const;
 

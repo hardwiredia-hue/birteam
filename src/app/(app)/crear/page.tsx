@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic';
 export default async function Crear({
   searchParams,
 }: {
-  searchParams: Promise<{ grupo?: string; deporte?: string }>;
+  searchParams: Promise<{ grupo?: string; deporte?: string; reserva?: string }>;
 }) {
-  const { grupo, deporte } = await searchParams;
+  const { grupo, deporte, reserva: reservaId } = await searchParams;
   const usuario = (await usuarioActual())!;
 
   const [deportes, membresias, lugares, seguimientos, canchasPublicadas] = await Promise.all([
@@ -43,12 +43,37 @@ export default async function Crear({
         telefono: true,
         ciudad: true,
         diasDisponibles: true,
+        deporteId: true,
         deporte: { select: { nombre: true } },
       },
       orderBy: { creadoEn: 'desc' },
       take: 20,
     }),
   ]);
+
+  // Viene de un turno confirmado: la cancha, el día y la hora ya están definidos.
+  const reserva = reservaId
+    ? await prisma.reserva.findFirst({
+        where: { id: reservaId, usuarioId: usuario.id, estado: 'CONFIRMADA', partidoId: null },
+        include: {
+          cancha: {
+            select: {
+              id: true,
+              nombre: true,
+              direccion: true,
+              telefono: true,
+              ciudad: true,
+              diasDisponibles: true,
+              deporteId: true,
+              deporte: { select: { nombre: true } },
+            },
+          },
+        },
+      })
+    : null;
+  if (reserva && !canchasPublicadas.some((cancha) => cancha.id === reserva.canchaId)) {
+    canchasPublicadas.unshift(reserva.cancha);
+  }
 
   const grupos = membresias.map((membresia) => membresia.grupo);
   const grupoInicial = grupos.find((g) => g.id === grupo) ?? null;
@@ -73,12 +98,24 @@ export default async function Crear({
           telefono: cancha.telefono,
           ciudad: cancha.ciudad,
           deporte: cancha.deporte.nombre,
+          deporteId: cancha.deporteId,
           diasDisponibles: dias,
         };
       })}
       seguidores={seguimientos.map((s) => s.seguidor)}
       grupoInicial={grupoInicial?.id ?? null}
       deporteInicial={deporteInicial}
+      turnoInicial={
+        reserva
+          ? {
+              reservaId: reserva.id,
+              canchaId: reserva.canchaId,
+              dia: reserva.fecha,
+              hora: reserva.hora,
+              deporteId: reserva.cancha.deporteId,
+            }
+          : null
+      }
     />
   );
 }
