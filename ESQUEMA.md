@@ -131,6 +131,14 @@ cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfi
 2 h de vencimiento; si no contesta, pasa al siguiente.
 
 ### 3.6 Grupos
+
+**Desafíos (buscador de rivales)** en /desafios: un admin de grupo desafía a
+otro grupo del mismo deporte (día, hora, lugar o cancha publicada, jugadores
+por lado, nivel y mensaje) o publica el desafío abierto. El rival acepta o
+rechaza; un abierto lo acepta el primer grupo que se anime (si dos aceptan a
+la vez, gana uno solo). Al aceptarse se arma el partido (cupo y mínimo = los
+dos equipos completos, visible para los grupos) y se invita a los miembros de
+los dos. Los abiertos compatibles (tu deporte y tu ciudad) salen primero.
 - Mis grupos → **Grupo**: miembros y roles (admin), próximos partidos, historial,
   chat, link de invitación.
 - Administradores: editan el grupo (nombre, descripción, abierto/cerrado), nombran
@@ -214,7 +222,9 @@ del dueño al día — `Usuario.tipoCuenta` + `Usuario.suscripcionHasta`) ·
 SOLICITADA/CONFIRMADA/RECHAZADA/CANCELADA/VENCIDA/BLOQUEO, precio, `ocupa`
 único mientras el turno está tomado, partido vinculado, oferta) ·
 `OfertaTurno` (cancha, fecha+hora, precio original y de oferta) ·
-`ResenaCancha` (cancha, usuario, puntaje, texto, respuesta del dueño).
+`ResenaCancha` (cancha, usuario, puntaje, texto, respuesta del dueño) ·
+`Desafio` (grupo retador, grupo rival o abierto, fecha, lugar, jugadores por
+lado, nivel, estado, partido que salió).
 
 ---
 

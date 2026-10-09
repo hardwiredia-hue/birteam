@@ -58,6 +58,11 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
         <Link href={`/crear?grupo=${grupo.id}`} className="btn btn-primario">Armar partido</Link>
         <CopiarInvitacion ruta={`/g/${grupo.tokenInvitacion}`} />
       </div>
+      {soyAdmin ? (
+        <Link href={`/desafios/nuevo?grupo=${grupo.id}`} className="btn btn-secundario">
+          Desafiar a otro grupo
+        </Link>
+      ) : null}
 
       {soyAdmin ? (
         <EditarGrupo

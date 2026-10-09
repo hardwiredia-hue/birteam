@@ -29,12 +29,22 @@ function IconoRadar() {
   );
 }
 
+function IconoDesafios() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4l8 8M4 4v4M4 4h4M20 4l-8 8M20 4v4M20 4h-4" />
+      <path d="M7 15l-3 3 2 2 3-3M17 15l3 3-2 2-3-3" />
+    </svg>
+  );
+}
+
 const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
   { href: '/birtsocial', rotulo: 'BirtSocial', Icono: IconoJugadas },
   { href: '/radar', rotulo: 'Radar', Icono: IconoRadar },
   { href: '/reservas', rotulo: 'Reservas', Icono: IconoReservas },
+  { href: '/desafios', rotulo: 'Desafíos', Icono: IconoDesafios },
   { href: '/perfil', rotulo: 'Perfil', Icono: IconoPerfil },
 ] as const;
 

@@ -104,7 +104,16 @@ export default async function Explorar({
       ) : tab === 'jugadores' ? (
         <Jugadores q={q} miId={usuario.id} />
       ) : tab === 'grupos' ? (
-        <GruposAbiertos q={q} usuario={usuario} />
+        <>
+          <Link href="/desafios" className="tarjeta flex items-center justify-between gap-2 p-3">
+            <span>
+              <span className="t-rotulo block text-naranja-txt">Buscador de rivales</span>
+              <span className="block text-xs font-semibold">Desafiá a otro grupo o aceptá un desafío abierto</span>
+            </span>
+            <span className="text-naranja-txt">→</span>
+          </Link>
+          <GruposAbiertos q={q} usuario={usuario} />
+        </>
       ) : tab === 'canchas' ? (
         <>
           <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} />

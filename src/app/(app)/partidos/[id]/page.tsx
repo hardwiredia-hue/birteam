@@ -48,6 +48,11 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   const organizo = partido.organizadorId === usuario.id || partido.coOrganizadorId === usuario.id;
   const yaPaso = partido.fecha < new Date();
   const cerrado = partido.estado === 'JUGADO' || partido.estado === 'CANCELADO';
+  // Partido que salió de un desafío entre grupos.
+  const desafio = await prisma.desafio.findFirst({
+    where: { partidoId: partido.id },
+    select: { retador: { select: { nombre: true } }, rival: { select: { nombre: true } } },
+  });
 
   const hora = partido.fecha.toLocaleTimeString('es-AR', {
     hour12: false, hour: '2-digit',
@@ -57,6 +62,16 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
 
   return (
     <div className="flex min-h-[75dvh] flex-col gap-5">
+      {desafio ? (
+        <Link href="/desafios" className="tarjeta flex items-center justify-between gap-3 p-3" style={{ borderColor: 'var(--naranja-txt)' }}>
+          <span className="text-sm font-semibold">
+            <span className="t-rotulo mr-2 text-naranja-txt">Desafío</span>
+            {desafio.retador.nombre} vs {desafio.rival?.nombre ?? '—'}
+          </span>
+          <span className="text-naranja-txt">→</span>
+        </Link>
+      ) : null}
+
       <header className="flex flex-col gap-2">
         <p className="t-rotulo text-verde-txt">
           {partido.deporte.nombre}

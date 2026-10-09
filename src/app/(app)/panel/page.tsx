@@ -72,6 +72,26 @@ export default async function Inicio() {
     (oferta) => oferta.cancha.duenoId !== usuario.id
   );
 
+  // Desafíos: los que esperan tu respuesta y los abiertos de tus deportes.
+  const [desafiosRecibidos, desafiosAbiertos] = await Promise.all([
+    prisma.desafio.count({
+      where: {
+        estado: 'PENDIENTE',
+        fecha: { gt: hoy },
+        rival: { miembros: { some: { usuarioId: usuario.id, rol: 'ADMIN' } } },
+      },
+    }),
+    prisma.desafio.count({
+      where: {
+        estado: 'PENDIENTE',
+        rivalId: null,
+        fecha: { gt: hoy },
+        deporteId: { in: usuario.deportes.map((relacion) => relacion.deporteId) },
+        retador: { miembros: { none: { usuarioId: usuario.id } } },
+      },
+    }),
+  ]);
+
   const primerNombre = usuario.nombre.split(' ')[0];
   const deportePrincipal =
     usuario.deportes.find((relacion) => relacion.principal)?.deporte ??
@@ -170,6 +190,20 @@ export default async function Inicio() {
               {radar[0].descuento ? `−${radar[0].descuento}% · ` : ''}
               {radar[0].cancha.nombre}, {cuandoEmpieza(radar[0].inicio, radar[0].fecha, radar[0].hora)} a{' '}
               {formatearPlata(radar[0].precioOferta)}
+            </p>
+          </div>
+          <span className="t-display text-[16px] text-naranja-txt">→</span>
+        </Link>
+      ) : null}
+
+      {desafiosRecibidos > 0 || desafiosAbiertos > 0 ? (
+        <Link href="/desafios" className="tarjeta flex items-center justify-between gap-3 p-4">
+          <div>
+            <p className="t-rotulo text-naranja-txt">Desafíos</p>
+            <p className="mt-0.5 text-sm font-semibold">
+              {desafiosRecibidos > 0
+                ? `Tu grupo tiene ${desafiosRecibidos} ${desafiosRecibidos === 1 ? 'desafío' : 'desafíos'} para responder`
+                : `${desafiosAbiertos} ${desafiosAbiertos === 1 ? 'grupo busca' : 'grupos buscan'} rival en tu deporte`}
             </p>
           </div>
           <span className="t-display text-[16px] text-naranja-txt">→</span>

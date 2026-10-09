@@ -214,6 +214,37 @@ model ResenaCancha {
   @@index([canchaId, creadoEn])
 }
 
+// Desafío entre grupos (buscador de rivales). Con rival: va dirigido a ese
+// grupo. Sin rival: queda publicado y lo acepta el primer grupo del mismo
+// deporte. Al aceptarse se arma el partido e invita a los dos grupos.
+model Desafio {
+  id             String    @id @default(cuid())
+  deporteId      String
+  deporte        Deporte   @relation(fields: [deporteId], references: [id])
+  retadorId      String
+  retador        Grupo     @relation("desafioRetador", fields: [retadorId], references: [id], onDelete: Cascade)
+  rivalId        String?
+  rival          Grupo?    @relation("desafioRival", fields: [rivalId], references: [id], onDelete: Cascade)
+  creadorId      String
+  fecha          DateTime
+  lugarNombre    String
+  direccion      String?
+  canchaId       String?
+  ciudad         String?
+  jugadoresPorLado Int     @default(5)
+  nivel          String?
+  mensaje        String?
+  // 'PENDIENTE' | 'ACEPTADO' | 'RECHAZADO' | 'CANCELADO'
+  estado         String    @default("PENDIENTE")
+  partidoId      String?
+  respondidoEn   DateTime?
+  creadoEn       DateTime  @default(now())
+
+  @@index([deporteId, estado, fecha])
+  @@index([retadorId])
+  @@index([rivalId])
+}
+
 // Suscripción del navegador a notificaciones push (una por dispositivo).
 model SuscripcionPush {
   id        String   @id @default(cuid())
@@ -274,6 +305,7 @@ model Deporte {
   partidos Partido[]
   torneos  Torneo[]
   canchas  Cancha[]
+  desafios Desafio[]
 }
 
 model UsuarioDeporte {
@@ -313,6 +345,8 @@ model Grupo {
   miembros MiembroGrupo[]
   partidos Partido[]
   mensajes Mensaje[]
+  desafiosEnviados  Desafio[] @relation("desafioRetador")
+  desafiosRecibidos Desafio[] @relation("desafioRival")
 }
 
 model MiembroGrupo {
