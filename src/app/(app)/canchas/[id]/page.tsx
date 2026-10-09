@@ -7,6 +7,8 @@ import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
 import { GrillaTurnos } from '@/components/turnos';
 import { grillaDeTurnos, precioDelTurno } from '@/lib/reservas';
+import { formatearPuntaje, jugoEnLaCancha } from '@/lib/resenas';
+import { Estrellas, FormularioResena, ResponderResena } from '@/components/resenas';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +51,22 @@ export default async function DetalleCancha({
   const conGrilla = esDueno || (visible && cancha.reservasOnline);
   const dias = conGrilla ? await grillaDeTurnos(cancha, usuario.id) : [];
   const precioTurno = precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
+
+  const [resenas, resumen, puedeResenar] = await Promise.all([
+    prisma.resenaCancha.findMany({
+      where: { canchaId: cancha.id },
+      include: { usuario: { select: { nombre: true, usuario: true } } },
+      orderBy: { creadoEn: 'desc' },
+      take: 20,
+    }),
+    prisma.resenaCancha.aggregate({
+      where: { canchaId: cancha.id },
+      _avg: { puntaje: true },
+      _count: { _all: true },
+    }),
+    esDueno ? Promise.resolve(false) : jugoEnLaCancha(usuario.id, cancha.id),
+  ]);
+  const miResena = resenas.find((resena) => resena.usuarioId === usuario.id) ?? null;
 
   let fotos: string[] = [];
   try {
@@ -104,6 +122,15 @@ export default async function DetalleCancha({
           {cancha.ciudad ? ` · ${cancha.ciudad}` : ''}
           {cancha.provincia ? `, ${cancha.provincia}` : ''}
         </p>
+        {resumen._count._all > 0 ? (
+          <a href="#resenas" className="mt-1 flex items-center gap-2 text-sm">
+            <Estrellas puntaje={resumen._avg.puntaje ?? 0} />
+            <span className="font-semibold tabular">{formatearPuntaje(resumen._avg.puntaje ?? 0)}</span>
+            <span className="text-tinta-3">
+              ({resumen._count._all} {resumen._count._all === 1 ? 'reseña' : 'reseñas'})
+            </span>
+          </a>
+        ) : null}
       </header>
 
       <div className="grid grid-cols-2 gap-2">
@@ -168,6 +195,55 @@ export default async function DetalleCancha({
           Llamar para reservar · {cancha.telefono}
         </a>
       ) : null}
+
+      <section id="resenas" className="flex flex-col gap-3">
+        <p className="t-rotulo">
+          Reseñas
+          {resumen._count._all > 0
+            ? ` · ${formatearPuntaje(resumen._avg.puntaje ?? 0)} de 5 (${resumen._count._all})`
+            : ''}
+        </p>
+        {puedeResenar ? (
+          <FormularioResena
+            canchaId={cancha.id}
+            inicial={miResena ? { id: miResena.id, puntaje: miResena.puntaje, texto: miResena.texto } : null}
+          />
+        ) : !esDueno ? (
+          <p className="text-xs text-tinta-3">
+            Reseñan los que jugaron acá (con un turno confirmado o un partido en esta cancha):
+            así las opiniones son reales.
+          </p>
+        ) : null}
+        {resenas.length === 0 ? (
+          <p className="text-sm text-tinta-2">Todavía no tiene reseñas.</p>
+        ) : (
+          resenas.map((resena) => (
+            <article key={resena.id} className="flex flex-col gap-1.5 border-b border-borde pb-3 last:border-b-0">
+              <div className="flex items-baseline justify-between gap-3">
+                <Link href={`/jugadores/${resena.usuario.usuario}`} className="truncate text-sm font-semibold">
+                  {resena.usuario.nombre}
+                </Link>
+                <span className="shrink-0 text-xs text-tinta-3">
+                  {resena.creadoEn.toLocaleDateString('es-AR', {
+                    day: 'numeric',
+                    month: 'short',
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                  })}
+                </span>
+              </div>
+              <Estrellas puntaje={resena.puntaje} tam={13} />
+              {resena.texto ? <p className="text-sm text-tinta-2">{resena.texto}</p> : null}
+              {resena.respuesta ? (
+                <div className="ml-3 border-l-2 border-borde-2 pl-3">
+                  <p className="t-rotulo">Respuesta del complejo</p>
+                  <p className="text-sm text-tinta-2">{resena.respuesta}</p>
+                </div>
+              ) : null}
+              {esDueno ? <ResponderResena resenaId={resena.id} respuesta={resena.respuesta} /> : null}
+            </article>
+          ))
+        )}
+      </section>
 
       <Link href={`/birtsocial?compartir=cancha:${cancha.id}`} className="btn btn-fantasma">
         Compartir en BirtSocial

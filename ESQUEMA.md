@@ -97,6 +97,10 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   pronto o lo más cerca; se pide con un toque al precio de la oferta. Al
   publicar se avisa a quienes juegan ese deporte en la ciudad de la cancha
   (como mucho un aviso cada 12 h por persona).
+- **Reseñas de canchas**: de 1 a 5 estrellas con comentario, solo de quienes
+  jugaron ahí (turno confirmado ya pasado o partido jugado en esa cancha);
+  una por persona, editable; el dueño responde. El promedio se ve en la
+  cancha y en Explorar.
 
 ### 3.4 Partido (la pantalla más importante)
 - Cabecera: deporte, horario, lugar, organizador, sello "se repite".
@@ -209,7 +213,8 @@ del dueño al día — `Usuario.tipoCuenta` + `Usuario.suscripcionHasta`) ·
 `Reserva` (cancha, usuario, fecha+hora en horario argentino, estado
 SOLICITADA/CONFIRMADA/RECHAZADA/CANCELADA/VENCIDA/BLOQUEO, precio, `ocupa`
 único mientras el turno está tomado, partido vinculado, oferta) ·
-`OfertaTurno` (cancha, fecha+hora, precio original y de oferta).
+`OfertaTurno` (cancha, fecha+hora, precio original y de oferta) ·
+`ResenaCancha` (cancha, usuario, puntaje, texto, respuesta del dueño).
 
 ---
 

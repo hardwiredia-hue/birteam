@@ -77,6 +77,7 @@ model Usuario {
   canchas          Cancha[]
   lugares          LugarGuardado[]
   reservas         Reserva[]
+  resenasCancha    ResenaCancha[]
 }
 
 // Lugares donde el usuario ya organizó: se eligen de una y guardan el contacto.
@@ -136,6 +137,7 @@ model Cancha {
   partidos Partido[]
   reservas Reserva[]
   ofertas  OfertaTurno[]
+  resenas  ResenaCancha[]
 
   @@index([deporteId, activa])
 }
@@ -191,6 +193,25 @@ model OfertaTurno {
 
   @@unique([canchaId, fecha, hora])
   @@index([inicio])
+}
+
+// Reseña de una cancha. Solo la deja quien jugó ahí (turno confirmado o
+// partido en esa cancha ya jugado); una por persona, editable. El dueño responde.
+model ResenaCancha {
+  id            String    @id @default(cuid())
+  canchaId      String
+  cancha        Cancha    @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  usuarioId     String
+  usuario       Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  puntaje       Int
+  texto         String?
+  respuesta     String?
+  respondidaEn  DateTime?
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  @@unique([canchaId, usuarioId])
+  @@index([canchaId, creadoEn])
 }
 
 // Suscripción del navegador a notificaciones push (una por dispositivo).

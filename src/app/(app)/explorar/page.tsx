@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
+import { formatearPuntaje, puntajesDeCanchas } from '@/lib/resenas';
 import { usuarioActual } from '@/lib/auth';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
 import { formatearPlata } from '@/lib/formato';
@@ -397,6 +398,7 @@ async function Canchas({
     }))
     .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity))
     .slice(0, 30);
+  const puntajes = await puntajesDeCanchas(lista.map((c) => c.id));
 
   if (lista.length === 0) {
     return (
@@ -487,6 +489,11 @@ async function Canchas({
               </p>
               <p className="mt-1 text-xs font-semibold tabular text-naranja-txt">
                 {c.precioPorHora ? `${formatearPlata(c.precioPorHora)} la hora` : 'Precio a consultar'}
+                {puntajes.get(c.id) ? (
+                  <span className="ml-2 text-tinta-2">
+                    ★ {formatearPuntaje(puntajes.get(c.id)!.promedio)} ({puntajes.get(c.id)!.cantidad})
+                  </span>
+                ) : null}
               </p>
             </div>
           </Link>
