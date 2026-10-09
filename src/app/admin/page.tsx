@@ -31,6 +31,35 @@ export default async function Metricas() {
     prisma.denuncia.count({ where: { estado: 'PENDIENTE' } }),
   ]);
 
+  // Canchas y turnos: solo conteos observados en la base, nada estimado.
+  const hace30 = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+  const [
+    duenos,
+    duenosActivos,
+    canchasPublicadas,
+    turnosPedidos30,
+    turnosConfirmados30,
+    turnosRadar30,
+    turnosCancelados30,
+    pedidosVencidos30,
+    ofertasActivas,
+    desafiosAceptados30,
+    resenas,
+  ] = await Promise.all([
+    prisma.usuario.count({ where: { tipoCuenta: 'CANCHA' } }),
+    prisma.usuario.count({ where: { tipoCuenta: 'CANCHA', suscripcionHasta: { gt: ahora } } }),
+    prisma.cancha.count({ where: { activa: true, dueno: { suscripcionHasta: { gt: ahora } } } }),
+    prisma.reserva.count({ where: { creadoEn: { gte: hace30 }, estado: { not: 'BLOQUEO' } } }),
+    prisma.reserva.count({ where: { creadoEn: { gte: hace30 }, estado: 'CONFIRMADA' } }),
+    prisma.reserva.count({ where: { creadoEn: { gte: hace30 }, estado: 'CONFIRMADA', ofertaId: { not: null } } }),
+    prisma.reserva.count({ where: { creadoEn: { gte: hace30 }, estado: 'CANCELADA' } }),
+    prisma.reserva.count({ where: { creadoEn: { gte: hace30 }, estado: 'VENCIDA' } }),
+    prisma.ofertaTurno.count({ where: { inicio: { gt: ahora } } }),
+    prisma.desafio.count({ where: { respondidoEn: { gte: hace30 }, estado: 'ACEPTADO' } }),
+    prisma.resenaCancha.count(),
+  ]);
+  const conversion = turnosPedidos30 > 0 ? Math.round((turnosConfirmados30 / turnosPedidos30) * 100) : null;
+
   return (
     <div className="flex flex-col gap-5">
       <section className="tarjeta p-5">
@@ -52,6 +81,33 @@ export default async function Metricas() {
           rotulo="Denuncias pendientes"
           alerta={denunciasPendientes > 0}
         />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <p className="t-rotulo">Canchas y turnos · últimos 30 días</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Cifra valor={duenosActivos} rotulo="Complejos activos" detalle={`de ${duenos} registrados`} />
+          <Cifra valor={canchasPublicadas} rotulo="Canchas visibles" />
+          <Cifra valor={turnosPedidos30} rotulo="Turnos pedidos" />
+          <Cifra
+            valor={turnosConfirmados30}
+            rotulo="Confirmados"
+            detalle={conversion != null ? `${conversion}% de los pedidos` : undefined}
+          />
+          <Cifra valor={turnosRadar30} rotulo="Vendidos por Radar" detalle={`${ofertasActivas} ofertas activas`} />
+          <Cifra valor={turnosCancelados30} rotulo="Cancelados" />
+          <Cifra
+            valor={pedidosVencidos30}
+            rotulo="Vencidos sin respuesta"
+            alerta={pedidosVencidos30 > 0}
+            detalle="complejos que no contestan"
+          />
+          <Cifra valor={desafiosAceptados30} rotulo="Desafíos aceptados" detalle={`${resenas} reseñas en total`} />
+        </div>
+        <p className="text-xs text-tinta-3">
+          Conteos de la base. Los turnos se pagan en el complejo: todavía no hay facturación ni
+          comisiones de la plataforma.
+        </p>
       </section>
     </div>
   );
