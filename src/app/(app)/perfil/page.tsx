@@ -201,7 +201,14 @@ export default async function Perfil() {
         </a>
       ) : null}
 
-      <AccionesPerfil temaActual={usuario.tema} />
+      <AccionesPerfil
+        temaActual={usuario.tema}
+        avisos={{
+          avisosSociales: usuario.avisosSociales,
+          avisosRadar: usuario.avisosRadar,
+          avisosDesafios: usuario.avisosDesafios,
+        }}
+      />
     </div>
   );
 }

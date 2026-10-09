@@ -145,6 +145,8 @@ export interface TurnoDeGrilla {
   oferta?: { id: string; precio: number; descuento: number | null };
   /** LIBRE · OCUPADO · PASADO · MIA (con estadoMio) */
   estado: 'LIBRE' | 'OCUPADO' | 'PASADO' | 'MIA';
+  /** Ocupado por un pedido que el complejo todavía no confirmó (puede liberarse). */
+  pendiente?: boolean;
   estadoMio?: string;
   reservaId?: string;
   /** Solo para el dueño: quién lo tiene y en qué estado. */
@@ -201,6 +203,7 @@ export async function grillaDeTurnos(
             return {
               hora,
               estado: 'OCUPADO',
+              pendiente: tomada.estado === 'SOLICITADA',
               ...(esDueno
                 ? {
                     reservaId: tomada.id,

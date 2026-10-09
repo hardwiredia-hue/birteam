@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
-import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
+import { cuandoEmpieza, diaDeSemana, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
 import { PedirOferta } from './pedir';
 
 export const metadata = { title: 'Radar de turnos libres' };
@@ -16,9 +16,18 @@ export const dynamic = 'force-dynamic';
 export default async function Radar({
   searchParams,
 }: {
-  searchParams: Promise<{ deporte?: string; orden?: string }>;
+  searchParams: Promise<{
+    deporte?: string;
+    orden?: string;
+    cuando?: string;
+    descuento?: string;
+    hasta?: string;
+  }>;
 }) {
-  const { deporte: slug, orden } = await searchParams;
+  const { deporte: slug, orden, cuando, descuento: descuentoCrudo, hasta: hastaCrudo } = await searchParams;
+  const descuentoMinimo = Number(descuentoCrudo) || 0;
+  const precioMaximo = Number(hastaCrudo) || 0;
+  const [hoy, manana] = proximosDias(2);
   const usuario = (await usuarioActual())!;
 
   const deportes = await prisma.deporte.findMany({
@@ -30,6 +39,14 @@ export default async function Radar({
 
   const conUbicacion = usuario.latitud != null && usuario.longitud != null;
   const lista = ofertas
+    .filter((oferta) => {
+      if (cuando === 'hoy' && oferta.fecha !== hoy) return false;
+      if (cuando === 'manana' && oferta.fecha !== manana) return false;
+      if (cuando === 'finde' && ![0, 5, 6].includes(diaDeSemana(oferta.fecha))) return false;
+      if (descuentoMinimo && (oferta.descuento ?? 0) < descuentoMinimo) return false;
+      if (precioMaximo && oferta.precioOferta > precioMaximo) return false;
+      return true;
+    })
     .map((oferta) => ({
       ...oferta,
       distancia:
@@ -42,12 +59,14 @@ export default async function Radar({
   }
   const propias = await prisma.cancha.count({ where: { duenoId: usuario.id } });
 
-  const enlace = (cambios: { deporte?: string | null; orden?: string | null }) => {
+  type Filtros = { deporte?: string; orden?: string; cuando?: string; descuento?: string; hasta?: string };
+  const actuales: Filtros = { deporte: slug, orden, cuando, descuento: descuentoCrudo, hasta: hastaCrudo };
+  const enlace = (cambios: { [K in keyof Filtros]?: string | null }) => {
     const parametros = new URLSearchParams();
-    const d = cambios.deporte === undefined ? slug : cambios.deporte;
-    const o = cambios.orden === undefined ? orden : cambios.orden;
-    if (d) parametros.set('deporte', d);
-    if (o) parametros.set('orden', o);
+    for (const clave of ['deporte', 'orden', 'cuando', 'descuento', 'hasta'] as const) {
+      const valor = cambios[clave] === undefined ? actuales[clave] : cambios[clave];
+      if (valor) parametros.set(clave, valor);
+    }
     const texto = parametros.toString();
     return texto ? `/radar?${texto}` : '/radar';
   };
@@ -78,6 +97,56 @@ export default async function Radar({
         ))}
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {[
+          { valor: null, rotulo: 'Cuando sea' },
+          { valor: 'hoy', rotulo: 'Hoy' },
+          { valor: 'manana', rotulo: 'Mañana' },
+          { valor: 'finde', rotulo: 'Finde' },
+        ].map((opcion) => (
+          <Link
+            key={opcion.rotulo}
+            href={enlace({ cuando: opcion.valor })}
+            className={(cuando ?? null) === opcion.valor ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+          >
+            {opcion.rotulo}
+          </Link>
+        ))}
+        {[20, 30, 50].map((minimo) => (
+          <Link
+            key={minimo}
+            href={enlace({ descuento: descuentoMinimo === minimo ? null : String(minimo) })}
+            className={descuentoMinimo === minimo ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+          >
+            −{minimo}% o más
+          </Link>
+        ))}
+      </div>
+
+      <form action="/radar" className="flex items-center gap-2">
+        {(['deporte', 'orden', 'cuando', 'descuento'] as const).map((clave) =>
+          actuales[clave] ? <input key={clave} type="hidden" name={clave} value={actuales[clave]} /> : null
+        )}
+        <input
+          name="hasta"
+          type="number"
+          min={0}
+          step={500}
+          inputMode="numeric"
+          defaultValue={precioMaximo || ''}
+          placeholder="Precio máximo"
+          className="campo flex-1"
+        />
+        <button type="submit" className="btn btn-secundario btn-sm">
+          Filtrar
+        </button>
+        {precioMaximo ? (
+          <Link href={enlace({ hasta: null })} className="text-xs font-semibold text-tinta-3">
+            Quitar
+          </Link>
+        ) : null}
+      </form>
+
       {conUbicacion && lista.length > 1 ? (
         <div className="flex gap-3 text-xs font-semibold">
           <Link href={enlace({ orden: null })} className={orden !== 'cerca' ? 'text-verde-txt' : 'text-tinta-3'}>
@@ -92,7 +161,8 @@ export default async function Radar({
       {lista.length === 0 ? (
         <div className="tarjeta flex flex-col gap-3 p-5">
           <p className="text-sm text-tinta-2">
-            Ahora no hay turnos en el Radar{deporte ? ` de ${deporte.nombre}` : ''}. Cuando un
+            Ahora no hay turnos en el Radar{deporte ? ` de ${deporte.nombre}` : ''}
+            {cuando || descuentoMinimo || precioMaximo ? ' con esos filtros' : ''}. Cuando un
             complejo publique uno libre con descuento te avisamos, si jugás ese deporte en su
             ciudad.
           </p>

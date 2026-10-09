@@ -96,7 +96,9 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   que sigue libre de verdad y no empezó, por deporte, ordenado por lo más
   pronto o lo más cerca; se pide con un toque al precio de la oferta. Al
   publicar se avisa a quienes juegan ese deporte en la ciudad de la cancha
-  (como mucho un aviso cada 12 h por persona).
+  (como mucho un aviso cada 12 h por persona, y solo a quien no los apagó).
+  Filtros: hoy / mañana / finde, descuento mínimo y precio máximo. En la
+  grilla, un turno pedido y sin confirmar se ve "En espera" (puede liberarse).
 - **Reseñas de canchas**: de 1 a 5 estrellas con comentario, solo de quienes
   jugaron ahí (turno confirmado ya pasado o partido jugado en esa cancha);
   una por persona, editable; el dueño responde. El promedio se ve en la
@@ -188,6 +190,10 @@ partido, al grupo y a los que estuvieron.
   después el feed vertical completo. Nunca un feed vacío el día del lanzamiento.
 
 ### 3.9 Notificaciones
+
+**Preferencias** (Perfil > Ajustes): los avisos de partidos, reservas e
+invitaciones llegan siempre; los sociales (me gusta, comentarios, seguidores),
+los del Radar (promocionales) y los de desafíos se pueden apagar.
 Centro de notificaciones + push: invitación · lugar liberado (countdown) ·
 recordatorio 24 h a los que no respondieron · "reconfirmá" 2 h antes a los Tal vez ·
 partido confirmado/cancelado/modificado · social (me gusta, comentario, etiqueta —

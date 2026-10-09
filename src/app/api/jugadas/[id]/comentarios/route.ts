@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { quiere } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { esquemaComentario, erroresDeZod } from '@/lib/validacion';
@@ -53,7 +54,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   });
 
   // Red social de verdad: al autor le llega que le comentaron.
-  if (jugada.autorId !== usuario.id) {
+  if (jugada.autorId !== usuario.id && (await quiere(jugada.autorId, 'avisosSociales'))) {
     const recorte =
       datos.data.texto.length > 80 ? `${datos.data.texto.slice(0, 80)}…` : datos.data.texto;
     const aviso = {

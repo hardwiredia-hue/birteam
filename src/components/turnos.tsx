@@ -225,7 +225,7 @@ export function GrillaTurnos({
             let estilo: React.CSSProperties = {};
             let rotulo = 'Libre';
             if (turno.estado === 'OCUPADO') {
-              rotulo = esDueno && turno.detalle ? (turno.detalle.estado === 'SOLICITADA' ? 'Pedido' : turno.detalle.estado === 'BLOQUEO' ? 'Bloqueado' : 'Reservado') : 'Ocupado';
+              rotulo = esDueno && turno.detalle ? (turno.detalle.estado === 'SOLICITADA' ? 'Pedido' : turno.detalle.estado === 'BLOQUEO' ? 'Bloqueado' : 'Reservado') : turno.pendiente ? 'En espera' : 'Ocupado';
               estilo =
                 esDueno && turno.detalle?.estado === 'SOLICITADA'
                   ? { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' }

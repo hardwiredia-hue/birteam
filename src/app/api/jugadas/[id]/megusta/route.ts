@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { quiere } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
 import { enviarPush } from '@/lib/push';
 
@@ -31,7 +32,7 @@ export async function POST(_request: Request, contexto: { params: Promise<{ id: 
       const yaAvisado = await prisma.notificacion.findFirst({
         where: { usuarioId: jugada.autorId, tipo: 'ME_GUSTA', titulo, url: `/birtsocial` },
       });
-      if (!yaAvisado) {
+      if (!yaAvisado && (await quiere(jugada.autorId, 'avisosSociales'))) {
         const aviso = { titulo, url: `/birtsocial` };
         await prisma.notificacion.create({
           data: { usuarioId: jugada.autorId, tipo: 'ME_GUSTA', ...aviso },

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { quienesQuieren } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
 import { permitir } from '@/lib/limite';
 import { erroresDeZod } from '@/lib/validacion';
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
 
   if (rival) {
     await avisar(
-      await adminsDelGrupo(rival.id),
+      await quienesQuieren(await adminsDelGrupo(rival.id), 'avisosDesafios'),
       'DESAFIO',
       `${retador.nombre} los desafía`,
       `${rotuloFecha(d.fecha)} en ${d.lugarNombre}, ${d.jugadoresPorLado} contra ${d.jugadoresPorLado}. ¿Aceptan?`,

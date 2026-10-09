@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { quiere } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
 import { enviarPush } from '@/lib/push';
 
@@ -29,6 +30,8 @@ export async function POST(request: Request) {
       await prisma.seguimiento.create({
         data: { seguidorId: usuario.id, seguidoId: usuarioId },
       });
+    }
+    if (!previo && (await quiere(usuarioId, 'avisosSociales'))) {
       await prisma.notificacion.create({
         data: {
           usuarioId,

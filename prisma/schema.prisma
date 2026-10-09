@@ -78,6 +78,10 @@ model Usuario {
   lugares          LugarGuardado[]
   reservas         Reserva[]
   resenasCancha    ResenaCancha[]
+  // Preferencias de avisos (los de partidos y reservas no se apagan).
+  avisosSociales   Boolean @default(true)
+  avisosRadar      Boolean @default(true)
+  avisosDesafios   Boolean @default(true)
 }
 
 // Lugares donde el usuario ya organizó: se eligen de una y guardan el contacto.

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { quienesQuieren } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
 import { erroresDeZod } from '@/lib/validacion';
 import { adminsDelGrupo, avisar, rotuloFecha } from '@/lib/desafios';
@@ -80,7 +81,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     });
     if (count === 0) return NextResponse.json({ error: 'Ese desafío ya fue respondido.' }, { status: 409 });
     await avisar(
-      adminsRetador,
+      await quienesQuieren(adminsRetador, 'avisosDesafios'),
       'DESAFIO_RECHAZADO',
       `${rival.nombre} no aceptó el desafío`,
       `El del ${rotuloFecha(desafio.fecha)}. Probá con otra fecha u otro rival.`,

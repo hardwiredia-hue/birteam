@@ -110,6 +110,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
     const interesados = await prisma.usuario.findMany({
       where: {
         id: { not: usuario.id },
+        avisosRadar: true,
         deportes: { some: { deporteId: cancha.deporteId } },
         ...(cancha.ciudad ? { ciudad: cancha.ciudad } : {}),
         notificaciones: { none: { tipo: 'RADAR', creadoEn: { gte: desde } } },
