@@ -6,7 +6,6 @@ import {
   IconoExplorar,
   IconoInicio,
   IconoJugadas,
-  IconoMas,
   IconoPerfil,
 } from '@/components/barra-inferior';
 
@@ -45,11 +44,6 @@ export function BarraLateral({ logo }: { logo: React.ReactNode }) {
             );
           })}
         </nav>
-
-        <Link href="/crear" className="btn btn-primario flex items-center justify-center gap-2">
-          <IconoMas />
-          Crear partido
-        </Link>
       </div>
     </aside>
   );
