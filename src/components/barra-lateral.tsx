@@ -38,6 +38,16 @@ function IconoDesafios() {
   );
 }
 
+function IconoComplejo() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="1.5" />
+      <path d="M12 5v14M3 9.5h3v5H3M21 9.5h-3v5h3" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  );
+}
+
 const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
@@ -49,14 +59,17 @@ const ITEMS = [
 ] as const;
 
 /** Navegación de escritorio: columna fija a la izquierda (en móvil manda la barra inferior). */
-export function BarraLateral() {
+export function BarraLateral({ esDueno = false }: { esDueno?: boolean }) {
   const ruta = usePathname();
+  const items = esDueno
+    ? [...ITEMS.slice(0, 1), { href: '/complejo', rotulo: 'Mi complejo', Icono: IconoComplejo }, ...ITEMS.slice(1)]
+    : ITEMS;
 
   return (
     <aside className="hidden lg:block lg:w-56 lg:flex-shrink-0">
       <div className="sticky top-8 flex flex-col gap-6">
         <nav className="flex flex-col gap-1">
-          {ITEMS.map(({ href, rotulo, Icono }) => {
+          {items.map(({ href, rotulo, Icono }) => {
             const activo = ruta === href || ruta.startsWith(`${href}/`);
             return (
               <Link

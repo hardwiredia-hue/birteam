@@ -99,6 +99,11 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   (como mucho un aviso cada 12 h por persona, y solo a quien no los apagó).
   Filtros: hoy / mañana / finde, descuento mínimo y precio máximo. En la
   grilla, un turno pedido y sin confirmar se ve "En espera" (puede liberarse).
+- **Panel del complejo** (/complejo, cuentas de dueño): ocupación de los
+  próximos 7 días, turnos tomados y libres, pedidos sin responder, lo cobrado
+  en el complejo por turnos jugados (30 días), turnos vendidos por el Radar,
+  cancelaciones y, por cancha, los huecos de hoy y mañana con atajo para
+  bloquearlos o publicarlos en el Radar. Todo calculado de reservas reales.
 - **Reseñas de canchas**: de 1 a 5 estrellas con comentario, solo de quienes
   jugaron ahí (turno confirmado ya pasado o partido jugado en esa cancha);
   una por persona, editable; el dueño responde. El promedio se ve en la

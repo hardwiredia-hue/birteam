@@ -233,7 +233,12 @@ async function SeccionCanchas({
 
   return (
     <section className="flex flex-col gap-3">
-      <p className="t-rotulo">{usuario.complejoNombre ?? 'Tus canchas'}</p>
+      <div className="flex items-baseline justify-between">
+        <p className="t-rotulo">{usuario.complejoNombre ?? 'Tus canchas'}</p>
+        <Link href="/complejo" className="text-xs font-semibold text-verde-txt">
+          Panel del complejo →
+        </Link>
+      </div>
 
       <div className="tarjeta flex flex-col gap-2 p-4">
         <div className="flex items-center justify-between gap-3">

@@ -45,7 +45,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
 
       {/* El contenido estira y el pie queda siempre pegado al fondo. */}
       <div className="w-full flex-1 lg:flex lg:items-start lg:gap-12">
-        <BarraLateral />
+        <BarraLateral esDueno={usuario.tipoCuenta === 'CANCHA'} />
         <main className="min-w-0 flex-1 lg:max-w-2xl">{children}</main>
       </div>
       <PieDePagina />

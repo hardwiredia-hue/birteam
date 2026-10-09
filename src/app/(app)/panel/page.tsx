@@ -166,6 +166,16 @@ export default async function Inicio() {
         )}
       </section>
 
+      {usuario.tipoCuenta === 'CANCHA' ? (
+        <Link href="/complejo" className="tarjeta flex items-center justify-between gap-3 p-4">
+          <div>
+            <p className="t-rotulo text-verde-txt">Mi complejo</p>
+            <p className="mt-0.5 text-sm font-semibold">Ocupación, turnos libres y lo cobrado</p>
+          </div>
+          <span className="t-display text-[16px] text-verde-txt">→</span>
+        </Link>
+      ) : null}
+
       {pedidosSinResponder > 0 ? (
         <Link href="/reservas" className="tarjeta flex items-center justify-between gap-3 p-4" style={{ borderColor: 'var(--naranja-txt)' }}>
           <div>
