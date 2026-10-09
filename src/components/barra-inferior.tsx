@@ -60,7 +60,7 @@ export function BarraInferior() {
   const ruta = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-borde bg-panel lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-borde bg-panel">
       <div className="mx-auto grid h-16 w-full max-w-md grid-cols-5 items-center px-1">
         {ITEMS.map(({ href, rotulo, Icono, ...item }) => {
           const activo = ruta === href || ruta.startsWith(`${href}/`);
