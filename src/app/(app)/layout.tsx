@@ -16,8 +16,9 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
 
   // Móvil: columna única con barra inferior. Escritorio: barra lateral + pie de página.
   return (
-    <div className="mx-auto w-full max-w-md px-5 pb-24 pt-6 lg:max-w-5xl lg:px-8 lg:pb-0 lg:pt-8">
-      <div className="lg:flex lg:items-start lg:gap-12">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-24 pt-6 lg:max-w-5xl lg:px-8 lg:pb-0 lg:pt-8">
+      {/* El contenido estira y el pie queda siempre pegado al fondo. */}
+      <div className="w-full flex-1 lg:flex lg:items-start lg:gap-12">
         <BarraLateral logo={<Logotipo ancho={120} />} />
         <main className="min-w-0 flex-1 lg:max-w-2xl">{children}</main>
       </div>
