@@ -10,8 +10,15 @@ import { grillaDeTurnos, precioDelTurno } from '@/lib/reservas';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DetalleCancha({ params }: { params: Promise<{ id: string }> }) {
+export default async function DetalleCancha({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ fecha?: string; hora?: string }>;
+}) {
   const { id } = await params;
+  const { fecha, hora } = await searchParams;
   const usuario = (await usuarioActual())!;
 
   const cancha = await prisma.cancha.findUnique({
@@ -142,6 +149,8 @@ export default async function DetalleCancha({ params }: { params: Promise<{ id: 
           dias={dias}
           esDueno={esDueno}
           precioTurno={precioTurno != null ? formatearPlata(precioTurno) : null}
+          precioBase={precioTurno}
+          inicial={fecha && hora ? { fecha, hora } : null}
           duracion={cancha.duracionTurno}
           telefono={cancha.telefono}
         />

@@ -106,6 +106,22 @@ export default async function Explorar({
       ) : tab === 'canchas' ? (
         <>
           <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} />
+          <div className="flex gap-2">
+            <Link href={deporte ? `/radar?deporte=${deporte}` : '/radar'} className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
+              <span>
+                <span className="t-rotulo block text-naranja-txt">Radar</span>
+                <span className="block text-xs font-semibold">Turnos libres con descuento</span>
+              </span>
+              <span className="text-naranja-txt">→</span>
+            </Link>
+            <Link href="/reservas" className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
+              <span>
+                <span className="t-rotulo block text-verde-txt">Reservas</span>
+                <span className="block text-xs font-semibold">Tus turnos pedidos</span>
+              </span>
+              <span className="text-verde-txt">→</span>
+            </Link>
+          </div>
           <div className="flex flex-wrap gap-2">
             {deportes.map((d) => (
               <Link

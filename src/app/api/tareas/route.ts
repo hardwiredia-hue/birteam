@@ -139,6 +139,8 @@ export async function POST(request: Request) {
   // ---- 4. Turnos de cancha ----
   // Pedidos que el dueño no contestó a tiempo: se liberan.
   resumen.pedidosVencidos = await liberarVencidas();
+  // Ofertas del Radar de turnos que ya pasaron: no sirven más.
+  await prisma.ofertaTurno.deleteMany({ where: { inicio: { lt: ahora } } });
   // Recordatorio 3 h antes de un turno confirmado (una sola vez).
   const en3h = new Date(ahora.getTime() + 3 * 3600 * 1000);
   const turnosCerca = await prisma.reserva.findMany({

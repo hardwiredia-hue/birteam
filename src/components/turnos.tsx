@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { DiaDeGrilla, TurnoDeGrilla } from '@/lib/reservas';
+import { formatearPlata } from '@/lib/formato';
+
+const DESCUENTOS = [10, 20, 30, 40, 50];
 
 const ROTULO_MIO: Record<string, string> = {
   SOLICITADA: 'Pedido',
@@ -26,21 +29,35 @@ export function GrillaTurnos({
   dias,
   esDueno,
   precioTurno,
+  precioBase,
   duracion,
   telefono,
+  inicial,
 }: {
   canchaId: string;
   dias: DiaDeGrilla[];
   esDueno: boolean;
   /** Ya formateado ("$12.000") o null si la cancha no publica precio. */
   precioTurno: string | null;
+  /** Precio normal del turno en número, para calcular las ofertas del Radar. */
+  precioBase: number | null;
   duracion: number;
   telefono: string | null;
+  /** Llegando desde el Radar: el turno ya viene elegido. */
+  inicial?: { fecha: string; hora: string } | null;
 }) {
   const router = useRouter();
   const primerDiaConLibres = dias.findIndex((dia) => dia.turnos.some((t) => t.estado === 'LIBRE'));
-  const [indiceDia, setIndiceDia] = useState(Math.max(0, primerDiaConLibres));
-  const [elegido, setElegido] = useState<TurnoDeGrilla | null>(null);
+  const diaInicial = inicial ? dias.findIndex((dia) => dia.fecha === inicial.fecha) : -1;
+  const [indiceDia, setIndiceDia] = useState(
+    diaInicial >= 0 ? diaInicial : Math.max(0, primerDiaConLibres)
+  );
+  const [elegido, setElegido] = useState<TurnoDeGrilla | null>(
+    diaInicial >= 0
+      ? (dias[diaInicial].turnos.find((t) => t.hora === inicial?.hora && t.estado === 'LIBRE') ?? null)
+      : null
+  );
+  const [precioOferta, setPrecioOferta] = useState('');
   const [nota, setNota] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +75,7 @@ export function GrillaTurnos({
   function elegirTurno(turno: TurnoDeGrilla) {
     setElegido(elegido?.hora === turno.hora ? null : turno);
     setNota('');
+    setPrecioOferta('');
     setError(null);
     setAviso(null);
   }
@@ -83,6 +101,48 @@ export function GrillaTurnos({
         ? `Bloqueaste el ${dia.rotulo} a las ${elegido.hora}.`
         : `Listo: pediste el ${dia.rotulo} a las ${elegido.hora}. Te avisamos cuando el complejo confirme.`
     );
+    setElegido(null);
+    router.refresh();
+  }
+
+  async function publicarOferta() {
+    if (!elegido) return;
+    const precio = Number(precioOferta);
+    if (!precioOferta.trim() || !Number.isFinite(precio) || precio < 0) {
+      setError('Poné el precio de la oferta.');
+      return;
+    }
+    setEnviando(true);
+    setError(null);
+    const respuesta = await fetch(`/api/canchas/${canchaId}/ofertas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fecha: dia.fecha, hora: elegido.hora, precio }),
+    });
+    const datos = await respuesta.json().catch(() => ({}));
+    setEnviando(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos publicar la oferta.');
+      return;
+    }
+    setAviso(`Publicado en el Radar: ${dia.rotulo} ${elegido.hora} a ${formatearPlata(precio)}.`);
+    setElegido(null);
+    setPrecioOferta('');
+    router.refresh();
+  }
+
+  async function sacarOferta() {
+    if (!elegido?.oferta) return;
+    setEnviando(true);
+    setError(null);
+    const respuesta = await fetch(`/api/ofertas/${elegido.oferta.id}`, { method: 'DELETE' });
+    const datos = await respuesta.json().catch(() => ({}));
+    setEnviando(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos sacar la oferta.');
+      return;
+    }
+    setAviso('Oferta sacada del Radar.');
     setElegido(null);
     router.refresh();
   }
@@ -176,6 +236,9 @@ export function GrillaTurnos({
             } else if (turno.estado === 'MIA') {
               rotulo = ROTULO_MIO[turno.estadoMio ?? ''] ?? 'Tuyo';
               estilo = { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' };
+            } else if (turno.oferta) {
+              rotulo = turno.oferta.descuento ? `−${turno.oferta.descuento}%` : 'Oferta';
+              estilo = { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' };
             } else {
               estilo = { borderColor: 'var(--verde-txt)', color: 'var(--verde-txt)' };
             }
@@ -207,10 +270,24 @@ export function GrillaTurnos({
 
           {elegido.estado === 'LIBRE' ? (
             <>
+              {!esDueno && elegido.oferta ? (
+                <p className="text-sm">
+                  <span className="font-bold text-naranja-txt">
+                    Radar: {formatearPlata(elegido.oferta.precio)}
+                  </span>
+                  {precioTurno ? <span className="ml-2 text-xs text-tinta-3 line-through">{precioTurno}</span> : null}
+                </p>
+              ) : null}
               <p className="text-xs text-tinta-3">
                 {esDueno
                   ? 'Bloquealo si lo reservaron por teléfono o la cancha no va a estar disponible.'
-                  : `El complejo confirma el pedido (tiene hasta 12 h). ${precioTurno ? `${precioTurno}, ` : ''}se paga allá.`}
+                  : `El complejo confirma el pedido (tiene hasta 12 h). ${
+                      elegido.oferta
+                        ? `${formatearPlata(elegido.oferta.precio)}, `
+                        : precioTurno
+                          ? `${precioTurno}, `
+                          : ''
+                    }se paga allá.`}
               </p>
               <input
                 className="campo"
@@ -222,6 +299,68 @@ export function GrillaTurnos({
               <button type="button" className="btn btn-primario" disabled={enviando} onClick={pedir}>
                 {enviando ? 'Enviando…' : esDueno ? 'Bloquear el turno' : 'Pedir este turno'}
               </button>
+              {esDueno ? (
+                <div className="flex flex-col gap-2 border-t border-borde pt-3">
+                  <p className="text-sm font-semibold">
+                    Radar de turnos libres{' '}
+                    {elegido.oferta ? (
+                      <span className="text-naranja-txt">
+                        · publicado a {formatearPlata(elegido.oferta.precio)}
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="text-xs text-tinta-3">
+                    Ofrecelo más barato y les avisamos a los que juegan este deporte en tu ciudad.
+                    Mientras siga libre, aparece en el Radar.
+                  </p>
+                  {precioBase ? (
+                    <div className="flex flex-wrap gap-2">
+                      {DESCUENTOS.map((descuento) => {
+                        const valor = String(Math.round((precioBase * (100 - descuento)) / 100));
+                        return (
+                          <button
+                            key={descuento}
+                            type="button"
+                            onClick={() => setPrecioOferta(valor)}
+                            className={precioOferta === valor ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                          >
+                            −{descuento}%
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  <div className="flex gap-2">
+                    <input
+                      className="campo flex-1"
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      value={precioOferta}
+                      onChange={(evento) => setPrecioOferta(evento.target.value)}
+                      placeholder="Precio de oferta"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secundario btn-sm"
+                      disabled={enviando}
+                      onClick={publicarOferta}
+                    >
+                      {elegido.oferta ? 'Cambiar' : 'Publicar'}
+                    </button>
+                  </div>
+                  {elegido.oferta ? (
+                    <button
+                      type="button"
+                      className="btn btn-fantasma btn-sm self-start"
+                      disabled={enviando}
+                      onClick={sacarOferta}
+                    >
+                      Sacar del Radar
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : null}
 

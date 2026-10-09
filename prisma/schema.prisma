@@ -135,6 +135,7 @@ model Cancha {
 
   partidos Partido[]
   reservas Reserva[]
+  ofertas  OfertaTurno[]
 
   @@index([deporteId, activa])
 }
@@ -165,12 +166,31 @@ model Reserva {
   venceEn     DateTime?
   recordadaEn DateTime?
   partidoId   String?
+  // Pedida desde el Radar: el precio es el de la oferta.
+  ofertaId    String?
   creadoEn    DateTime  @default(now())
   actualizadoEn DateTime @updatedAt
 
   @@index([canchaId, fecha])
   @@index([usuarioId, inicio])
   @@index([estado, venceEn])
+}
+
+// Radar de turnos libres: el dueño ofrece con descuento un turno que está libre.
+// Solo se muestra mientras el turno siga libre de verdad y no haya empezado.
+model OfertaTurno {
+  id             String   @id @default(cuid())
+  canchaId       String
+  cancha         Cancha   @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  fecha          String
+  hora           String
+  inicio         DateTime
+  precioOriginal Float?
+  precioOferta   Float
+  creadoEn       DateTime @default(now())
+
+  @@unique([canchaId, fecha, hora])
+  @@index([inicio])
 }
 
 // Suscripción del navegador a notificaciones push (una por dispositivo).

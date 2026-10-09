@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
-import { rotuloDia } from '@/lib/reservas';
+import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
+import { formatearPlata } from '@/lib/formato';
 import iso from '../../../../public/birteam-iso.png';
 
 export const metadata = { title: 'Inicio' };
@@ -63,6 +64,13 @@ export default async function Inicio() {
         })
       : 0,
   ]);
+
+  // Radar: turnos libres con descuento, de tu deporte si tenés uno.
+  const deporteDelRadar =
+    usuario.deportes.find((relacion) => relacion.principal)?.deporteId ?? usuario.deportes[0]?.deporteId;
+  const radar = (await ofertasVigentes({ deporteId: deporteDelRadar })).filter(
+    (oferta) => oferta.cancha.duenoId !== usuario.id
+  );
 
   const primerNombre = usuario.nombre.split(' ')[0];
   const deportePrincipal =
@@ -146,6 +154,22 @@ export default async function Inicio() {
               {pedidosSinResponder === 1
                 ? 'Tenés 1 pedido esperando que lo confirmes'
                 : `Tenés ${pedidosSinResponder} pedidos esperando que los confirmes`}
+            </p>
+          </div>
+          <span className="t-display text-[16px] text-naranja-txt">→</span>
+        </Link>
+      ) : null}
+
+      {radar.length > 0 ? (
+        <Link href="/radar" className="tarjeta flex items-center justify-between gap-3 p-4" style={{ borderColor: 'var(--naranja-txt)' }}>
+          <div className="min-w-0">
+            <p className="t-rotulo text-naranja-txt">
+              Radar · {radar.length} {radar.length === 1 ? 'turno libre' : 'turnos libres'} con descuento
+            </p>
+            <p className="mt-0.5 truncate text-sm font-semibold">
+              {radar[0].descuento ? `−${radar[0].descuento}% · ` : ''}
+              {radar[0].cancha.nombre}, {cuandoEmpieza(radar[0].inicio, radar[0].fecha, radar[0].hora)} a{' '}
+              {formatearPlata(radar[0].precioOferta)}
             </p>
           </div>
           <span className="t-display text-[16px] text-naranja-txt">→</span>

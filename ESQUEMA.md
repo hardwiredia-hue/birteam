@@ -91,6 +91,12 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   recordatorio 3 h antes. Con el turno confirmado, "Armar el partido" abre el
   asistente con cancha, día y hora ya puestos y deja la reserva vinculada.
   Todo en **Reservas** (jugador: sus turnos; dueño: pedidos y agenda).
+- **Radar de turnos libres**: el dueño toca un turno libre de su grilla y lo
+  publica más barato (−10 % a −50 % o precio a mano). El Radar lista solo lo
+  que sigue libre de verdad y no empezó, por deporte, ordenado por lo más
+  pronto o lo más cerca; se pide con un toque al precio de la oferta. Al
+  publicar se avisa a quienes juegan ese deporte en la ciudad de la cancha
+  (como mucho un aviso cada 12 h por persona).
 
 ### 3.4 Partido (la pantalla más importante)
 - Cabecera: deporte, horario, lugar, organizador, sello "se repite".
@@ -196,7 +202,8 @@ dirección+coords, precio/hora, fotos, activa; visible solo con suscripción
 del dueño al día — `Usuario.tipoCuenta` + `Usuario.suscripcionHasta`) ·
 `Reserva` (cancha, usuario, fecha+hora en horario argentino, estado
 SOLICITADA/CONFIRMADA/RECHAZADA/CANCELADA/VENCIDA/BLOQUEO, precio, `ocupa`
-único mientras el turno está tomado, partido vinculado).
+único mientras el turno está tomado, partido vinculado, oferta) ·
+`OfertaTurno` (cancha, fecha+hora, precio original y de oferta).
 
 ---
 

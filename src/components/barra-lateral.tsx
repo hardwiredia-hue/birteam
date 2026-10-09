@@ -18,10 +18,22 @@ function IconoReservas() {
   );
 }
 
+function IconoRadar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <path d="M12 12l5.5-5.5" />
+      <circle cx="12" cy="12" r="0.8" fill="currentColor" />
+    </svg>
+  );
+}
+
 const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
   { href: '/birtsocial', rotulo: 'BirtSocial', Icono: IconoJugadas },
+  { href: '/radar', rotulo: 'Radar', Icono: IconoRadar },
   { href: '/reservas', rotulo: 'Reservas', Icono: IconoReservas },
   { href: '/perfil', rotulo: 'Perfil', Icono: IconoPerfil },
 ] as const;

@@ -118,7 +118,15 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
     return NextResponse.json({ error: 'Ese turno ya está tomado.' }, { status: 409 });
   }
 
-  const precio = precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
+  // Si el turno está en el Radar, se pide al precio de la oferta.
+  const oferta = esDueno
+    ? null
+    : await prisma.ofertaTurno.findUnique({
+        where: { canchaId_fecha_hora: { canchaId: cancha.id, fecha, hora } },
+      });
+  const precio = oferta
+    ? oferta.precioOferta
+    : precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
   const venceEn = new Date(
     Math.min(Date.now() + HORAS_RESPUESTA * 3600_000, inicio.getTime())
   );
@@ -138,6 +146,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
         nota,
         ocupa: claveOcupa(cancha.id, fecha, hora),
         venceEn: esDueno ? null : venceEn,
+        ofertaId: oferta?.id ?? null,
       },
     });
   } catch (error) {
@@ -154,7 +163,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       'RESERVA_SOLICITADA',
       `Pedido de turno · ${cancha.nombre}`,
       `${usuario.nombre} pide el ${rotuloDia(fecha)} a las ${hora}${
-        precio != null ? ` (${formatearPlata(precio)})` : ''
+        precio != null ? ` (${formatearPlata(precio)}${oferta ? ', precio del Radar' : ''})` : ''
       }. Confirmalo antes de ${HORAS_RESPUESTA} h o se libera.`,
       '/reservas'
     );

@@ -141,6 +141,8 @@ export async function liberarVencidas(canchaId?: string) {
 
 export interface TurnoDeGrilla {
   hora: string;
+  /** Publicado en el Radar con descuento (solo en turnos libres). */
+  oferta?: { id: string; precio: number; descuento: number | null };
   /** LIBRE · OCUPADO · PASADO · MIA (con estadoMio) */
   estado: 'LIBRE' | 'OCUPADO' | 'PASADO' | 'MIA';
   estadoMio?: string;
@@ -175,10 +177,13 @@ export async function grillaDeTurnos(
   const horarios = horariosDelDia(cancha);
   const limite = Date.now() + MINUTOS_ANTICIPACION * 60_000;
 
-  const reservas = await prisma.reserva.findMany({
-    where: { canchaId: cancha.id, fecha: { in: dias }, estado: { in: ESTADOS_ACTIVOS } },
-    include: { usuario: { select: { nombre: true, usuario: true } } },
-  });
+  const [reservas, ofertas] = await Promise.all([
+    prisma.reserva.findMany({
+      where: { canchaId: cancha.id, fecha: { in: dias }, estado: { in: ESTADOS_ACTIVOS } },
+      include: { usuario: { select: { nombre: true, usuario: true } } },
+    }),
+    prisma.ofertaTurno.findMany({ where: { canchaId: cancha.id, fecha: { in: dias } } }),
+  ]);
 
   return dias.map((fecha) => {
     const abierto = abiertos.includes(diaDeSemana(fecha));
@@ -210,7 +215,20 @@ export async function grillaDeTurnos(
             };
           }
           if (inicio < limite) return { hora, estado: 'PASADO' };
-          return { hora, estado: 'LIBRE' };
+          const oferta = ofertas.find((o) => o.fecha === fecha && o.hora === hora);
+          return {
+            hora,
+            estado: 'LIBRE',
+            ...(oferta
+              ? {
+                  oferta: {
+                    id: oferta.id,
+                    precio: oferta.precioOferta,
+                    descuento: porcentajeDescuento(oferta.precioOriginal, oferta.precioOferta),
+                  },
+                }
+              : {}),
+          };
         })
       : [];
     return { fecha, rotulo: rotuloDia(fecha), abierto, turnos };
@@ -227,4 +245,118 @@ export async function avisarReserva(
 ) {
   await prisma.notificacion.create({ data: { usuarioId, tipo, titulo, cuerpo, url } });
   await enviarPush(usuarioId, { titulo, cuerpo, url });
+}
+
+export function porcentajeDescuento(original: number | null, oferta: number) {
+  if (!original || original <= 0 || oferta >= original) return null;
+  return Math.round((1 - oferta / original) * 100);
+}
+
+export interface OfertaVigente {
+  id: string;
+  fecha: string;
+  hora: string;
+  inicio: Date;
+  precioOriginal: number | null;
+  precioOferta: number;
+  descuento: number | null;
+  cancha: {
+    id: string;
+    duenoId: string;
+    nombre: string;
+    direccion: string;
+    ciudad: string | null;
+    latitud: number | null;
+    longitud: number | null;
+    deporteId: string;
+    deporte: string;
+    duracionTurno: number;
+  };
+}
+
+/**
+ * El Radar: ofertas de turnos que siguen libres de verdad. Se descarta lo que
+ * ya arrancó (o arranca en menos de MINUTOS_ANTICIPACION), lo que alguien
+ * tomó, lo que la cancha ya no ofrece (cambió horario o días) y las canchas
+ * pausadas, sin pedidos online o con la suscripción vencida.
+ */
+export async function ofertasVigentes(filtro: { canchaId?: string; deporteId?: string } = {}) {
+  await liberarVencidas(filtro.canchaId);
+  const limite = new Date(Date.now() + MINUTOS_ANTICIPACION * 60_000);
+  const ofertas = await prisma.ofertaTurno.findMany({
+    where: {
+      inicio: { gte: limite },
+      ...(filtro.canchaId ? { canchaId: filtro.canchaId } : {}),
+      cancha: {
+        activa: true,
+        reservasOnline: true,
+        dueno: { suscripcionHasta: { gt: new Date() } },
+        ...(filtro.deporteId ? { deporteId: filtro.deporteId } : {}),
+      },
+    },
+    include: { cancha: { include: { deporte: { select: { nombre: true } } } } },
+    orderBy: { inicio: 'asc' },
+    take: 200,
+  });
+  if (ofertas.length === 0) return [];
+
+  const tomadas = await prisma.reserva.findMany({
+    where: {
+      canchaId: { in: [...new Set(ofertas.map((o) => o.canchaId))] },
+      fecha: { in: [...new Set(ofertas.map((o) => o.fecha))] },
+      estado: { in: ESTADOS_ACTIVOS },
+    },
+    select: { canchaId: true, inicio: true, duracion: true },
+  });
+
+  return ofertas
+    .filter((oferta) => {
+      const { cancha } = oferta;
+      if (!diasDeLaCancha(cancha.diasDisponibles).includes(diaDeSemana(oferta.fecha))) return false;
+      if (!horariosDelDia(cancha).includes(oferta.hora)) return false;
+      return !tomadas.some(
+        (reserva) =>
+          reserva.canchaId === cancha.id &&
+          seSuperponen(
+            oferta.inicio.getTime(),
+            cancha.duracionTurno,
+            reserva.inicio.getTime(),
+            reserva.duracion
+          )
+      );
+    })
+    .map(
+      (oferta): OfertaVigente => ({
+        id: oferta.id,
+        fecha: oferta.fecha,
+        hora: oferta.hora,
+        inicio: oferta.inicio,
+        precioOriginal: oferta.precioOriginal,
+        precioOferta: oferta.precioOferta,
+        descuento: porcentajeDescuento(oferta.precioOriginal, oferta.precioOferta),
+        cancha: {
+          id: oferta.cancha.id,
+          duenoId: oferta.cancha.duenoId,
+          nombre: oferta.cancha.nombre,
+          direccion: oferta.cancha.direccion,
+          ciudad: oferta.cancha.ciudad,
+          latitud: oferta.cancha.latitud,
+          longitud: oferta.cancha.longitud,
+          deporteId: oferta.cancha.deporteId,
+          deporte: oferta.cancha.deporte.nombre,
+          duracionTurno: oferta.cancha.duracionTurno,
+        },
+      })
+    );
+}
+
+/** "en 45 min" · "en 3 h" · "mañana 21:00" · "Sáb 10 oct 21:00" */
+export function cuandoEmpieza(inicio: Date, fecha: string, hora: string) {
+  const minutos = Math.round((inicio.getTime() - Date.now()) / 60_000);
+  if (minutos < 60) return `en ${Math.max(0, minutos)} min`;
+  if (minutos < 6 * 60) return `en ${Math.floor(minutos / 60)} h`;
+  const [hoy, manana] = proximosDias(2);
+  if (fecha === hoy) return `hoy ${hora}`;
+  if (fecha === manana) return `mañana ${hora}`;
+  return `${rotuloDia(fecha)} ${hora}`;
 }
