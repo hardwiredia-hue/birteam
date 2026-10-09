@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { usuarioActual } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { obtenerFeed } from '@/lib/jugadas';
+import { obtenerDestacadas, obtenerFeed } from '@/lib/jugadas';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { BotonSeguir } from '@/components/seguir';
 import { Avatar } from '@/components/avatar';
+import { AccesosRapidos } from '@/components/accesos';
 
 export const metadata = { title: 'BirtSocial' };
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,12 @@ export default async function BirtSocial({
 }) {
   const { compartir } = await searchParams;
   const usuario = (await usuarioActual())!;
-  const { red, comunidad } = await obtenerFeed(usuario.id);
+  const [{ red, comunidad }, destacadas, avisosSinLeer, mensajesSinLeer] = await Promise.all([
+    obtenerFeed(usuario.id),
+    obtenerDestacadas(usuario.id),
+    prisma.notificacion.count({ where: { usuarioId: usuario.id, leidaEn: null } }),
+    prisma.mensaje.count({ where: { destinatarioId: usuario.id, leidoEn: null } }),
+  ]);
 
   // "A quién seguir": lo que toda red necesita para arrancar la bola.
   const [siguiendo, ocultos] = await Promise.all([
@@ -64,9 +70,12 @@ export default async function BirtSocial({
         <h1 className="t-pantalla">
           Birt<span className="text-verde-txt">Social</span>
         </h1>
-        <Link href="/clips" className="btn btn-secundario btn-sm">
-          ▶ Clips
-        </Link>
+        <div className="flex items-center gap-2">
+          <AccesosRapidos avisos={avisosSinLeer} mensajes={mensajesSinLeer} />
+          <Link href="/clips" className="btn btn-secundario btn-sm">
+            ▶ Clips
+          </Link>
+        </div>
       </div>
 
       <PublicarJugada
@@ -76,6 +85,15 @@ export default async function BirtSocial({
         canchaId={canchaId}
         adjunto={adjunto}
       />
+
+      {destacadas.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <p className="t-rotulo text-naranja-txt">Lo que está pegando · esta semana</p>
+          {destacadas.map((jugada) => (
+            <TarjetaJugada key={`destacada-${jugada.id}`} jugada={jugada} />
+          ))}
+        </section>
+      ) : null}
 
       {sugeridos.length > 0 ? (
         <section className="flex flex-col gap-2">

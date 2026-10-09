@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { usuarioActual } from '@/lib/auth';
 import { Avatar } from '@/components/avatar';
+import { AccesosRapidos } from '@/components/accesos';
+import { prisma } from '@/lib/db';
 import { sitioEnConstruccion } from '@/lib/sitio';
 import { BarraInferior } from '@/components/barra-inferior';
 import { BarraLateral } from '@/components/barra-lateral';
@@ -16,6 +18,11 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
     return <PaginaConstruccion />;
   }
 
+  const [avisosSinLeer, mensajesSinLeer] = await Promise.all([
+    prisma.notificacion.count({ where: { usuarioId: usuario.id, leidaEn: null } }),
+    prisma.mensaje.count({ where: { destinatarioId: usuario.id, leidoEn: null } }),
+  ]);
+
   // Móvil: columna única con barra inferior. Escritorio: barra lateral + pie de página.
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-24 pt-6 lg:max-w-5xl lg:px-8 lg:pb-0 lg:pt-6">
@@ -25,6 +32,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <Logotipo ancho={120} />
         </Link>
         <div className="flex items-center gap-5">
+          <AccesosRapidos avisos={avisosSinLeer} mensajes={mensajesSinLeer} />
           <Link href="/crear" className="btn btn-primario btn-sm">
             + Crear partido
           </Link>

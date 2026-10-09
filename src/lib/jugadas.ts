@@ -182,3 +182,21 @@ export async function obtenerClips(usuarioId: string, limite = 30): Promise<Juga
     limite
   );
 }
+
+/** Lo que está pegando: las jugadas públicas con más me gusta de la semana. */
+export async function obtenerDestacadas(usuarioId: string, limite = 3): Promise<JugadaParaMostrar[]> {
+  const ocultos = await idsBloqueados(usuarioId);
+  const candidatas = await armarJugadas(
+    usuarioId,
+    {
+      grupoId: null,
+      creadoEn: { gte: new Date(Date.now() - 7 * 24 * 3600 * 1000) },
+      ...(ocultos.length > 0 ? { autorId: { notIn: ocultos } } : {}),
+    },
+    60
+  );
+  return candidatas
+    .filter((jugada) => jugada.totalMeGusta > 0)
+    .sort((a, b) => b.totalMeGusta - a.totalMeGusta)
+    .slice(0, limite);
+}
