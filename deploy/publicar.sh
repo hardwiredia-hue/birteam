@@ -50,16 +50,13 @@ sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
 set -a; . ./.env.production; set +a
 
 npx prisma generate
-# --accept-data-loss: sin el, cualquier indice unico nuevo frena el deploy
-# pidiendo confirmacion. El respaldo diario (respaldo.sh) es la red.
+# --accept-data-loss: si no, un indice unico nuevo frena el deploy.
 npx prisma db push --skip-generate --accept-data-loss
 
-# Catalogos (deportes, geografia): la siembra es idempotente, solo agrega lo
-# que falta y nunca pisa datos cargados.
+# Catalogos (deportes, geografia): siembra idempotente, nunca pisa datos.
 npx tsx prisma/seed.ts
 
-# Compilar A UN COSTADO: el .next vivo no se toca hasta tener el nuevo listo,
-# asi el sitio sigue sirviendo durante todo el build (sin 500 de ventana).
+# Compilar A UN COSTADO: el .next vivo sigue sirviendo hasta tener el nuevo.
 rm -rf .next.nuevo
 if ! DIST_DIR=.next.nuevo npm run build; then
   anotar "FALLÓ el build de $SHA; la versión anterior sigue en el aire, sin tocar."
@@ -74,6 +71,8 @@ mv .next.nuevo .next
 sudo /bin/systemctl restart "$SERVICIO"
 anotar "Publicado $SHA y reiniciado $SERVICIO."
 
-# Los scripts de publicacion del repo pisan la copia viva para la PROXIMA
-# corrida, asi el circuito se actualiza solo.
-cp -f deploy/publicar.sh deploy/publicar-remoto.sh deploy/respaldo.sh /home/birteam/deploy/ 2>/dev/null || true
+# Autoactualizacion para la PROXIMA corrida: copia aparte y mv (inodo nuevo),
+# asi bash sigue leyendo la version vieja y nunca ejecuta medio archivo.
+for f in publicar.sh publicar-remoto.sh respaldo.sh; do
+  cp -p "deploy/$f" "/home/birteam/deploy/.$f.n" && mv -f "/home/birteam/deploy/.$f.n" "/home/birteam/deploy/$f"
+done 2>/dev/null || true
