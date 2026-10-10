@@ -208,6 +208,8 @@ export default async function Perfil() {
           avisosRadar: usuario.avisosRadar,
           avisosDesafios: usuario.avisosDesafios,
         }}
+        usuario={usuario.usuario}
+        conClave={Boolean(usuario.hashClave)}
       />
     </div>
   );

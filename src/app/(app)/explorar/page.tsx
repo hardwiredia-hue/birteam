@@ -657,6 +657,7 @@ async function Jugadores({ q, miId }: { q?: string; miId: string }) {
   const jugadores = await prisma.usuario.findMany({
     where: {
       id: { not: miId, notIn: ocultos },
+      eliminadoEn: null,
       ...(filtro
         ? {
             OR: [

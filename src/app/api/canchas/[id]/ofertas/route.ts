@@ -111,6 +111,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       where: {
         id: { not: usuario.id },
         avisosRadar: true,
+        eliminadoEn: null,
         deportes: { some: { deporteId: cancha.deporteId } },
         ...(cancha.ciudad ? { ciudad: cancha.ciudad } : {}),
         notificaciones: { none: { tipo: 'RADAR', creadoEn: { gte: desde } } },

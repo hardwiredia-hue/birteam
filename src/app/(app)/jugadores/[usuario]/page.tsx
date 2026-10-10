@@ -21,7 +21,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
     where: { usuario: alias.toLowerCase() },
     include: { deportes: { include: { deporte: true }, orderBy: { principal: 'desc' } } },
   });
-  if (!jugador) notFound();
+  if (!jugador || jugador.eliminadoEn) notFound();
   if (jugador.id === yo.id) redirect('/perfil');
 
   const [conRegistro, grupos, historial, bloqueo, seguidores, loSigo] = await Promise.all([

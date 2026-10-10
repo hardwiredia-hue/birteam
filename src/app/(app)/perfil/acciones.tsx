@@ -37,9 +37,13 @@ export type PreferenciasAvisos = Record<(typeof AVISOS)[number]['clave'], boolea
 export function AccionesPerfil({
   temaActual,
   avisos: avisosIniciales,
+  usuario,
+  conClave,
 }: {
   temaActual: string;
   avisos: PreferenciasAvisos;
+  usuario: string;
+  conClave: boolean;
 }) {
   const [avisos, setAvisos] = useState(avisosIniciales);
 
@@ -132,7 +136,83 @@ export function AccionesPerfil({
       <button type="button" className="btn btn-peligro" onClick={salir} disabled={saliendo}>
         {saliendo ? 'Cerrando…' : 'Cerrar sesión'}
       </button>
+
+      <EliminarCuenta usuario={usuario} conClave={conClave} />
     </section>
+  );
+}
+
+/** Cerrar la cuenta para siempre: borra datos personales y contenido. */
+function EliminarCuenta({ usuario, conClave }: { usuario: string; conClave: boolean }) {
+  const router = useRouter();
+  const [abierto, setAbierto] = useState(false);
+  const [confirmacion, setConfirmacion] = useState('');
+  const [clave, setClave] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function eliminar() {
+    setEnviando(true);
+    setError(null);
+    const respuesta = await fetch('/api/perfil/eliminar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmacion, clave }),
+    });
+    const datos = await respuesta.json().catch(() => ({}));
+    setEnviando(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos cerrar la cuenta.');
+      return;
+    }
+    router.push('/?cuenta=eliminada');
+    router.refresh();
+  }
+
+  if (!abierto) {
+    return (
+      <button type="button" className="self-center text-xs font-semibold text-tinta-3" onClick={() => setAbierto(true)}>
+        Eliminar mi cuenta
+      </button>
+    );
+  }
+
+  return (
+    <div className="tarjeta flex flex-col gap-3 p-4" style={{ borderColor: 'var(--rojo)' }}>
+      <p className="text-sm font-semibold">Eliminar mi cuenta</p>
+      <p className="text-xs text-tinta-2">
+        Se borran tus datos personales, tus jugadas, comentarios, mensajes, seguidores y deportes.
+        Los partidos que organizás pasan a tu co-organizador o se cancelan avisando a los
+        anotados; tus grupos quedan con otro admin; tus canchas dejan de publicarse. En los
+        partidos ya jugados vas a figurar como “Usuario eliminado”. No se puede deshacer.
+      </p>
+      <input
+        className="campo"
+        value={confirmacion}
+        onChange={(evento) => setConfirmacion(evento.target.value)}
+        placeholder={`Escribí @${usuario} para confirmar`}
+        autoComplete="off"
+      />
+      {conClave ? (
+        <input
+          className="campo"
+          type="password"
+          value={clave}
+          onChange={(evento) => setClave(evento.target.value)}
+          placeholder="Tu contraseña"
+          autoComplete="current-password"
+        />
+      ) : null}
+      {error ? <p className="aviso-error">{error}</p> : null}
+      <div className="flex gap-2">
+        <button type="button" className="btn btn-peligro btn-sm" disabled={enviando || !confirmacion} onClick={eliminar}>
+          {enviando ? 'Eliminando…' : 'Eliminar para siempre'}
+        </button>
+        <button type="button" className="btn btn-fantasma btn-sm" onClick={() => setAbierto(false)}>
+          Cancelar
+        </button>
+      </div>
+    </div>
   );
 }
 

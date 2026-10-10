@@ -15,6 +15,7 @@ export async function GET(request: Request) {
   const jugadores = await prisma.usuario.findMany({
     where: {
       id: { not: usuario.id, notIn: ocultos },
+      eliminadoEn: null,
       OR: [{ nombre: { contains: q } }, { usuario: { contains: q.toLowerCase() } }],
     },
     select: { id: true, nombre: true, usuario: true },

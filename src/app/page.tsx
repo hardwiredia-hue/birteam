@@ -5,7 +5,12 @@ import { sitioEnConstruccion } from '@/lib/sitio';
 import { Logotipo } from '@/components/marca';
 import { PaginaConstruccion } from '@/components/construccion';
 
-export default async function Portada() {
+export default async function Portada({
+  searchParams,
+}: {
+  searchParams: Promise<{ cuenta?: string }>;
+}) {
+  const { cuenta } = await searchParams;
   const usuario = await usuarioActual();
   if ((await sitioEnConstruccion()) && usuario?.rol !== 'ADMIN') {
     return <PaginaConstruccion />;
@@ -15,6 +20,12 @@ export default async function Portada() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-10 lg:max-w-5xl lg:px-8">
       <Logotipo ancho={132} />
+      {cuenta === 'eliminada' ? (
+        <p className="aviso-ok mt-6">
+          Tu cuenta quedó eliminada y borramos tus datos personales. Gracias por haber jugado con
+          birteam.
+        </p>
+      ) : null}
 
       <div className="flex flex-1 flex-col justify-center py-10 lg:grid lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
         <div>

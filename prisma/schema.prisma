@@ -48,6 +48,9 @@ model Usuario {
   verificacion   String   @default("PENDIENTE")
   // Comprobante de titularidad (constancia de AFIP o factura de servicio).
   verificacionDocUrl String?
+  // Cuenta eliminada por su titular: datos personales borrados, queda solo
+  // como "Usuario eliminado" en partidos y grupos de otros.
+  eliminadoEn   DateTime?
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
 

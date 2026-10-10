@@ -31,7 +31,10 @@ export default async function BirtSocial({
     idsBloqueados(usuario.id),
   ]);
   const sugeridos = await prisma.usuario.findMany({
-    where: { id: { not: usuario.id, notIn: [...siguiendo.map((s) => s.seguidoId), ...ocultos] } },
+    where: {
+      id: { not: usuario.id, notIn: [...siguiendo.map((s) => s.seguidoId), ...ocultos] },
+      eliminadoEn: null,
+    },
     include: {
       deportes: { include: { deporte: true }, orderBy: { principal: 'desc' }, take: 1 },
     },

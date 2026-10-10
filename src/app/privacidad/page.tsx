@@ -54,7 +54,9 @@ export default function Privacidad() {
           <h2 className="mb-1 text-base font-bold text-tinta">5. Tus derechos</h2>
           <p>
             Podés acceder, corregir o pedir la eliminación de tus datos cuando quieras (Ley 25.326
-            de Protección de Datos Personales). Escribinos a{' '}
+            de Protección de Datos Personales). Tus datos los corregís desde tu perfil, y podés
+            cerrar la cuenta vos mismo en Perfil › Ajustes › Eliminar mi cuenta: se borran tus
+            datos personales y tu contenido al instante. Para cualquier otro pedido escribinos a{' '}
             <span className="text-tinta">hola@birteam.com</span> y lo resolvemos. La Agencia de
             Acceso a la Información Pública es la autoridad de aplicación.
           </p>
