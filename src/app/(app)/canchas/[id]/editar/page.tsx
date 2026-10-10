@@ -59,6 +59,7 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
           duracionTurno: cancha.duracionTurno,
           reservasOnline: cancha.reservasOnline,
           cobroOnline: cancha.cobroOnline,
+          horasCancelacion: cancha.horasCancelacion,
           precioPico: cancha.precioPico,
           picoDesdeHora: cancha.picoDesdeHora,
           picoFinDeSemana: cancha.picoFinDeSemana,

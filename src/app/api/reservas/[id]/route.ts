@@ -3,13 +3,13 @@ import { prisma } from '@/lib/db';
 import { reembolsarReserva } from '@/lib/cobros';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaAccionReserva, erroresDeZod } from '@/lib/validacion';
-import { HORAS_CANCELACION, avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 
 /**
  * Responder un pedido de turno o cancelarlo.
  * - confirmar / rechazar: el dueño, sobre una solicitud.
  * - cancelar: el jugador (solicitud en cualquier momento; confirmada hasta
- *   HORAS_CANCELACION antes) o el dueño (cualquier turno tomado, avisando).
+ *   las horas de cancelación de la cancha antes) o el dueño (cualquier turno tomado, avisando).
  * Cada cambio se hace con un update condicionado al estado anterior, así dos
  * clics cruzados no pisan una respuesta.
  */
@@ -36,7 +36,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   const reserva = await prisma.reserva.findUnique({
     where: { id },
     include: {
-      cancha: { select: { id: true, nombre: true, duenoId: true } },
+      cancha: { select: { id: true, nombre: true, duenoId: true, horasCancelacion: true } },
       usuario: { select: { nombre: true } },
     },
   });
@@ -117,11 +117,11 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   }
   if (
     reserva.estado === 'CONFIRMADA' &&
-    reserva.inicio.getTime() - Date.now() < HORAS_CANCELACION * 3600_000
+    reserva.inicio.getTime() - Date.now() < reserva.cancha.horasCancelacion * 3600_000
   ) {
     return NextResponse.json(
       {
-        error: `Faltan menos de ${HORAS_CANCELACION} horas: para cancelar, hablá con el complejo.`,
+        error: `Faltan menos de ${reserva.cancha.horasCancelacion} horas: para cancelar, hablá con el complejo.`,
       },
       { status: 409 }
     );

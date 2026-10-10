@@ -183,7 +183,7 @@ export default async function MiComplejo({
               {comision > 0
                 ? `birteam retiene un ${comision}% de cada cobro online; la comisión de Mercado Pago la descuenta Mercado Pago.`
                 : 'Por ahora birteam no cobra comisión; la comisión de Mercado Pago la descuenta Mercado Pago.'}{' '}
-              Cancelaciones del complejo, o del jugador con más de 6 h, se devuelven automáticamente.
+              Si cancelás vos, o el jugador dentro de la política de cada cancha, se devuelve automáticamente.
             </p>
           </div>
           {mpVigente ? (

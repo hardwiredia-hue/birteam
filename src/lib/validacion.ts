@@ -332,6 +332,7 @@ const camposCancha = z.object({
   duracionTurno: z.union([z.literal(60), z.literal(90), z.literal(120)]).default(60),
   reservasOnline: z.boolean().default(true),
   cobroOnline: z.enum(['NO', 'SENA', 'TOTAL']).default('NO'),
+  horasCancelacion: z.number().int().min(0).max(72).default(6),
   precioPico: z.number().min(0).max(10_000_000).nullish(),
   picoDesdeHora: z.number().int().min(0).max(23).nullish(),
   picoFinDeSemana: z.boolean().default(false),

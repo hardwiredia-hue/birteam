@@ -191,6 +191,7 @@ export default async function DetalleCancha({
               : null
           }
           inicial={fecha && hora ? { fecha, hora } : null}
+          horasCancelacion={cancha.horasCancelacion}
           cobro={
             cancha.cobroOnline !== 'NO' && precioTurno != null && (await duenoCobraOnline(cancha.duenoId))
               ? { tipo: cancha.cobroOnline as 'SENA' | 'TOTAL', porcentaje: cancha.senaPorcentaje }

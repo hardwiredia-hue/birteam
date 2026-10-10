@@ -204,6 +204,13 @@ export default async function CanchaPublica({ params }: { params: Promise<{ id: 
       {cancha.descripcion ? <p className="text-sm leading-relaxed text-tinta-2">{cancha.descripcion}</p> : null}
 
       {cancha.reservasOnline ? (
+        <p className="text-xs text-tinta-3">
+          Cancelación sin cargo{' '}
+          {cancha.horasCancelacion > 0 ? `hasta ${cancha.horasCancelacion} h antes del turno` : 'hasta que empieza el turno'}.
+        </p>
+      ) : null}
+
+      {cancha.reservasOnline ? (
         <Link
           href={usuario ? destino : `/entrar?volver=${encodeURIComponent(destino)}`}
           className="btn btn-primario"

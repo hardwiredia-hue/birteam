@@ -146,6 +146,9 @@ model Cancha {
   // Cobro online con Mercado Pago: 'NO' | 'SENA' | 'TOTAL'. Con seña se cobra
   // senaPorcentaje del precio y el resto se paga en el complejo.
   cobroOnline    String  @default("NO")
+  // Política de cancelación: el jugador cancela (y se le devuelve lo pagado)
+  // hasta estas horas antes del turno; después, solo hablando con el complejo.
+  horasCancelacion Int   @default(6)
   senaPorcentaje Int     @default(30)
   // El dueño la puede pausar sin borrarla.
   activa        Boolean  @default(true)

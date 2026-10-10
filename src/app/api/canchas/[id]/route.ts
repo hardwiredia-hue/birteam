@@ -53,6 +53,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       duracionTurno: d.duracionTurno,
       reservasOnline: d.reservasOnline,
       cobroOnline: d.cobroOnline,
+      horasCancelacion: d.horasCancelacion,
       precioPico: d.precioPico ?? null,
       picoDesdeHora: d.precioPico != null ? (d.picoDesdeHora ?? null) : null,
       picoFinDeSemana: d.precioPico != null ? d.picoFinDeSemana : false,

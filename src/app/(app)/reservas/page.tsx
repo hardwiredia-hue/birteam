@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
-import { HORAS_CANCELACION, ROTULOS_ESTADO, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { ROTULOS_ESTADO, liberarVencidas, rotuloDia } from '@/lib/reservas';
 import { AccionesReserva } from './acciones';
 
 export const metadata = { title: 'Reservas' };
@@ -36,7 +36,7 @@ export default async function Reservas() {
         inicio: { gte: desde },
         cancha: { duenoId: { not: usuario.id } },
       },
-      include: { cancha: { select: { id: true, nombre: true, direccion: true, telefono: true } } },
+      include: { cancha: { select: { id: true, nombre: true, direccion: true, telefono: true, horasCancelacion: true } } },
       orderBy: { inicio: 'asc' },
     }),
     prisma.reserva.findMany({
@@ -206,7 +206,7 @@ export default async function Reservas() {
                 esDueno={false}
                 cancelable={
                   reserva.estado !== 'CONFIRMADA' ||
-                  reserva.inicio.getTime() - ahora.getTime() >= HORAS_CANCELACION * 3600_000
+                  reserva.inicio.getTime() - ahora.getTime() >= reserva.cancha.horasCancelacion * 3600_000
                 }
                 armarPartido={
                   reserva.partidoId

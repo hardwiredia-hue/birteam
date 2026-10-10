@@ -11,8 +11,6 @@ export const ZONA = 'America/Argentina/Buenos_Aires';
 export const DIAS_RESERVABLES = 14;
 /** Una solicitud sin respuesta del dueño vence a las 12 h (o al empezar el turno). */
 export const HORAS_RESPUESTA = 12;
-/** El jugador cancela una reserva confirmada hasta 6 h antes; después, hablando con el complejo. */
-export const HORAS_CANCELACION = 6;
 /** No se piden turnos que arrancan en menos de 30 minutos: para eso, el teléfono. */
 export const MINUTOS_ANTICIPACION = 30;
 export const DURACIONES = [60, 90, 120] as const;

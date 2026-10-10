@@ -26,6 +26,7 @@ interface CanchaExistente {
   duracionTurno: number;
   reservasOnline: boolean;
   cobroOnline: string;
+  horasCancelacion: number;
   senaPorcentaje: number;
   precioPico: number | null;
   picoDesdeHora: number | null;
@@ -73,6 +74,7 @@ export function FormularioCancha({
   const [duracion, setDuracion] = useState(cancha?.duracionTurno ?? 60);
   const [reservasOnline, setReservasOnline] = useState(cancha?.reservasOnline ?? true);
   const [cobroOnline, setCobroOnline] = useState(cancha?.cobroOnline ?? 'NO');
+  const [horasCancelacion, setHorasCancelacion] = useState(cancha?.horasCancelacion ?? 6);
   const [conPico, setConPico] = useState(cancha?.precioPico != null);
   const [picoDesde, setPicoDesde] = useState<number | null>(cancha?.picoDesdeHora ?? 18);
   const [picoFinde, setPicoFinde] = useState(cancha?.picoFinDeSemana ?? false);
@@ -135,6 +137,7 @@ export function FormularioCancha({
       reservasOnline,
       cobroOnline: mercadoPago?.conectada ? cobroOnline : 'NO',
       senaPorcentaje,
+      horasCancelacion,
       precioPico: conPico ? numero(form.get('precioPico')) : null,
       picoDesdeHora: conPico ? picoDesde : null,
       picoFinDeSemana: conPico && picoFinde,
@@ -411,6 +414,28 @@ export function FormularioCancha({
             className="h-5 w-5 shrink-0 accent-[#a8e617]"
           />
         </label>
+        {reservasOnline ? (
+          <label className="flex flex-col gap-1 border-t border-borde pt-3 text-sm">
+            <span className="font-semibold">Cancelación sin cargo hasta</span>
+            <span className="flex items-center gap-2">
+              <select
+                className="campo w-auto"
+                value={horasCancelacion}
+                onChange={(evento) => setHorasCancelacion(Number(evento.target.value))}
+              >
+                {[0, 2, 3, 6, 12, 24, 48, 72].map((horas) => (
+                  <option key={horas} value={horas}>
+                    {horas === 0 ? 'el comienzo del turno' : `${horas} h antes`}
+                  </option>
+                ))}
+              </select>
+            </span>
+            <span className="text-xs text-tinta-3">
+              Hasta ahí el jugador cancela solo (y si pagó online se le devuelve). Después, solo
+              hablando con vos.
+            </span>
+          </label>
+        ) : null}
         {reservasOnline ? (
           <div className="flex flex-col gap-2 border-t border-borde pt-3">
             <p className="text-sm font-semibold">Cobro online con Mercado Pago</p>

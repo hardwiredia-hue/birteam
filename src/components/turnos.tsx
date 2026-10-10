@@ -37,6 +37,7 @@ export function GrillaTurnos({
   telefono,
   inicial,
   cobro,
+  horasCancelacion = 6,
 }: {
   canchaId: string;
   dias: DiaDeGrilla[];
@@ -53,6 +54,8 @@ export function GrillaTurnos({
   inicial?: { fecha: string; hora: string } | null;
   /** Cobro online con Mercado Pago (seña o total), si la cancha lo tiene activo. */
   cobro?: { tipo: 'SENA' | 'TOTAL'; porcentaje: number } | null;
+  /** Política de la cancha: hasta cuántas horas antes se cancela sin cargo. */
+  horasCancelacion?: number;
 }) {
   const router = useRouter();
   const primerDiaConLibres = dias.findIndex((dia) => dia.turnos.some((t) => t.estado === 'LIBRE'));
@@ -316,7 +319,11 @@ export function GrillaTurnos({
                         cobro?.tipo === 'SENA' && precioElegido != null
                           ? ` (seña); el resto, ${formatearPlata(precioElegido - montoAhora)}, en el complejo`
                           : ''
-                      }. El turno queda confirmado apenas se aprueba el pago. Si cancelás con más de 6 h, te lo devolvemos.`
+                      }. El turno queda confirmado apenas se aprueba el pago. ${
+                        horasCancelacion > 0
+                          ? `Si cancelás con más de ${horasCancelacion} h, te lo devolvemos.`
+                          : 'Si cancelás antes de que empiece, te lo devolvemos.'
+                      }`
                     : `El complejo confirma el pedido (tiene hasta 12 h). ${
                       elegido.oferta
                         ? `${formatearPlata(elegido.oferta.precio)}, `
