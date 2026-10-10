@@ -256,9 +256,19 @@ export default async function DetalleCancha({
       </Link>
 
       {esDueno ? (
-        <Link href={`/canchas/${cancha.id}/editar`} className="btn btn-secundario">
-          Editar la cancha
-        </Link>
+        <>
+          <Link href={`/canchas/${cancha.id}/editar`} className="btn btn-secundario">
+            Editar la cancha
+          </Link>
+          {visible ? (
+            <p className="text-center text-xs text-tinta-3">
+              Ficha pública para compartir y para Google:{' '}
+              <Link href={`/c/${cancha.id}`} className="font-semibold text-verde-txt">
+                birteam.com/c/{cancha.id}
+              </Link>
+            </p>
+          ) : null}
+        </>
       ) : null}
     </div>
   );

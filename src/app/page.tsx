@@ -64,6 +64,12 @@ export default async function Portada({
               Publicala en birteam
             </Link>
           </p>
+          <p className="mt-2 text-sm text-tinta-2">
+            ¿Buscás dónde jugar?{' '}
+            <Link href="/c" className="font-semibold text-verde-txt">
+              Mirá las canchas y sus turnos libres
+            </Link>
+          </p>
         </div>
       </div>
 

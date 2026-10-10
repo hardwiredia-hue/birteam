@@ -310,6 +310,11 @@ export default async function MiComplejo({
                   <Link href={`/canchas/${cancha.id}/editar`} className="btn btn-fantasma btn-sm">
                     Editar
                   </Link>
+                  {cancha.activa ? (
+                    <Link href={`/c/${cancha.id}`} className="btn btn-fantasma btn-sm">
+                      Ficha pública
+                    </Link>
+                  ) : null}
                 </div>
               </article>
             ))}

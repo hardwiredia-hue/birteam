@@ -1,7 +1,6 @@
 import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
-import { existsSync, readFileSync } from 'fs';
-import path from 'path';
 import { prisma } from './db';
+import { ambiente } from './publico';
 
 /**
  * Mercado Pago como marketplace (Checkout Pro + OAuth). Cada complejo conecta
@@ -32,10 +31,7 @@ export const MINUTOS_PARA_PAGAR = 15;
 
 /** ¿Este proceso es staging o desarrollo? Ante la duda, no (producción). */
 export function simulacionPermitida() {
-  if (process.env.NODE_ENV !== 'production') return true;
-  if (process.cwd().startsWith('/home/birteam/staging')) return true;
-  const marca = path.join(process.cwd(), '.ambiente');
-  return existsSync(marca) && readFileSync(marca, 'utf8').trim() === 'staging';
+  return ambiente() !== 'produccion';
 }
 
 /** Simulador prendido (Ajuste 'pagos_simulados') y permitido en este ambiente. */

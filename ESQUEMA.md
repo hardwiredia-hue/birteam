@@ -105,6 +105,12 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   (como mucho un aviso cada 12 h por persona, y solo a quien no los apagó).
   Filtros: hoy / mañana / finde, descuento mínimo y precio máximo. En la
   grilla, un turno pedido y sin confirmar se ve "En espera" (puede liberarse).
+- **Fichas públicas (SEO)**: /c lista las canchas publicadas por ciudad y
+  /c/[id] muestra cada una sin cuenta (precio del turno, horario, días, turnos
+  libres reales de hoy y la semana, ofertas del Radar, reseñas) con título,
+  vista previa para compartir, URL canónica y datos estructurados
+  (schema.org SportsActivityLocation). sitemap.xml las incluye; robots.txt
+  bloquea la indexación fuera de producción y las zonas privadas.
 - **Panel del complejo** (/complejo, cuentas de dueño): ocupación de los
   próximos 7 días, turnos tomados y libres, pedidos sin responder, lo cobrado
   en el complejo por turnos jugados (30 días), turnos vendidos por el Radar,
