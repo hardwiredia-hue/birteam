@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 import { registrarEvento, simulacionPermitida } from '@/lib/mercadopago';
 
 /** Prender o apagar el simulador de pagos. Solo administración y nunca en producción. */
@@ -20,5 +20,6 @@ export async function POST(request: Request) {
     update: { valor: cuerpo.prendido ? '1' : '0' },
   });
   await registrarEvento(null, cuerpo.prendido ? 'SIMULADOR_PRENDIDO' : 'SIMULADOR_APAGADO', admin.usuario);
+  await auditar(admin, 'SIMULADOR_PAGOS', null, cuerpo.prendido ? 'prendido' : 'apagado');
   return NextResponse.json({ prendido: cuerpo.prendido });
 }

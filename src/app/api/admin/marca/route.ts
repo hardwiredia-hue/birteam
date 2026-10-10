@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 import { guardarImagen } from '@/lib/archivos';
 import { CLAVES_MARCA, type ClaveMarca } from '@/lib/marca';
 
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     update: { valor: resultado.url },
   });
 
+  await auditar(admin, 'MARCA_CAMBIO', String(tipo), resultado.url);
   return NextResponse.json({ url: resultado.url }, { status: 201 });
 }
 
@@ -44,5 +45,6 @@ export async function DELETE(request: Request) {
   }
 
   await prisma.ajuste.deleteMany({ where: { clave: cuerpo.tipo } });
+  await auditar(admin, 'MARCA_RESTAURADA', String(cuerpo.tipo));
   return NextResponse.json({ listo: true });
 }

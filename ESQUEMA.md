@@ -105,6 +105,10 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   (como mucho un aviso cada 12 h por persona, y solo a quien no los apagó).
   Filtros: hoy / mañana / finde, descuento mínimo y precio máximo. En la
   grilla, un turno pedido y sin confirmar se ve "En espera" (puede liberarse).
+- **Política de cancelación por cancha** (0 a 72 h antes, por defecto 6) y
+  **empleados del complejo**: el dueño suma gente por @usuario que gestiona
+  turnos (bloquear, confirmar, rechazar, cancelar, avisos) sin acceso a
+  precios, Radar, cobros ni edición de canchas.
 - **Horario pico**: precio por hora distinto desde cierta hora y/o los fines de
   semana; la grilla muestra el precio de cada turno.
 - **Informe del complejo**: CSV descargable de reservas por período (cobrado
@@ -231,6 +235,10 @@ Jugás con desconocidos: **Reportar** (usuario, partido, jugada) y **Bloquear** 
 el día uno. Términos y privacidad en el registro. Sin esto no se lanza.
 
 ### 3.12 Backoffice (web, solo admin)
+
+**Auditoría** (/admin/auditoria): cada acción sensible (roles, suscripciones,
+verificaciones, denuncias, catálogos, marca, modo construcción, comisión,
+simulador) queda registrada con el @admin, la fecha y el detalle.
 Usuarios · deportes · geografía (países/provincias/ciudades con coordenadas) ·
 denuncias · métricas (partidos jugados por semana, la métrica norte).
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 import { registrarEvento } from '@/lib/mercadopago';
 
 /** Fijar la comisión de birteam sobre los cobros online (0 a 30 %). Solo administración. */
@@ -19,5 +19,6 @@ export async function POST(request: Request) {
     update: { valor: String(redondeado) },
   });
   await registrarEvento(null, 'COMISION_CAMBIADA', `${redondeado}% por ${admin.usuario}`);
+  await auditar(admin, 'COMISION', null, `${redondeado}%`);
   return NextResponse.json({ porcentaje: redondeado });
 }

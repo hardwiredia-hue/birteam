@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 import { slugificar } from '@/lib/normalizar';
 
 export async function POST(request: Request) {
@@ -24,5 +24,6 @@ export async function POST(request: Request) {
     data: { nombre, slug, orden: (ultimo._max.orden ?? 0) + 1 },
   });
 
+  await auditar(admin, 'DEPORTE_ALTA', deporte.id, nombre);
   return NextResponse.json({ id: deporte.id }, { status: 201 });
 }

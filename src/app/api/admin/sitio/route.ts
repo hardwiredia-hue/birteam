@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 
 /** Prender o apagar el modo "En construcción". Solo administración. */
 export async function POST(request: Request) {
@@ -18,5 +18,6 @@ export async function POST(request: Request) {
     update: { valor: cuerpo.enConstruccion ? '1' : '0' },
   });
 
+  await auditar(admin, 'EN_CONSTRUCCION', null, cuerpo.enConstruccion ? 'prendido' : 'apagado');
   return NextResponse.json({ enConstruccion: cuerpo.enConstruccion });
 }

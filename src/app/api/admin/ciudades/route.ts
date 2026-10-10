@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 import { normalizar } from '@/lib/normalizar';
 
 export async function POST(request: Request) {
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const ciudad = await prisma.ciudad.create({
     data: { nombre, nombreNorm: normalizar(nombre), provinciaId, latitud, longitud },
   });
+  await auditar(admin, 'CIUDAD_ALTA', ciudad.id, nombre);
   return NextResponse.json({ id: ciudad.id }, { status: 201 });
 }
 
@@ -41,5 +42,6 @@ export async function DELETE(request: Request) {
   if (!ciudadId) return NextResponse.json({ error: 'Falta la ciudad.' }, { status: 400 });
 
   await prisma.ciudad.delete({ where: { id: ciudadId } }).catch(() => {});
+  await auditar(admin, 'CIUDAD_BAJA', ciudadId);
   return NextResponse.json({ listo: true });
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 
 export async function PATCH(request: Request) {
   const admin = await adminActual();
@@ -14,5 +14,6 @@ export async function PATCH(request: Request) {
   }
 
   await prisma.denuncia.update({ where: { id: denunciaId }, data: { estado } });
+  await auditar(admin, 'DENUNCIA', denunciaId, estado);
   return NextResponse.json({ listo: true });
 }

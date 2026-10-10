@@ -307,6 +307,21 @@ model EmpleadoComplejo {
   @@index([usuarioId])
 }
 
+// Registro de auditoría del backoffice: quién hizo qué y cuándo. Se guarda
+// el @usuario del admin como texto para que el registro sobreviva a bajas.
+model RegistroAdmin {
+  id           String   @id @default(cuid())
+  adminId      String
+  adminUsuario String
+  accion       String
+  objetivo     String?
+  detalle      String?
+  creadoEn     DateTime @default(now())
+
+  @@index([creadoEn])
+  @@index([accion, creadoEn])
+}
+
 // Pagos del simulador (solo staging/desarrollo, nunca se mueve plata). Hace
 // de API de Mercado Pago para probar el circuito completo sin credenciales.
 model PagoSimulado {

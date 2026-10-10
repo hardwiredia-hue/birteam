@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { adminActual } from '@/lib/admin';
+import { adminActual, auditar } from '@/lib/admin';
 import { enviarPush } from '@/lib/push';
 
 export async function PATCH(request: Request) {
@@ -25,6 +25,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Tu propio rol no se toca desde acá.' }, { status: 400 });
     }
     await prisma.usuario.update({ where: { id: usuarioId }, data: { rol } });
+    await auditar(admin, 'ROL', usuarioId, rol);
   }
 
   // Suscripción de dueño de cancha: 'activar' suma 30 días (desde hoy o desde
@@ -56,6 +57,7 @@ export async function PATCH(request: Request) {
         data: { suscripcionHasta: null },
       });
     }
+    await auditar(admin, 'SUSCRIPCION', usuarioId, suscripcion);
   }
 
   // Verificación de titularidad: la decide administración mirando el comprobante.
@@ -70,6 +72,7 @@ export async function PATCH(request: Request) {
     if (!usuario) return NextResponse.json({ error: 'Ese usuario no existe.' }, { status: 404 });
 
     await prisma.usuario.update({ where: { id: usuarioId }, data: { verificacion } });
+    await auditar(admin, 'VERIFICACION', usuarioId, verificacion);
 
     const aviso =
       verificacion === 'VERIFICADA'
