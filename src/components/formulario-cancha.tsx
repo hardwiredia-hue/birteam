@@ -27,6 +27,9 @@ interface CanchaExistente {
   reservasOnline: boolean;
   cobroOnline: string;
   senaPorcentaje: number;
+  precioPico: number | null;
+  picoDesdeHora: number | null;
+  picoFinDeSemana: boolean;
   activa: boolean;
 }
 
@@ -70,6 +73,9 @@ export function FormularioCancha({
   const [duracion, setDuracion] = useState(cancha?.duracionTurno ?? 60);
   const [reservasOnline, setReservasOnline] = useState(cancha?.reservasOnline ?? true);
   const [cobroOnline, setCobroOnline] = useState(cancha?.cobroOnline ?? 'NO');
+  const [conPico, setConPico] = useState(cancha?.precioPico != null);
+  const [picoDesde, setPicoDesde] = useState<number | null>(cancha?.picoDesdeHora ?? 18);
+  const [picoFinde, setPicoFinde] = useState(cancha?.picoFinDeSemana ?? false);
   const [senaPorcentaje, setSenaPorcentaje] = useState(cancha?.senaPorcentaje ?? 30);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -129,6 +135,9 @@ export function FormularioCancha({
       reservasOnline,
       cobroOnline: mercadoPago?.conectada ? cobroOnline : 'NO',
       senaPorcentaje,
+      precioPico: conPico ? numero(form.get('precioPico')) : null,
+      picoDesdeHora: conPico ? picoDesde : null,
+      picoFinDeSemana: conPico && picoFinde,
       ...(cancha ? { activa } : {}),
     };
 
@@ -239,6 +248,64 @@ export function FormularioCancha({
           />
           <ErrorDeCampo mensajes={errores.telefono} />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="flex items-center gap-2 text-sm font-semibold">
+          <input
+            type="checkbox"
+            checked={conPico}
+            onChange={(evento) => setConPico(evento.target.checked)}
+            className="h-4 w-4 accent-[#a8e617]"
+          />
+          Precio distinto en horario pico
+        </label>
+        {conPico ? (
+          <div className="tarjeta flex flex-col gap-3 p-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="rotulo-campo" htmlFor="precioPico">Precio pico por hora</label>
+                <input
+                  id="precioPico"
+                  name="precioPico"
+                  type="number"
+                  min={0}
+                  step="any"
+                  className="campo"
+                  placeholder="En pesos"
+                  defaultValue={cancha?.precioPico ?? ''}
+                  required
+                />
+              </div>
+              <div>
+                <label className="rotulo-campo" htmlFor="picoDesde">Desde las</label>
+                <select
+                  id="picoDesde"
+                  className="campo"
+                  value={picoDesde ?? ''}
+                  onChange={(evento) => setPicoDesde(evento.target.value === '' ? null : Number(evento.target.value))}
+                >
+                  <option value="">Sin horario</option>
+                  {Array.from({ length: 24 }, (_, hora) => hora).map((hora) => (
+                    <option key={hora} value={hora}>
+                      {String(hora).padStart(2, '0')}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={picoFinde}
+                onChange={(evento) => setPicoFinde(evento.target.checked)}
+                className="h-4 w-4 accent-[#a8e617]"
+              />
+              Todo el día los sábados y domingos
+            </label>
+            <ErrorDeCampo mensajes={errores.precioPico} />
+          </div>
+        ) : null}
       </div>
 
       <div>

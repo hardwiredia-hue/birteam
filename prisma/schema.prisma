@@ -125,6 +125,11 @@ model Cancha {
   latitud       Float?
   longitud      Float?
   precioPorHora Float?
+  // Horario pico (opcional): otro precio por hora desde cierta hora y/o los
+  // fines de semana (sábado y domingo).
+  precioPico      Float?
+  picoDesdeHora   Int?
+  picoFinDeSemana Boolean @default(false)
   telefono      String?
   // Fotos: JSON con nombres de archivo subidos (igual que Jugada).
   fotos         String   @default("[]")

@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   diaDeSemana,
+  esHorarioPico,
+  precioDelTurnoEn,
   horariosDelDia,
   porcentajeDescuento,
   precioDelTurno,
@@ -58,4 +60,23 @@ test('precios: turno, seña, total y descuento', () => {
   assert.equal(porcentajeDescuento(30000, 21000), 30);
   assert.equal(porcentajeDescuento(null, 21000), null);
   assert.equal(porcentajeDescuento(30000, 30000), null);
+});
+
+test('horario pico: desde cierta hora y/o fines de semana', () => {
+  const cancha = { precioPorHora: 30000, precioPico: 40000, picoDesdeHora: 18, picoFinDeSemana: true, duracionTurno: 60 };
+  // Viernes 9/10/2026
+  assert.equal(esHorarioPico(cancha, '2026-10-09', '17:00'), false);
+  assert.equal(esHorarioPico(cancha, '2026-10-09', '18:00'), true);
+  assert.equal(precioDelTurnoEn(cancha, '2026-10-09', '17:00'), 30000);
+  assert.equal(precioDelTurnoEn(cancha, '2026-10-09', '21:00'), 40000);
+  // Sábado a la mañana: pico por fin de semana.
+  assert.equal(precioDelTurnoEn(cancha, '2026-10-10', '10:00'), 40000);
+  // Turno de 90 minutos en pico.
+  assert.equal(precioDelTurnoEn({ ...cancha, duracionTurno: 90 }, '2026-10-09', '19:30'), 60000);
+  // Sin precio pico, nunca es pico.
+  assert.equal(esHorarioPico({ ...cancha, precioPico: null }, '2026-10-10', '21:00'), false);
+  // Solo fines de semana.
+  const finde = { ...cancha, picoDesdeHora: null };
+  assert.equal(precioDelTurnoEn(finde, '2026-10-09', '22:00'), 30000);
+  assert.equal(precioDelTurnoEn(finde, '2026-10-11', '09:00'), 40000);
 });

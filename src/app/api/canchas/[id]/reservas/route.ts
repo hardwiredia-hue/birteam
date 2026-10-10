@@ -27,7 +27,7 @@ import {
   horariosDelDia,
   inicioDelTurno,
   liberarVencidas,
-  precioDelTurno,
+  precioDelTurnoEn,
   proximosDias,
   rotuloDia,
   seSuperponen,
@@ -136,7 +136,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       });
   const precio = oferta
     ? oferta.precioOferta
-    : precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
+    : precioDelTurnoEn(cancha, fecha, hora);
   // Cobro online: el turno queda retenido unos minutos mientras se paga y se
   // confirma solo cuando Mercado Pago informa el pago aprobado.
   const aCobrar =

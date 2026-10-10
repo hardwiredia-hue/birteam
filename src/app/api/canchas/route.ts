@@ -55,6 +55,9 @@ export async function POST(request: Request) {
       duracionTurno: d.duracionTurno,
       reservasOnline: d.reservasOnline,
       cobroOnline: d.cobroOnline,
+      precioPico: d.precioPico ?? null,
+      picoDesdeHora: d.precioPico != null ? (d.picoDesdeHora ?? null) : null,
+      picoFinDeSemana: d.precioPico != null ? d.picoFinDeSemana : false,
       senaPorcentaje: d.senaPorcentaje,
     },
   });

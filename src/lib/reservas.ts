@@ -99,6 +99,29 @@ export function precioDelTurno(precioPorHora: number | null, duracion: number) {
   return precioPorHora != null ? Math.round((precioPorHora * duracion) / 60) : null;
 }
 
+export interface PreciosCancha {
+  precioPorHora: number | null;
+  precioPico: number | null;
+  picoDesdeHora: number | null;
+  picoFinDeSemana: boolean;
+  duracionTurno: number;
+}
+
+/** ¿El turno cae en horario pico (desde cierta hora, o sábado y domingo)? */
+export function esHorarioPico(cancha: PreciosCancha, fecha: string, hora: string) {
+  if (cancha.precioPico == null) return false;
+  const horaDelTurno = Number(hora.slice(0, 2));
+  if (cancha.picoDesdeHora != null && horaDelTurno >= cancha.picoDesdeHora) return true;
+  const dia = diaDeSemana(fecha);
+  return cancha.picoFinDeSemana && (dia === 0 || dia === 6);
+}
+
+/** Precio de un turno puntual, con el horario pico si corresponde. */
+export function precioDelTurnoEn(cancha: PreciosCancha, fecha: string, hora: string) {
+  const porHora = esHorarioPico(cancha, fecha, hora) ? cancha.precioPico : cancha.precioPorHora;
+  return precioDelTurno(porHora, cancha.duracionTurno);
+}
+
 /** ¿Se superponen dos turnos? (inicio en ms, duración en minutos) */
 export function seSuperponen(inicioA: number, duracionA: number, inicioB: number, duracionB: number) {
   return inicioA < inicioB + duracionB * 60_000 && inicioB < inicioA + duracionA * 60_000;
@@ -168,6 +191,9 @@ export async function liberarVencidas(canchaId?: string) {
 
 export interface TurnoDeGrilla {
   hora: string;
+  /** Precio normal de este turno (con horario pico si corresponde). */
+  precio?: number | null;
+  pico?: boolean;
   /** Publicado en el Radar con descuento (solo en turnos libres). */
   oferta?: { id: string; precio: number; descuento: number | null };
   /** LIBRE · OCUPADO · PASADO · MIA (con estadoMio) */
@@ -191,13 +217,12 @@ export interface DiaDeGrilla {
 
 /** La grilla de turnos de los próximos días, vista por un usuario (dueño o jugador). */
 export async function grillaDeTurnos(
-  cancha: {
+  cancha: PreciosCancha & {
     id: string;
     duenoId: string;
     diasDisponibles: string;
     horaApertura: number;
     horaCierre: number;
-    duracionTurno: number;
   },
   usuarioId: string
 ): Promise<DiaDeGrilla[]> {
@@ -258,6 +283,8 @@ export async function grillaDeTurnos(
           return {
             hora,
             estado: 'LIBRE',
+            precio: precioDelTurnoEn(cancha, fecha, hora),
+            pico: esHorarioPico(cancha, fecha, hora),
             ...(oferta
               ? {
                   oferta: {

@@ -139,6 +139,13 @@ export default async function DetalleCancha({
           <p className="t-display text-[20px] text-verde-txt tabular">
             {cancha.precioPorHora ? formatearPlata(cancha.precioPorHora) : 'Consultar'}
           </p>
+          {cancha.precioPico != null ? (
+            <p className="mt-0.5 text-[11px] font-semibold text-naranja-txt tabular">
+              Pico {formatearPlata(cancha.precioPico)}
+              {cancha.picoDesdeHora != null ? ` desde ${cancha.picoDesdeHora} h` : ''}
+              {cancha.picoFinDeSemana ? `${cancha.picoDesdeHora != null ? ' y' : ''} fin de semana` : ''}
+            </p>
+          ) : null}
           <p className="t-rotulo mt-1 text-[9.5px]">Por hora</p>
         </div>
         <div className="tarjeta px-3 py-3 text-center">
@@ -178,6 +185,11 @@ export default async function DetalleCancha({
           esDueno={esDueno}
           precioTurno={precioTurno != null ? formatearPlata(precioTurno) : null}
           precioBase={precioTurno}
+          precioPico={
+            cancha.precioPico != null
+              ? formatearPlata(precioDelTurno(cancha.precioPico, cancha.duracionTurno)!)
+              : null
+          }
           inicial={fecha && hora ? { fecha, hora } : null}
           cobro={
             cancha.cobroOnline !== 'NO' && precioTurno != null && (await duenoCobraOnline(cancha.duenoId))

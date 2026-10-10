@@ -14,7 +14,7 @@ import {
   horariosDelDia,
   inicioDelTurno,
   porcentajeDescuento,
-  precioDelTurno,
+  precioDelTurnoEn,
   proximosDias,
   rotuloDia,
   seSuperponen,
@@ -78,7 +78,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       { status: 400 }
     );
   }
-  const precioOriginal = precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
+  const precioOriginal = precioDelTurnoEn(cancha, fecha, hora);
   if (precioOriginal != null && precio >= precioOriginal) {
     return NextResponse.json(
       { error: `La oferta tiene que ser menor que el precio normal (${formatearPlata(precioOriginal)}).` },

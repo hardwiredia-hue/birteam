@@ -32,6 +32,7 @@ export function GrillaTurnos({
   esDueno,
   precioTurno,
   precioBase,
+  precioPico,
   duracion,
   telefono,
   inicial,
@@ -44,6 +45,8 @@ export function GrillaTurnos({
   precioTurno: string | null;
   /** Precio normal del turno en número, para calcular las ofertas del Radar. */
   precioBase: number | null;
+  /** Precio del turno en horario pico, ya formateado (si la cancha lo tiene). */
+  precioPico?: string | null;
   duracion: number;
   telefono: string | null;
   /** Llegando desde el Radar: el turno ya viene elegido. */
@@ -185,7 +188,7 @@ export function GrillaTurnos({
   }
 
   // Lo que se paga online por el turno elegido (seña o total), con el precio del Radar si aplica.
-  const precioElegido = elegido?.oferta ? elegido.oferta.precio : precioBase;
+  const precioElegido = elegido?.oferta ? elegido.oferta.precio : (elegido?.precio ?? precioBase);
   const montoAhora =
     cobro && precioElegido != null
       ? cobro.tipo === 'TOTAL'
@@ -201,7 +204,7 @@ export function GrillaTurnos({
         </p>
         {precioTurno ? (
           <p className="text-xs text-tinta-3">
-            {precioTurno} el turno ·{' '}
+            {precioTurno} el turno{precioPico ? ` · pico ${precioPico}` : ''} ·{' '}
             {cobro
               ? cobro.tipo === 'TOTAL'
                 ? 'se paga online al reservar'
@@ -266,6 +269,7 @@ export function GrillaTurnos({
               rotulo = turno.oferta.descuento ? `−${turno.oferta.descuento}%` : 'Oferta';
               estilo = { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' };
             } else {
+              if (turno.precio != null) rotulo = formatearPlata(turno.precio);
               estilo = { borderColor: 'var(--verde-txt)', color: 'var(--verde-txt)' };
             }
             if (seleccionado) {
@@ -316,8 +320,8 @@ export function GrillaTurnos({
                     : `El complejo confirma el pedido (tiene hasta 12 h). ${
                       elegido.oferta
                         ? `${formatearPlata(elegido.oferta.precio)}, `
-                        : precioTurno
-                          ? `${precioTurno}, `
+                        : precioElegido != null
+                          ? `${formatearPlata(precioElegido)}${elegido.pico ? ' (horario pico)' : ''}, `
                           : ''
                     }se paga allá.`}
               </p>
@@ -351,10 +355,10 @@ export function GrillaTurnos({
                     Ofrecelo más barato y les avisamos a los que juegan este deporte en tu ciudad.
                     Mientras siga libre, aparece en el Radar.
                   </p>
-                  {precioBase ? (
+                  {(elegido.precio ?? precioBase) ? (
                     <div className="flex flex-wrap gap-2">
                       {DESCUENTOS.map((descuento) => {
-                        const valor = String(Math.round((precioBase * (100 - descuento)) / 100));
+                        const valor = String(Math.round(((elegido.precio ?? precioBase)! * (100 - descuento)) / 100));
                         return (
                           <button
                             key={descuento}

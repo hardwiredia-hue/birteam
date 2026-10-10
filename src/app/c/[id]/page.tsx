@@ -167,6 +167,11 @@ export default async function CanchaPublica({ params }: { params: Promise<{ id: 
           <p className="t-rotulo mt-1 text-[9px]">
             Turno de {cancha.duracionTurno === 60 ? '1 h' : cancha.duracionTurno === 90 ? '1 h 30' : '2 h'}
           </p>
+          {cancha.precioPico != null ? (
+            <p className="mt-0.5 text-[10px] font-semibold text-naranja-txt tabular">
+              pico {formatearPlata(precioDelTurno(cancha.precioPico, cancha.duracionTurno)!)}
+            </p>
+          ) : null}
         </div>
         <div className="tarjeta px-2 py-3 text-center">
           <p className="t-display text-[18px] tabular">

@@ -332,6 +332,9 @@ const camposCancha = z.object({
   duracionTurno: z.union([z.literal(60), z.literal(90), z.literal(120)]).default(60),
   reservasOnline: z.boolean().default(true),
   cobroOnline: z.enum(['NO', 'SENA', 'TOTAL']).default('NO'),
+  precioPico: z.number().min(0).max(10_000_000).nullish(),
+  picoDesdeHora: z.number().int().min(0).max(23).nullish(),
+  picoFinDeSemana: z.boolean().default(false),
   senaPorcentaje: z.number().int().min(10, 'La seña va del 10 al 90%.').max(90, 'La seña va del 10 al 90%.').default(30),
 });
 
@@ -347,9 +350,16 @@ const cobroConPrecio = {
   mensaje: { message: 'Para cobrar online poné el precio por hora.', path: ['precioPorHora'] },
 };
 
+const picoCompleto = {
+  chequeo: (cancha: { precioPico?: number | null; picoDesdeHora?: number | null; picoFinDeSemana: boolean }) =>
+    cancha.precioPico == null || cancha.picoDesdeHora != null || cancha.picoFinDeSemana,
+  mensaje: { message: 'Elegí desde qué hora o los fines de semana.', path: ['precioPico'] },
+};
+
 export const esquemaCancha = camposCancha
   .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje)
-  .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje);
+  .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje)
+  .refine(picoCompleto.chequeo, picoCompleto.mensaje);
 
 export const esquemaCanchaEditar = camposCancha
   .extend({
@@ -359,7 +369,8 @@ export const esquemaCanchaEditar = camposCancha
     fotos: z.array(z.string().max(120)).max(5, 'Hasta 5 fotos.').default([]),
   })
   .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje)
-  .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje);
+  .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje)
+  .refine(picoCompleto.chequeo, picoCompleto.mensaje);
 
 export const esquemaReserva = z.object({
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.'),
