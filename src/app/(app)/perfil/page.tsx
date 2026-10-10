@@ -207,6 +207,7 @@ export default async function Perfil() {
           avisosSociales: usuario.avisosSociales,
           avisosRadar: usuario.avisosRadar,
           avisosDesafios: usuario.avisosDesafios,
+          avisosPartidos: usuario.avisosPartidos,
         }}
         usuario={usuario.usuario}
         conClave={Boolean(usuario.hashClave)}

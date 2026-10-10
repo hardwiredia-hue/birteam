@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     reconfirmaciones: 0,
     pedidosVencidos: 0,
     recordatoriosTurno: 0,
+    avisosFaltanJugadores: 0,
   };
 
   // ---- 1. Invitaciones vencidas ----
@@ -161,6 +162,77 @@ export async function POST(request: Request) {
       reserva.partidoId ? `/partidos/${reserva.partidoId}` : '/reservas'
     );
     resumen.recordatoriosTurno++;
+  }
+
+  // ---- 5. Partidos abiertos a los que les faltan jugadores ----
+  // Una sola vez por partido, a quienes juegan ese deporte en la ciudad del
+  // partido, con la preferencia prendida y como mucho un aviso así por día.
+  const en48h = new Date(ahora.getTime() + 48 * 3600 * 1000);
+  const hace24h = new Date(ahora.getTime() - 24 * 3600 * 1000);
+  const abiertos = await prisma.partido.findMany({
+    where: {
+      visibilidad: 'ABIERTO',
+      estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+      avisoFaltanEn: null,
+      fecha: { gt: en2h, lte: en48h },
+    },
+    include: {
+      deporte: { select: { nombre: true } },
+      participaciones: { select: { usuarioId: true, estado: true } },
+    },
+    take: 50,
+  });
+  for (const partido of abiertos) {
+    const voy = partido.participaciones.filter((p) => p.estado === 'VOY').length;
+    const faltan = partido.cupo - voy;
+    await prisma.partido.update({ where: { id: partido.id }, data: { avisoFaltanEn: ahora } });
+    if (faltan <= 0 || !partido.ciudad) continue;
+    const bloqueos = await prisma.bloqueo.findMany({
+      where: { OR: [{ bloqueadorId: partido.organizadorId }, { bloqueadoId: partido.organizadorId }] },
+      select: { bloqueadorId: true, bloqueadoId: true },
+    });
+    const excluidos = [
+      partido.organizadorId,
+      ...partido.participaciones.map((p) => p.usuarioId),
+      ...bloqueos.flatMap((b) => [b.bloqueadorId, b.bloqueadoId]),
+    ];
+    const candidatos = await prisma.usuario.findMany({
+      where: {
+        id: { notIn: excluidos },
+        eliminadoEn: null,
+        avisosPartidos: true,
+        ciudad: partido.ciudad,
+        deportes: { some: { deporteId: partido.deporteId } },
+        notificaciones: { none: { tipo: 'FALTAN_JUGADORES', creadoEn: { gte: hace24h } } },
+      },
+      select: { id: true },
+      take: 30,
+    });
+    if (candidatos.length === 0) continue;
+    const dia = partido.fecha.toLocaleDateString('es-AR', { weekday: 'long', timeZone: 'America/Argentina/Buenos_Aires' });
+    const horaPartido = partido.fecha.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Argentina/Buenos_Aires',
+    });
+    const titulo = `Faltan ${faltan} para ${partido.deporte.nombre}`;
+    const cuerpo = `El ${dia} a las ${horaPartido} en ${partido.lugarNombre}. ¿Te sumás?`;
+    await prisma.notificacion.createMany({
+      data: candidatos.map((c) => ({
+        usuarioId: c.id,
+        tipo: 'FALTAN_JUGADORES',
+        titulo,
+        cuerpo,
+        url: `/partidos/${partido.id}`,
+        expiraEn: partido.fecha,
+      })),
+    });
+    await enviarPush(
+      candidatos.map((c) => c.id),
+      { titulo, cuerpo, url: `/partidos/${partido.id}` }
+    );
+    resumen.avisosFaltanJugadores += candidatos.length;
   }
 
   return NextResponse.json(resumen);

@@ -85,6 +85,7 @@ model Usuario {
   avisosSociales   Boolean @default(true)
   avisosRadar      Boolean @default(true)
   avisosDesafios   Boolean @default(true)
+  avisosPartidos   Boolean @default(true)
   cuentaMercadoPago CuentaMercadoPago?
 }
 
@@ -468,6 +469,8 @@ model Partido {
   cancha            Cancha?   @relation(fields: [canchaId], references: [id], onDelete: SetNull)
   // Nivel sugerido para sumarse (null = cualquier nivel).
   nivel             String?
+  // Cuándo se avisó a jugadores cercanos que faltan jugadores (una sola vez).
+  avisoFaltanEn     DateTime?
   ciudad            String?
   provincia         String?
   pais              String    @default("AR")

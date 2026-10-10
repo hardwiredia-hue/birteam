@@ -105,6 +105,13 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
   (como mucho un aviso cada 12 h por persona, y solo a quien no los apagó).
   Filtros: hoy / mañana / finde, descuento mínimo y precio máximo. En la
   grilla, un turno pedido y sin confirmar se ve "En espera" (puede liberarse).
+- **Horario pico**: precio por hora distinto desde cierta hora y/o los fines de
+  semana; la grilla muestra el precio de cada turno.
+- **Informe del complejo**: CSV descargable de reservas por período (cobrado
+  online, comisión, devoluciones, saldo a cobrar allá).
+- **Partido sin cancha**: el organizador ve turnos libres reales cerca del
+  horario en canchas del deporte; con un turno confirmado ese día lo vincula
+  al partido (toma lugar y hora y avisa a los anotados).
 - **Fichas públicas (SEO)**: /c lista las canchas publicadas por ciudad y
   /c/[id] muestra cada una sin cuenta (precio del turno, horario, días, turnos
   libres reales de hoy y la semana, ofertas del Radar, reseñas) con título,

@@ -426,3 +426,80 @@ export function cuandoEmpieza(inicio: Date, fecha: string, hora: string) {
   if (fecha === manana) return `mañana ${hora}`;
   return `${rotuloDia(fecha)} ${hora}`;
 }
+
+export interface TurnoSugerido {
+  canchaId: string;
+  canchaNombre: string;
+  direccion: string;
+  ciudad: string | null;
+  fecha: string;
+  hora: string;
+  precio: number | null;
+}
+
+/**
+ * Turnos libres de verdad, en canchas del deporte, cerca del horario pedido
+ * (hasta una hora antes o después). Sirve para el partido que todavía no
+ * tiene cancha: el organizador elige uno y lo reserva.
+ */
+export async function turnosLibresParaPartido(opciones: {
+  deporteId: string;
+  instante: Date;
+  ciudad?: string | null;
+  limite?: number;
+}): Promise<TurnoSugerido[]> {
+  const fecha = claveDia(opciones.instante);
+  const horaPedida = opciones.instante.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ZONA });
+  const minutosPedidos = Number(horaPedida.slice(0, 2)) * 60 + Number(horaPedida.slice(3, 5));
+  const limiteAnticipacion = Date.now() + MINUTOS_ANTICIPACION * 60_000;
+
+  await liberarVencidas();
+  const canchas = await prisma.cancha.findMany({
+    where: {
+      deporteId: opciones.deporteId,
+      activa: true,
+      reservasOnline: true,
+      dueno: { suscripcionHasta: { gt: new Date() }, eliminadoEn: null },
+    },
+    take: 60,
+  });
+  if (canchas.length === 0) return [];
+  const tomadas = await prisma.reserva.findMany({
+    where: { canchaId: { in: canchas.map((c) => c.id) }, fecha, estado: { in: ESTADOS_ACTIVOS } },
+    select: { canchaId: true, inicio: true, duracion: true },
+  });
+
+  const sugeridos: (TurnoSugerido & { distancia: number; mismaCiudad: boolean })[] = [];
+  for (const cancha of canchas) {
+    if (!diasDeLaCancha(cancha.diasDisponibles).includes(diaDeSemana(fecha))) continue;
+    for (const hora of horariosDelDia(cancha)) {
+      const minutos = Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3, 5));
+      const distancia = Math.abs(minutos - minutosPedidos);
+      if (distancia > 60) continue;
+      const inicio = inicioDelTurno(fecha, hora).getTime();
+      if (inicio < limiteAnticipacion) continue;
+      const ocupado = tomadas.some(
+        (r) => r.canchaId === cancha.id && seSuperponen(inicio, cancha.duracionTurno, r.inicio.getTime(), r.duracion)
+      );
+      if (ocupado) continue;
+      sugeridos.push({
+        canchaId: cancha.id,
+        canchaNombre: cancha.nombre,
+        direccion: cancha.direccion,
+        ciudad: cancha.ciudad,
+        fecha,
+        hora,
+        precio: precioDelTurnoEn(cancha, fecha, hora),
+        distancia,
+        mismaCiudad: Boolean(opciones.ciudad && cancha.ciudad === opciones.ciudad),
+      });
+    }
+  }
+  // Primero la misma ciudad, después lo más pegado al horario; un turno por cancha.
+  sugeridos.sort((a, b) => Number(b.mismaCiudad) - Number(a.mismaCiudad) || a.distancia - b.distancia);
+  const vistos = new Set<string>();
+  return sugeridos
+    .filter((s) => (vistos.has(s.canchaId) ? false : (vistos.add(s.canchaId), true)))
+    .slice(0, opciones.limite ?? 5)
+    .map(({ distancia: _distancia, mismaCiudad: _mismaCiudad, ...turno }) => turno);
+}

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
+import { claveDia, turnosLibresParaPartido } from '@/lib/reservas';
+import { VincularTurno } from './vincular';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { Chat } from '@/components/chat';
@@ -53,6 +55,32 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
     where: { partidoId: partido.id },
     select: { retador: { select: { nombre: true } }, rival: { select: { nombre: true } } },
   });
+
+  // Turno confirmado del organizador, ese día y de ese deporte, listo para vincular.
+  const turnoParaVincular =
+    organizo && !partido.canchaId && !yaPaso && !cerrado
+      ? await prisma.reserva.findFirst({
+          where: {
+            usuarioId: usuario.id,
+            estado: 'CONFIRMADA',
+            partidoId: null,
+            fecha: claveDia(partido.fecha),
+            cancha: { deporteId: partido.deporteId },
+          },
+          include: { cancha: { select: { nombre: true } } },
+          orderBy: { inicio: 'asc' },
+        })
+      : null;
+
+  // Partido sin cancha publicada: turnos libres reales cerca de ese horario.
+  const turnosSugeridos =
+    organizo && !partido.canchaId && !yaPaso && !cerrado && !turnoParaVincular
+      ? await turnosLibresParaPartido({
+          deporteId: partido.deporteId,
+          instante: partido.fecha,
+          ciudad: partido.ciudad,
+        })
+      : [];
 
   const hora = partido.fecha.toLocaleTimeString('es-AR', {
     hour12: false, hour: '2-digit',
@@ -139,6 +167,48 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           <i style={{ width: `${Math.min(100, (voy.length / partido.cupo) * 100)}%` }} />
         </div>
       </section>
+
+      {turnoParaVincular ? (
+        <section className="tarjeta flex flex-col gap-2 p-4" style={{ borderColor: 'var(--verde-txt)' }}>
+          <p className="text-sm">
+            Tenés un turno confirmado ese día en <strong>{turnoParaVincular.cancha.nombre}</strong> a las{' '}
+            {turnoParaVincular.hora}.
+          </p>
+          <VincularTurno partidoId={partido.id} reservaId={turnoParaVincular.id} />
+          <p className="text-xs text-tinta-3">
+            El partido toma ese lugar y horario y les avisamos a los anotados.
+          </p>
+        </section>
+      ) : null}
+
+      {turnosSugeridos.length > 0 ? (
+        <section className="tarjeta flex flex-col gap-2 p-4" style={{ borderColor: 'var(--verde-txt)' }}>
+          <p className="t-rotulo text-verde-txt">¿Todavía no tienen cancha? Hay turnos libres</p>
+          {turnosSugeridos.map((turno) => (
+            <Link
+              key={turno.canchaId}
+              href={`/canchas/${turno.canchaId}?fecha=${turno.fecha}&hora=${turno.hora}`}
+              className="flex items-center justify-between gap-3 border-b border-borde py-2 last:border-b-0"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold">{turno.canchaNombre}</span>
+                <span className="block truncate text-xs text-tinta-3">
+                  {turno.direccion}
+                  {turno.ciudad ? ` · ${turno.ciudad}` : ''}
+                </span>
+              </span>
+              <span className="shrink-0 text-right text-xs font-semibold tabular text-verde-txt">
+                {turno.hora}
+                {turno.precio != null ? <span className="block text-tinta-3">{formatearPlata(turno.precio)}</span> : null}
+              </span>
+            </Link>
+          ))}
+          <p className="text-xs text-tinta-3">
+            Disponibilidad real en este momento. Reservalo y, cuando el complejo lo confirme,
+            vinculalo acá con un toque.
+          </p>
+        </section>
+      ) : null}
 
       {partido.costoPorJugador ? (
         <section className="tarjeta flex items-center justify-between p-4">
