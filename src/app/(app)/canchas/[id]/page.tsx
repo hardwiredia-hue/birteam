@@ -8,6 +8,7 @@ import { Avatar } from '@/components/avatar';
 import { GrillaTurnos } from '@/components/turnos';
 import { grillaDeTurnos, precioDelTurno } from '@/lib/reservas';
 import { duenoCobraOnline } from '@/lib/mercadopago';
+import { gestionaCancha } from '@/lib/gestion';
 import { formatearPuntaje, jugoEnLaCancha } from '@/lib/resenas';
 import { Estrellas, FormularioResena, ResponderResena } from '@/components/resenas';
 
@@ -44,13 +45,15 @@ export default async function DetalleCancha({
   if (!cancha) notFound();
 
   const esDueno = cancha.duenoId === usuario.id;
+  // Empleados del complejo: gestionan los turnos como el dueño (sin editar ni Radar).
+  const gestiona = esDueno || (await gestionaCancha(usuario.id, cancha));
   const visible = cancha.activa && suscripcionActiva(cancha.dueno);
   // Pausada o con suscripción vencida: la ve solo el dueño (y administración).
-  if (!visible && !esDueno && usuario.rol !== 'ADMIN') notFound();
+  if (!visible && !gestiona && usuario.rol !== 'ADMIN') notFound();
 
   // La grilla: la ve el dueño siempre; los jugadores, si la cancha toma pedidos online.
-  const conGrilla = esDueno || (visible && cancha.reservasOnline);
-  const dias = conGrilla ? await grillaDeTurnos(cancha, usuario.id) : [];
+  const conGrilla = gestiona || (visible && cancha.reservasOnline);
+  const dias = conGrilla ? await grillaDeTurnos(cancha, usuario.id, gestiona) : [];
   const precioTurno = precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
 
   const [resenas, resumen, puedeResenar] = await Promise.all([
@@ -182,7 +185,8 @@ export default async function DetalleCancha({
         <GrillaTurnos
           canchaId={cancha.id}
           dias={dias}
-          esDueno={esDueno}
+          esDueno={gestiona}
+          radar={esDueno}
           precioTurno={precioTurno != null ? formatearPlata(precioTurno) : null}
           precioBase={precioTurno}
           precioPico={

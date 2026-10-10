@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
+import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { ROTULOS_ESTADO, liberarVencidas, rotuloDia } from '@/lib/reservas';
@@ -26,7 +27,9 @@ export default async function Reservas() {
   const ahora = new Date();
   // Un turno sigue "en curso" hasta 2 h después de arrancar.
   const desde = new Date(ahora.getTime() - 2 * 3600_000);
-  const esDueno = usuario.tipoCuenta === 'CANCHA';
+  // Complejos cuyos turnos gestiona: el propio (si es dueño) y donde es empleado.
+  const duenos = await duenosQueGestiono(usuario.id, usuario.tipoCuenta);
+  const esDueno = duenos.length > 0;
 
   const [mias, historial, pendientes, agenda] = await Promise.all([
     prisma.reserva.findMany({
@@ -34,7 +37,7 @@ export default async function Reservas() {
         usuarioId: usuario.id,
         estado: { in: ['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA'] },
         inicio: { gte: desde },
-        cancha: { duenoId: { not: usuario.id } },
+        cancha: { duenoId: { notIn: duenos } },
       },
       include: { cancha: { select: { id: true, nombre: true, direccion: true, telefono: true, horasCancelacion: true } } },
       orderBy: { inicio: 'asc' },
@@ -42,7 +45,7 @@ export default async function Reservas() {
     prisma.reserva.findMany({
       where: {
         usuarioId: usuario.id,
-        cancha: { duenoId: { not: usuario.id } },
+        cancha: { duenoId: { notIn: duenos } },
         OR: [
           { estado: { in: ['RECHAZADA', 'CANCELADA', 'VENCIDA'] } },
           { inicio: { lt: desde } },
@@ -54,7 +57,7 @@ export default async function Reservas() {
     }),
     esDueno
       ? prisma.reserva.findMany({
-          where: { cancha: { duenoId: usuario.id }, estado: 'SOLICITADA', inicio: { gte: ahora } },
+          where: { cancha: { duenoId: { in: duenos } }, estado: 'SOLICITADA', inicio: { gte: ahora } },
           include: {
             cancha: { select: { id: true, nombre: true } },
             usuario: { select: { nombre: true, usuario: true } },
@@ -65,7 +68,7 @@ export default async function Reservas() {
     esDueno
       ? prisma.reserva.findMany({
           where: {
-            cancha: { duenoId: usuario.id },
+            cancha: { duenoId: { in: duenos } },
             estado: { in: ['CONFIRMADA', 'BLOQUEO'] },
             inicio: { gte: desde },
           },

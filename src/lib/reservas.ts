@@ -1,5 +1,6 @@
 import { prisma } from './db';
 import { enviarPush } from './push';
+import { equipoDelComplejo } from './gestion';
 
 /**
  * Turnos de cancha. Todo se calcula en horario argentino (sin horario de
@@ -222,11 +223,13 @@ export async function grillaDeTurnos(
     horaApertura: number;
     horaCierre: number;
   },
-  usuarioId: string
+  usuarioId: string,
+  /** Dueño o empleado del complejo: ve quién tiene cada turno. */
+  gestiona = cancha.duenoId === usuarioId
 ): Promise<DiaDeGrilla[]> {
   await liberarVencidas(cancha.id);
   const dias = proximosDias();
-  const esDueno = cancha.duenoId === usuarioId;
+  const esDueno = gestiona;
   const abiertos = diasDeLaCancha(cancha.diasDisponibles);
   const horarios = horariosDelDia(cancha);
   const limite = Date.now() + MINUTOS_ANTICIPACION * 60_000;
@@ -297,6 +300,19 @@ export async function grillaDeTurnos(
       : [];
     return { fecha, rotulo: rotuloDia(fecha), abierto, turnos };
   });
+}
+
+/** Aviso al dueño y a sus empleados (los que gestionan los turnos). */
+export async function avisarAlComplejo(
+  duenoId: string,
+  tipo: string,
+  titulo: string,
+  cuerpo: string,
+  url: string
+) {
+  for (const usuarioId of await equipoDelComplejo(duenoId)) {
+    await avisarReserva(usuarioId, tipo, titulo, cuerpo, url);
+  }
 }
 
 /** Aviso en la campanita + push, en un solo paso. */

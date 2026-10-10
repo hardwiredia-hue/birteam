@@ -6,6 +6,7 @@ import { formatearPlata } from '@/lib/formato';
 import { suscripcionActiva } from '@/lib/suscripcion';
 import { cobroOnlineHabilitado, comisionPorcentaje, pagosSimulados } from '@/lib/mercadopago';
 import { DesconectarMercadoPago } from './mercadopago';
+import { EquipoComplejo } from './equipo';
 import { formatearPuntaje } from '@/lib/resenas';
 import {
   ESTADOS_ACTIVOS,
@@ -130,6 +131,11 @@ export default async function MiComplejo({
     cobroOnlineHabilitado(),
     pagosSimulados(),
   ]);
+  const equipo = await prisma.empleadoComplejo.findMany({
+    where: { duenoId: usuario.id },
+    include: { usuario: { select: { nombre: true, usuario: true } } },
+    orderBy: { creadoEn: 'asc' },
+  });
   const mpVigente = Boolean(cuentaMp && (cuentaMp.expiraEn > ahora || cuentaMp.refreshToken));
   const cobrando = canchas.filter((c) => c.cobroOnline !== 'NO').length;
 
@@ -236,6 +242,10 @@ export default async function MiComplejo({
               {canceladas > 0 ? ` Cancelaciones en el período: ${canceladas}.` : ''}
             </p>
           </section>
+
+          <EquipoComplejo
+            equipo={equipo.map((e) => ({ id: e.id, nombre: e.usuario.nombre, usuario: e.usuario.usuario }))}
+          />
 
           <form action="/api/complejo/informe" method="get" className="tarjeta flex flex-col gap-3 p-4">
             <div>

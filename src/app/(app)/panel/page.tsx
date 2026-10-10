@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
+import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
 import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
@@ -58,11 +59,13 @@ export default async function Inicio() {
       orderBy: { inicio: 'asc' },
       include: { cancha: { select: { nombre: true } } },
     }),
-    usuario.tipoCuenta === 'CANCHA'
-      ? prisma.reserva.count({
-          where: { cancha: { duenoId: usuario.id }, estado: 'SOLICITADA', inicio: { gte: hoy } },
-        })
-      : 0,
+    duenosQueGestiono(usuario.id, usuario.tipoCuenta).then((duenos) =>
+      duenos.length > 0
+        ? prisma.reserva.count({
+            where: { cancha: { duenoId: { in: duenos } }, estado: 'SOLICITADA', inicio: { gte: hoy } },
+          })
+        : 0
+    ),
   ]);
 
   // Radar: turnos libres con descuento, de tu deporte si tenés uno.

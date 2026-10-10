@@ -87,6 +87,8 @@ model Usuario {
   avisosDesafios   Boolean @default(true)
   avisosPartidos   Boolean @default(true)
   cuentaMercadoPago CuentaMercadoPago?
+  empleados        EmpleadoComplejo[] @relation("empleadosDelComplejo")
+  empleos          EmpleadoComplejo[] @relation("empleosEnComplejos")
 }
 
 // Lugares donde el usuario ya organizó: se eligen de una y guardan el contacto.
@@ -288,6 +290,21 @@ model CuentaMercadoPago {
   simulada     Boolean  @default(false)
   conectadoEn  DateTime @default(now())
   actualizadoEn DateTime @updatedAt
+}
+
+// Empleado de un complejo: gestiona los turnos de las canchas del dueño
+// (ver, bloquear, confirmar, rechazar, cancelar), pero no precios, Radar,
+// cobros ni la publicación de las canchas.
+model EmpleadoComplejo {
+  id        String   @id @default(cuid())
+  duenoId   String
+  dueno     Usuario  @relation("empleadosDelComplejo", fields: [duenoId], references: [id], onDelete: Cascade)
+  usuarioId String
+  usuario   Usuario  @relation("empleosEnComplejos", fields: [usuarioId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now())
+
+  @@unique([duenoId, usuarioId])
+  @@index([usuarioId])
 }
 
 // Pagos del simulador (solo staging/desarrollo, nunca se mueve plata). Hace

@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { formatearPlata } from './formato';
-import { avisarReserva, claveOcupa, rotuloDia } from './reservas';
+import { avisarAlComplejo, avisarReserva, claveOcupa, rotuloDia } from './reservas';
 import { type CuentaActiva, obtenerPago, reembolsar, registrarEvento, tokenDelDueno } from './mercadopago';
 
 /**
@@ -125,7 +125,7 @@ async function confirmarPagada(reservaId: string, cuenta: CuentaActiva, pagoId: 
     }.`,
     '/reservas'
   );
-  await avisarReserva(
+  await avisarAlComplejo(
     reserva.cancha.duenoId,
     'RESERVA_PAGADA',
     `Turno vendido · ${reserva.cancha.nombre}`,

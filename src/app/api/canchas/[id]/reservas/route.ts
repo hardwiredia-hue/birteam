@@ -6,6 +6,7 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { permitir } from '@/lib/limite';
 import { esquemaReserva, erroresDeZod } from '@/lib/validacion';
 import { formatearPlata } from '@/lib/formato';
+import { gestionaCancha } from '@/lib/gestion';
 import {
   MINUTOS_PARA_PAGAR,
   comisionPorcentaje,
@@ -20,7 +21,7 @@ import {
   ESTADOS_ACTIVOS,
   HORAS_RESPUESTA,
   MINUTOS_ANTICIPACION,
-  avisarReserva,
+  avisarAlComplejo,
   claveOcupa,
   diaDeSemana,
   diasDeLaCancha,
@@ -52,7 +53,8 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   });
   if (!cancha) return NextResponse.json({ error: 'Esa cancha no existe.' }, { status: 404 });
 
-  const esDueno = cancha.duenoId === usuario.id;
+  // Dueño o empleado: lo que pide queda como bloqueo del complejo.
+  const esDueno = await gestionaCancha(usuario.id, cancha);
   if (!esDueno) {
     if (!cancha.activa || !suscripcionActiva(cancha.dueno)) {
       return NextResponse.json({ error: 'Esta cancha no está tomando turnos.' }, { status: 409 });
@@ -212,7 +214,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   }
 
   if (!esDueno) {
-    await avisarReserva(
+    await avisarAlComplejo(
       cancha.duenoId,
       'RESERVA_SOLICITADA',
       `Pedido de turno · ${cancha.nombre}`,

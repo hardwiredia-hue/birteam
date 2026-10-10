@@ -111,6 +111,7 @@ export async function eliminarCuenta(usuarioId: string) {
     prisma.sesion.deleteMany({ where: { usuarioId } }),
     prisma.cuentaMercadoPago.deleteMany({ where: { usuarioId } }),
     prisma.resenaCancha.deleteMany({ where: { usuarioId } }),
+    prisma.empleadoComplejo.deleteMany({ where: { OR: [{ duenoId: usuarioId }, { usuarioId }] } }),
     // Sus canchas dejan de publicarse (las reservas pasadas quedan para los jugadores).
     prisma.cancha.updateMany({ where: { duenoId: usuarioId }, data: { activa: false } }),
     prisma.usuario.update({

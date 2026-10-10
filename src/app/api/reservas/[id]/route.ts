@@ -3,7 +3,8 @@ import { prisma } from '@/lib/db';
 import { reembolsarReserva } from '@/lib/cobros';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaAccionReserva, erroresDeZod } from '@/lib/validacion';
-import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { avisarAlComplejo, avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { gestionaCancha } from '@/lib/gestion';
 
 /**
  * Responder un pedido de turno o cancelarlo.
@@ -42,7 +43,8 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   });
   if (!reserva) return NextResponse.json({ error: 'Esa reserva no existe.' }, { status: 404 });
 
-  const esDueno = reserva.cancha.duenoId === usuario.id;
+  // Dueño o empleado del complejo.
+  const esDueno = await gestionaCancha(usuario.id, reserva.cancha);
   const esJugador = reserva.usuarioId === usuario.id;
   const turno = `${rotuloDia(reserva.fecha)} a las ${reserva.hora}`;
   const cambiar = (desde: string[], cambios: { estado: string; ocupa?: null; motivo?: string | null }) =>
@@ -135,7 +137,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   });
   if (count === 0) return yaCambio;
   if (reserva.estado === 'PENDIENTE_PAGO') return NextResponse.json({ listo: true });
-  await avisarReserva(
+  await avisarAlComplejo(
     reserva.cancha.duenoId,
     'RESERVA_CANCELADA',
     `Se liberó un turno · ${reserva.cancha.nombre}`,

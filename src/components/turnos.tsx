@@ -18,7 +18,7 @@ const ROTULO_DETALLE: Record<string, string> = {
   SOLICITADA: 'Pide el turno (sin confirmar)',
   PENDIENTE_PAGO: 'Lo está pagando ahora (retenido unos minutos)',
   CONFIRMADA: 'Turno confirmado',
-  BLOQUEO: 'Bloqueado por vos',
+  BLOQUEO: 'Bloqueado por el complejo',
 };
 
 /**
@@ -38,6 +38,7 @@ export function GrillaTurnos({
   inicial,
   cobro,
   horasCancelacion = 6,
+  radar = true,
 }: {
   canchaId: string;
   dias: DiaDeGrilla[];
@@ -56,6 +57,8 @@ export function GrillaTurnos({
   cobro?: { tipo: 'SENA' | 'TOTAL'; porcentaje: number } | null;
   /** Política de la cancha: hasta cuántas horas antes se cancela sin cargo. */
   horasCancelacion?: number;
+  /** El dueño publica en el Radar; los empleados del complejo, no. */
+  radar?: boolean;
 }) {
   const router = useRouter();
   const primerDiaConLibres = dias.findIndex((dia) => dia.turnos.some((t) => t.estado === 'LIBRE'));
@@ -348,7 +351,7 @@ export function GrillaTurnos({
                       ? `Reservar y pagar ${formatearPlata(montoAhora)}`
                       : 'Pedir este turno'}
               </button>
-              {esDueno ? (
+              {esDueno && radar ? (
                 <div className="flex flex-col gap-2 border-t border-borde pt-3">
                   <p className="text-sm font-semibold">
                     Radar de turnos libres{' '}
