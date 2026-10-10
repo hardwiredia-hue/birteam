@@ -237,6 +237,39 @@ export default async function MiComplejo({
             </p>
           </section>
 
+          <form action="/api/complejo/informe" method="get" className="tarjeta flex flex-col gap-3 p-4">
+            <div>
+              <p className="text-sm font-semibold">Informe de reservas</p>
+              <p className="text-xs text-tinta-3">
+                Todas las reservas del período con lo cobrado online, devoluciones y el saldo a
+                cobrar en el complejo. Se abre con Excel o Google Sheets.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs text-tinta-3">
+                Desde
+                <input
+                  type="date"
+                  name="desde"
+                  className="campo mt-1"
+                  defaultValue={new Date(ahora.getTime() - 30 * 86400_000).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })}
+                />
+              </label>
+              <label className="text-xs text-tinta-3">
+                Hasta
+                <input
+                  type="date"
+                  name="hasta"
+                  className="campo mt-1"
+                  defaultValue={new Date(ahora.getTime() + 14 * 86400_000).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })}
+                />
+              </label>
+            </div>
+            <button type="submit" className="btn btn-secundario btn-sm self-start">
+              Descargar CSV
+            </button>
+          </form>
+
           <section className="flex flex-col gap-3">
             <div className="flex items-baseline justify-between">
               <p className="t-rotulo">Tus canchas</p>
