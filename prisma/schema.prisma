@@ -272,8 +272,24 @@ model CuentaMercadoPago {
   accessToken  String
   refreshToken String?
   expiraEn     DateTime
+  // Conectada con el simulador de pagos de staging: no es una cuenta real.
+  simulada     Boolean  @default(false)
   conectadoEn  DateTime @default(now())
   actualizadoEn DateTime @updatedAt
+}
+
+// Pagos del simulador (solo staging/desarrollo, nunca se mueve plata). Hace
+// de API de Mercado Pago para probar el circuito completo sin credenciales.
+model PagoSimulado {
+  id        String   @id
+  reservaId String
+  monto     Float
+  comision  Float    @default(0)
+  // 'approved' | 'rejected' | 'refunded'
+  estado    String
+  creadoEn  DateTime @default(now())
+
+  @@index([reservaId])
 }
 
 // Un pago de Mercado Pago tal como lo informa su API (nunca el navegador).

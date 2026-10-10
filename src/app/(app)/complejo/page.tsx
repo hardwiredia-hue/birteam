@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { suscripcionActiva } from '@/lib/suscripcion';
-import { comisionPorcentaje, mercadoPagoHabilitado } from '@/lib/mercadopago';
+import { cobroOnlineHabilitado, comisionPorcentaje, pagosSimulados } from '@/lib/mercadopago';
 import { DesconectarMercadoPago } from './mercadopago';
 import { formatearPuntaje } from '@/lib/resenas';
 import {
@@ -121,12 +121,14 @@ export default async function MiComplejo({
   const porRadar = jugadas.filter((r) => r.ofertaId).length;
   const canceladas = ultimas.filter((r) => r.estado === 'CANCELADA').length;
   const activa = suscripcionActiva(usuario);
-  const [cuentaMp, comision] = await Promise.all([
+  const [cuentaMp, comision, cobroDisponible, simulador] = await Promise.all([
     prisma.cuentaMercadoPago.findUnique({
       where: { usuarioId: usuario.id },
-      select: { conectadoEn: true, expiraEn: true, refreshToken: true },
+      select: { conectadoEn: true, expiraEn: true, refreshToken: true, simulada: true },
     }),
     comisionPorcentaje(),
+    cobroOnlineHabilitado(),
+    pagosSimulados(),
   ]);
   const mpVigente = Boolean(cuentaMp && (cuentaMp.expiraEn > ahora || cuentaMp.refreshToken));
   const cobrando = canchas.filter((c) => c.cobroOnline !== 'NO').length;
@@ -148,10 +150,18 @@ export default async function MiComplejo({
         <p className={MENSAJES_MP[mp].error ? 'aviso-error' : 'aviso-ok'}>{MENSAJES_MP[mp].texto}</p>
       ) : null}
 
-      {mercadoPagoHabilitado() ? (
+      {cobroDisponible ? (
         <section className="tarjeta flex flex-col gap-3 p-4">
           <div>
-            <p className="t-rotulo text-verde-txt">Cobro online · Mercado Pago</p>
+            <p className="t-rotulo text-verde-txt">
+              Cobro online · Mercado Pago
+              {simulador ? <span className="ml-2 text-naranja-txt">· simulador de prueba</span> : null}
+            </p>
+            {cuentaMp?.simulada ? (
+              <p className="mt-1 text-xs font-semibold text-naranja-txt">
+                Cuenta del simulador: los pagos son de prueba, no se cobra nada.
+              </p>
+            ) : null}
             {mpVigente ? (
               <p className="mt-1 text-sm">
                 Cuenta conectada

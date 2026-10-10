@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { usuarioActual } from '@/lib/auth';
-import { conectarCuenta, registrarEvento, urlPublica } from '@/lib/mercadopago';
+import { conectarCuenta, pagosSimulados, registrarEvento, urlPublica } from '@/lib/mercadopago';
 
 /** Vuelta del OAuth: valida el estado (anti-CSRF) y guarda la cuenta conectada. */
 export async function GET(request: Request) {
@@ -18,8 +18,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${base}/complejo?mp=error`);
   }
   try {
-    await conectarCuenta(usuario.id, codigo, request);
-    await registrarEvento(null, 'CUENTA_CONECTADA', usuario.id);
+    // El simulador vuelve con un código propio; solo vale con el simulador prendido.
+    const simulado = codigo === 'simulado' && (await pagosSimulados());
+    await conectarCuenta(usuario.id, codigo, request, simulado);
+    await registrarEvento(null, simulado ? 'CUENTA_CONECTADA_SIMULADA' : 'CUENTA_CONECTADA', usuario.id);
     return NextResponse.redirect(`${base}/complejo?mp=conectada`);
   } catch (error) {
     await registrarEvento(null, 'CONEXION_FALLIDA', `${usuario.id}: ${(error as Error).message}`);

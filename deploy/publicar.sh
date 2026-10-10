@@ -38,6 +38,9 @@ anotar "Publicando $SHA"
 git fetch origin
 git checkout -f "$SHA"
 
+# Marca del ambiente para la app (ej: el simulador de pagos solo se prende en staging).
+echo "$AMBIENTE" > .ambiente
+
 npm ci --no-audit --no-fund
 
 # En el servidor la base es PostgreSQL; el repo trae SQLite para desarrollo.

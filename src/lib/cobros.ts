@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { formatearPlata } from './formato';
 import { avisarReserva, claveOcupa, rotuloDia } from './reservas';
-import { obtenerPago, reembolsar, registrarEvento, tokenDelDueno } from './mercadopago';
+import { type CuentaActiva, obtenerPago, reembolsar, registrarEvento, tokenDelDueno } from './mercadopago';
 
 /**
  * Procesa un pago informado por Mercado Pago (webhook o vuelta del checkout).
@@ -17,13 +17,13 @@ export async function procesarPago(reservaId: string, pagoId: string) {
   });
   if (!reserva) return { resultado: 'SIN_RESERVA' as const };
 
-  const token = await tokenDelDueno(reserva.cancha.duenoId);
-  if (!token) {
+  const cuenta = await tokenDelDueno(reserva.cancha.duenoId);
+  if (!cuenta) {
     await registrarEvento(reserva.id, 'SIN_TOKEN', `pago ${pagoId}`);
     return { resultado: 'SIN_TOKEN' as const };
   }
 
-  const pago = await obtenerPago(token, pagoId);
+  const pago = await obtenerPago(cuenta, pagoId);
   if (pago.referencia !== reserva.id) {
     await registrarEvento(reserva.id, 'REFERENCIA_AJENA', `pago ${pago.id} trae ${pago.referencia}`);
     return { resultado: 'AJENO' as const };
@@ -57,15 +57,15 @@ export async function procesarPago(reservaId: string, pagoId: string) {
   const esperado = reserva.montoOnline ?? 0;
   if (pago.moneda !== 'ARS' || pago.monto + 0.5 < esperado) {
     await registrarEvento(reserva.id, 'MONTO_INCORRECTO', `${pago.moneda} ${pago.monto} vs ${esperado}`);
-    await devolverPago(reserva.id, token, pago.id, 'el monto no coincidía con el del turno');
+    await devolverPago(reserva.id, cuenta, pago.id, 'el monto no coincidía con el del turno');
     return { resultado: 'MONTO_INCORRECTO' as const };
   }
 
-  return confirmarPagada(reserva.id, token, pago.id);
+  return confirmarPagada(reserva.id, cuenta, pago.id);
 }
 
 /** El pago está aprobado: la reserva pasa a confirmada (o se devuelve si ya no se puede). */
-async function confirmarPagada(reservaId: string, token: string, pagoId: string) {
+async function confirmarPagada(reservaId: string, cuenta: CuentaActiva, pagoId: string) {
   const reserva = await prisma.reserva.findUniqueOrThrow({
     where: { id: reservaId },
     include: { cancha: { select: { id: true, nombre: true, duenoId: true } }, usuario: { select: { nombre: true } } },
@@ -77,7 +77,7 @@ async function confirmarPagada(reservaId: string, token: string, pagoId: string)
 
   // Lo canceló el jugador antes de que llegara el pago: se devuelve.
   if (reserva.estado === 'CANCELADA') {
-    await devolverPago(reserva.id, token, pagoId, 'el turno ya estaba cancelado');
+    await devolverPago(reserva.id, cuenta, pagoId, 'el turno ya estaba cancelado');
     return { resultado: 'DEVUELTO' as const };
   }
 
@@ -107,7 +107,7 @@ async function confirmarPagada(reservaId: string, token: string, pagoId: string)
   }
 
   if (!confirmada) {
-    await devolverPago(reserva.id, token, pagoId, 'el turno ya no estaba disponible');
+    await devolverPago(reserva.id, cuenta, pagoId, 'el turno ya no estaba disponible');
     return { resultado: 'DEVUELTO' as const };
   }
 
@@ -136,11 +136,11 @@ async function confirmarPagada(reservaId: string, token: string, pagoId: string)
 }
 
 /** Devuelve un pago aprobado y deja constancia; avisa al jugador. */
-async function devolverPago(reservaId: string, token: string, pagoId: string, motivo: string) {
+async function devolverPago(reservaId: string, cuenta: CuentaActiva, pagoId: string, motivo: string) {
   const registro = await prisma.pagoMercadoPago.findUnique({ where: { mpPaymentId: pagoId } });
   if (registro?.reembolsadoEn) return;
   try {
-    await reembolsar(token, pagoId);
+    await reembolsar(cuenta, pagoId);
   } catch (error) {
     await registrarEvento(reservaId, 'REEMBOLSO_FALLIDO', `${pagoId}: ${(error as Error).message}`);
     throw error;
@@ -183,9 +183,9 @@ export async function reembolsarReserva(reservaId: string, motivo: string) {
   if (!reserva) return;
   const aprobados = reserva.pagos.filter((pago) => pago.estado === 'approved' && !pago.reembolsadoEn);
   if (aprobados.length === 0) return;
-  const token = await tokenDelDueno(reserva.cancha.duenoId);
-  if (!token) throw new Error('La cuenta de Mercado Pago del complejo no está conectada.');
+  const cuenta = await tokenDelDueno(reserva.cancha.duenoId);
+  if (!cuenta) throw new Error('La cuenta de Mercado Pago del complejo no está conectada.');
   for (const pago of aprobados) {
-    await devolverPago(reserva.id, token, pago.mpPaymentId, motivo);
+    await devolverPago(reserva.id, cuenta, pago.mpPaymentId, motivo);
   }
 }

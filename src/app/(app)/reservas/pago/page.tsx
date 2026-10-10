@@ -39,6 +39,10 @@ export default async function PagoDelTurno({
     }))!;
   }
 
+  const rechazado =
+    pagoId && reserva.estado === 'PENDIENTE_PAGO'
+      ? (await prisma.pagoMercadoPago.findUnique({ where: { mpPaymentId: pagoId } }))?.estado === 'rejected'
+      : false;
   const turno = `${rotuloDia(reserva.fecha)} · ${reserva.hora}`;
   const resto =
     reserva.precio != null && reserva.montoOnline != null && reserva.precio > reserva.montoOnline
@@ -74,8 +78,10 @@ export default async function PagoDelTurno({
         </div>
       ) : reserva.estado === 'PENDIENTE_PAGO' ? (
         <div className="tarjeta flex flex-col gap-3 p-5">
-          <EsperarConfirmacion />
-          <p className="text-sm font-semibold">Esperando la confirmación de Mercado Pago…</p>
+          {rechazado ? null : <EsperarConfirmacion />}
+          <p className="text-sm font-semibold">
+            {rechazado ? 'Mercado Pago rechazó el pago.' : 'Esperando la confirmación de Mercado Pago…'}
+          </p>
           <p className="text-sm text-tinta-2">
             Te guardamos el turno hasta las{' '}
             {reserva.venceEn?.toLocaleTimeString('es-AR', {

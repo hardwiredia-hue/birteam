@@ -40,3 +40,23 @@ export function EditarComision({ inicial }: { inicial: number }) {
     </div>
   );
 }
+
+export function InterruptorSimulador({ prendido }: { prendido: boolean }) {
+  const router = useRouter();
+  const [enviando, setEnviando] = useState(false);
+  async function cambiar() {
+    setEnviando(true);
+    await fetch('/api/admin/simulador', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prendido: !prendido }),
+    });
+    setEnviando(false);
+    router.refresh();
+  }
+  return (
+    <button type="button" className={prendido ? 'btn btn-secundario btn-sm' : 'btn btn-primario btn-sm'} disabled={enviando} onClick={cambiar}>
+      {prendido ? 'Apagar el simulador' : 'Prender el simulador'}
+    </button>
+  );
+}

@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { formatearPlata } from '@/lib/formato';
-import { comisionPorcentaje, mercadoPagoHabilitado } from '@/lib/mercadopago';
-import { EditarComision } from './comision';
+import { comisionPorcentaje, mercadoPagoHabilitado, pagosSimulados, simulacionPermitida } from '@/lib/mercadopago';
+import { EditarComision, InterruptorSimulador } from './comision';
 
 export const metadata = { title: 'Pagos' };
 export const dynamic = 'force-dynamic';
@@ -33,6 +33,7 @@ export default async function Pagos() {
       select: { monto: true, comision: true },
     }),
   ]);
+  const [simuladorPrendido, permitido] = [await pagosSimulados(), simulacionPermitida()];
   const volumen = aprobados30.reduce((suma, p) => suma + p.monto, 0);
   const comisiones = aprobados30.reduce((suma, p) => suma + (p.comision ?? 0), 0);
 
@@ -63,6 +64,22 @@ export default async function Pagos() {
           Ver deploy/PUBLICAR.md › “Cobros con Mercado Pago”. {cuentas} {cuentas === 1 ? 'complejo conectado' : 'complejos conectados'}.
         </p>
       </section>
+
+      {permitido ? (
+        <section className="tarjeta flex flex-col gap-2 p-5" style={{ borderColor: 'var(--naranja-txt)' }}>
+          <p className="t-rotulo text-naranja-txt">Simulador de pagos · solo staging</p>
+          <p className="text-sm">
+            {simuladorPrendido
+              ? 'Prendido: los complejos conectan una cuenta de prueba y los pagos se aprueban o rechazan a mano. No se cobra nada.'
+              : 'Apagado. Prendelo para probar todo el circuito de cobro sin credenciales de Mercado Pago.'}
+          </p>
+          <InterruptorSimulador prendido={simuladorPrendido} />
+          <p className="text-xs text-tinta-3">
+            Las cuentas y pagos del simulador nunca se mezclan con los reales: con credenciales
+            cargadas, apagalo y cada complejo conecta su cuenta de verdad.
+          </p>
+        </section>
+      ) : null}
 
       <section className="tarjeta flex flex-col gap-2 p-5">
         <p className="t-rotulo">Comisión de birteam sobre cobros online</p>

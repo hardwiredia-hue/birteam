@@ -274,6 +274,13 @@ Una sola vez:
 5. systemctl restart birteam birteam-staging
 6. Backoffice › Pagos muestra ✓/✗ por variable (nunca sus valores).
 
+Simulador (para probar sin credenciales): en STAGING, Backoffice › Pagos ›
+"Prender el simulador". Los complejos conectan una cuenta de prueba y el pago
+se aprueba o rechaza a mano en una pantalla amarilla marcada "SIMULADOR DE
+PAGOS". No se cobra nada. En producción no se puede prender (la app lo sabe
+por la carpeta /home/birteam/staging y por el archivo .ambiente que deja
+publicar.sh). Las cuentas y pagos simulados nunca se mezclan con los reales.
+
 Cómo funciona: el jugador elige el turno → queda retenido 15 minutos → paga en
 Mercado Pago → birteam consulta el pago a la API de Mercado Pago (con el token
 del complejo) y recién ahí confirma. El aviso (webhook) se valida con la firma

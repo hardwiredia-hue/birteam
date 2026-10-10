@@ -176,10 +176,10 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
 
   if (aCobrar) {
     try {
-      const token = await tokenDelDueno(cancha.duenoId);
-      if (!token) throw new Error('Cuenta de Mercado Pago del complejo sin conectar.');
+      const cuenta = await tokenDelDueno(cancha.duenoId);
+      if (!cuenta) throw new Error('Cuenta de Mercado Pago del complejo sin conectar.');
       const comision = Math.round((aCobrar * (await comisionPorcentaje())) / 100);
-      const preferencia = await crearPreferencia(token, {
+      const preferencia = await crearPreferencia(cuenta, {
         reservaId: reserva.id,
         titulo: `${cancha.nombre} · ${rotuloDia(fecha)} ${hora}${cancha.cobroOnline === 'SENA' ? ' (seña)' : ''}`,
         monto: aCobrar,
