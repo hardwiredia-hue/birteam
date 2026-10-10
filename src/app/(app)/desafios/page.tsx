@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
 import { ESTADOS_DESAFIO, gruposQueAdministro, rotuloFecha } from '@/lib/desafios';
+import { slugsDelFiltro, nombreDelFiltro } from '@/lib/deportes';
+import { ChipsDeportes } from '@/components/chips-deportes';
 import { AccionesDesafio } from './acciones';
 
 export const metadata = { title: 'Desafíos' };
@@ -34,7 +36,8 @@ export default async function Desafios({
   ]);
   const misGrupos = membresias.map((m) => m.grupoId);
   const idsAdmin = administrados.map((g) => g.id);
-  const deporte = deportes.find((d) => d.slug === slug) ?? null;
+  const slugsFiltro = slugsDelFiltro(slug, deportes);
+  const nombreFiltro = nombreDelFiltro(slug, deportes);
 
   const [recibidos, abiertos, mios] = await Promise.all([
     prisma.desafio.findMany({
@@ -48,7 +51,7 @@ export default async function Desafios({
         estado: 'PENDIENTE',
         fecha: { gt: ahora },
         retadorId: { notIn: misGrupos },
-        ...(deporte ? { deporteId: deporte.id } : {}),
+        ...(slugsFiltro ? { deporte: { slug: { in: slugsFiltro } } } : {}),
       },
       include: incluir,
       orderBy: { fecha: 'asc' },
@@ -121,23 +124,14 @@ export default async function Desafios({
 
       <section className="flex flex-col gap-2">
         <p className="t-rotulo">Grupos que buscan rival</p>
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          <Link href="/desafios" className={!deporte ? 'chip-sel chip-sel-activo shrink-0' : 'chip-sel shrink-0'}>
-            Todos
-          </Link>
-          {deportes.map((d) => (
-            <Link
-              key={d.id}
-              href={`/desafios?deporte=${d.slug}`}
-              className={deporte?.id === d.id ? 'chip-sel chip-sel-activo shrink-0' : 'chip-sel shrink-0'}
-            >
-              {d.nombre}
-            </Link>
-          ))}
-        </div>
+        <ChipsDeportes
+          deportes={deportes}
+          activo={slug}
+          href={(valor) => (valor ? `/desafios?deporte=${valor}` : '/desafios')}
+        />
         {abiertosOrdenados.length === 0 ? (
           <p className="tarjeta p-4 text-sm text-tinta-2">
-            Ahora no hay desafíos abiertos{deporte ? ` de ${deporte.nombre}` : ''}. Publicá el tuyo
+            Ahora no hay desafíos abiertos{nombreFiltro ? ` de ${nombreFiltro}` : ''}. Publicá el tuyo
             y que lo acepte el primero que se anime.
           </p>
         ) : (

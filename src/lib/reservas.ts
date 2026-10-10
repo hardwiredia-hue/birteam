@@ -360,7 +360,9 @@ export interface OfertaVigente {
  * tomó, lo que la cancha ya no ofrece (cambió horario o días) y las canchas
  * pausadas, sin pedidos online o con la suscripción vencida.
  */
-export async function ofertasVigentes(filtro: { canchaId?: string; deporteId?: string } = {}) {
+export async function ofertasVigentes(
+  filtro: { canchaId?: string; deporteId?: string; deporteIds?: string[] | null } = {}
+) {
   await liberarVencidas(filtro.canchaId);
   const limite = new Date(Date.now() + MINUTOS_ANTICIPACION * 60_000);
   const ofertas = await prisma.ofertaTurno.findMany({
@@ -372,6 +374,7 @@ export async function ofertasVigentes(filtro: { canchaId?: string; deporteId?: s
         reservasOnline: true,
         dueno: { suscripcionHasta: { gt: new Date() } },
         ...(filtro.deporteId ? { deporteId: filtro.deporteId } : {}),
+        ...(filtro.deporteIds ? { deporteId: { in: filtro.deporteIds } } : {}),
       },
     },
     include: { cancha: { include: { deporte: { select: { nombre: true } } } } },

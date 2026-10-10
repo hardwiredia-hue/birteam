@@ -22,8 +22,10 @@ interface Candidato {
 /** Jugadores por lado más comunes según el deporte (se puede cambiar). */
 const POR_LADO: Record<string, number> = {
   'Fútbol 5': 5,
+  'Fútbol 7': 7,
   'Fútbol 11': 11,
   Básquet: 5,
+  'Básquet 3x3': 3,
   Vóley: 6,
   Rugby: 15,
   Hockey: 11,

@@ -23,8 +23,10 @@ export const MAX_DEPORTES_USUARIO = 5;
 /** Catálogo inicial de deportes (se siembra en la base). */
 export const DEPORTES_INICIALES = [
   'Fútbol 5',
+  'Fútbol 7',
   'Fútbol 11',
   'Básquet',
+  'Básquet 3x3',
   'Vóley',
   'Rugby',
   'Tenis',
@@ -66,8 +68,10 @@ export const ROTULOS_NIVEL: Record<string, string> = {
 /** Posiciones sugeridas por deporte (se puede escribir otra). */
 export const POSICIONES_POR_DEPORTE: Record<string, string[]> = {
   'Fútbol 5': ['Arquero', 'Defensor', 'Mediocampista', 'Delantero', 'Comodín'],
+  'Fútbol 7': ['Arquero', 'Defensor', 'Volante', 'Delantero'],
   'Fútbol 11': ['Arquero', 'Central', 'Lateral', 'Volante', 'Enganche', 'Delantero'],
   Básquet: ['Base', 'Escolta', 'Alero', 'Ala-pívot', 'Pívot'],
+  'Básquet 3x3': ['Base', 'Alero', 'Pívot'],
   Vóley: ['Armador', 'Opuesto', 'Central', 'Punta', 'Líbero'],
   Rugby: ['Pilar', 'Hooker', 'Segunda línea', 'Ala', 'Octavo', 'Medio scrum', 'Apertura', 'Centro', 'Wing', 'Fullback'],
   Tenis: ['Singles', 'Dobles'],

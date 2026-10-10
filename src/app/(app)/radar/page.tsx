@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
+import { slugsDelFiltro, nombreDelFiltro } from '@/lib/deportes';
+import { ChipsDeportes } from '@/components/chips-deportes';
 import { cuandoEmpieza, diaDeSemana, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
 import { PedirOferta } from './pedir';
 
@@ -34,8 +36,11 @@ export default async function Radar({
     orderBy: { orden: 'asc' },
     select: { id: true, nombre: true, slug: true },
   });
-  const deporte = deportes.find((d) => d.slug === slug) ?? null;
-  const ofertas = await ofertasVigentes({ deporteId: deporte?.id });
+  const slugsFiltro = slugsDelFiltro(slug, deportes);
+  const nombreFiltro = nombreDelFiltro(slug, deportes);
+  const ofertas = await ofertasVigentes({
+    deporteIds: slugsFiltro ? deportes.filter((d) => slugsFiltro.includes(d.slug)).map((d) => d.id) : null,
+  });
 
   const conUbicacion = usuario.latitud != null && usuario.longitud != null;
   const lista = ofertas
@@ -82,20 +87,7 @@ export default async function Radar({
         </p>
       </header>
 
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-        <Link href={enlace({ deporte: null })} className={!deporte ? 'chip-sel chip-sel-activo shrink-0' : 'chip-sel shrink-0'}>
-          Todos
-        </Link>
-        {deportes.map((d) => (
-          <Link
-            key={d.id}
-            href={enlace({ deporte: d.slug })}
-            className={deporte?.id === d.id ? 'chip-sel chip-sel-activo shrink-0' : 'chip-sel shrink-0'}
-          >
-            {d.nombre}
-          </Link>
-        ))}
-      </div>
+      <ChipsDeportes deportes={deportes} activo={slug} href={(valor) => enlace({ deporte: valor })} />
 
       <div className="flex flex-wrap gap-2">
         {[
@@ -161,7 +153,7 @@ export default async function Radar({
       {lista.length === 0 ? (
         <div className="tarjeta flex flex-col gap-3 p-5">
           <p className="text-sm text-tinta-2">
-            Ahora no hay turnos en el Radar{deporte ? ` de ${deporte.nombre}` : ''}
+            Ahora no hay turnos en el Radar{nombreFiltro ? ` de ${nombreFiltro}` : ''}
             {cuando || descuentoMinimo || precioMaximo ? ' con esos filtros' : ''}. Cuando un
             complejo publique uno libre con descuento te avisamos, si jugás ese deporte en su
             ciudad.

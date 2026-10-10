@@ -1,9 +1,10 @@
 'use client';
 
+import { SelectorDeporte } from '@/components/selector-deporte';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export function FormularioTorneo({ deportes }: { deportes: { id: string; nombre: string }[] }) {
+export function FormularioTorneo({ deportes }: { deportes: { id: string; nombre: string; slug: string }[] }) {
   const router = useRouter();
   const [deporteId, setDeporteId] = useState<string | null>(null);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -48,17 +49,8 @@ export function FormularioTorneo({ deportes }: { deportes: { id: string; nombre:
 
       <div>
         <span className="rotulo-campo">Deporte</span>
-        <div className="flex flex-wrap gap-2">
-          {deportes.map((deporte) => (
-            <button
-              key={deporte.id}
-              type="button"
-              onClick={() => setDeporteId(deporte.id)}
-              className={deporteId === deporte.id ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-            >
-              {deporte.nombre}
-            </button>
-          ))}
+        <div className="mt-1">
+          <SelectorDeporte deportes={deportes} valor={deporteId || null} alCambiar={(id) => setDeporteId(id ?? '')} />
         </div>
         {errores.deporteId ? <p className="mt-1 text-xs text-rojo">{errores.deporteId[0]}</p> : null}
       </div>

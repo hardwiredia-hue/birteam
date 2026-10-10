@@ -5,6 +5,8 @@ import { usuarioActual } from '@/lib/auth';
 import { calcularRanking } from '@/lib/estadisticas';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
 import { formatearPlata } from '@/lib/formato';
+import { agruparDeportes, infoDeporte } from '@/lib/deportes';
+import { IconoDeporte } from '@/components/icono-deporte';
 import { Avatar } from '@/components/avatar';
 import { BotonSumarme } from '@/components/sumarse-grupo';
 
@@ -21,6 +23,11 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
 
   const deporte = await prisma.deporte.findUnique({ where: { slug } });
   if (!deporte) notFound();
+  // Las otras modalidades de la misma familia (Fútbol 5/7/11, Básquet 5x5/3x3).
+  const info = infoDeporte(deporte);
+  const familia = agruparDeportes(
+    await prisma.deporte.findMany({ orderBy: { orden: 'asc' }, select: { id: true, nombre: true, slug: true } })
+  ).find((f) => f.clave === info.clave);
 
   const [partidos, grupos, jugadoresTotal, ranking, torneos] = await Promise.all([
     prisma.partido.findMany({
@@ -41,7 +48,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
       take: 5,
     }),
     prisma.usuarioDeporte.count({ where: { deporteId: deporte.id } }),
-    calcularRanking(usuario.id, { deporteSlug: slug, soloCiudad: usuario.ciudad }),
+    calcularRanking(usuario.id, { deporteSlugs: [slug], soloCiudad: usuario.ciudad }),
     prisma.torneo.findMany({
       where: { deporteId: deporte.id, estado: { in: ['INSCRIPCION', 'EN_JUEGO'] } },
       include: { _count: { select: { equipos: true } } },
@@ -54,7 +61,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
   const podio =
     ranking.filas.length > 0
       ? ranking
-      : await calcularRanking(usuario.id, { deporteSlug: slug, soloCiudad: null });
+      : await calcularRanking(usuario.id, { deporteSlugs: [slug], soloCiudad: null });
 
   const cercanos = partidos
     .map((partido) => ({
@@ -71,7 +78,26 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1.5">
         <Link href="/comunidades" className="t-rotulo">← Todas las comunidades</Link>
-        <h1 className="t-display text-[28px]">{deporte.nombre}</h1>
+        <h1 className="t-display flex items-center gap-2.5 text-[28px]">
+          <span className="text-verde-txt">
+            <IconoDeporte icono={info.icono} tam={28} />
+          </span>
+          {deporte.nombre}
+        </h1>
+        {familia && familia.opciones.length > 1 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="t-rotulo">Tipo</span>
+            {familia.opciones.map((opcion) => (
+              <Link
+                key={opcion.id}
+                href={`/comunidades/${opcion.slug}`}
+                className={opcion.id === deporte.id ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {opcion.modalidad}
+              </Link>
+            ))}
+          </div>
+        ) : null}
         <p className="t-rotulo tabular">
           {jugadoresTotal} jugadores en birteam
           {usuario.ciudad ? ` · tu zona: ${usuario.ciudad}` : ''}

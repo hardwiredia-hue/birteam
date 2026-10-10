@@ -2,6 +2,8 @@ import Link from 'next/link';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
+import { slugsDelFiltro } from '@/lib/deportes';
+import { ChipsDeportes } from '@/components/chips-deportes';
 import { formatearPuntaje, puntajesDeCanchas } from '@/lib/resenas';
 import { usuarioActual } from '@/lib/auth';
 import { distanciaKm, formatearDistancia } from '@/lib/geo';
@@ -35,6 +37,8 @@ export default async function Explorar({
     orderBy: { orden: 'asc' },
     select: { id: true, nombre: true, slug: true },
   });
+  // "futbol" filtra 5, 7 y 11; un slug suelto (links viejos) sigue andando.
+  const slugsFiltro = slugsDelFiltro(deporte, deportes);
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,23 +85,19 @@ export default async function Explorar({
                 </Link>
               </>
             ) : null}
-            {deportes.map((d) => (
-              <Link
-                key={d.id}
-                href={
-                  d.slug === deporte
-                    ? `/explorar?tab=ranking${ambito === 'todos' ? '&ambito=todos' : ''}`
-                    : `/explorar?tab=ranking&deporte=${d.slug}${ambito === 'todos' ? '&ambito=todos' : ''}`
-                }
-                className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {d.nombre}
-              </Link>
-            ))}
+            <ChipsDeportes
+              deportes={deportes}
+              activo={deporte}
+              conTodos={false}
+              envolver="contenido"
+              href={(clave) =>
+                `/explorar?tab=ranking${clave ? `&deporte=${clave}` : ''}${ambito === 'todos' ? '&ambito=todos' : ''}`
+              }
+            />
           </div>
           <Ranking
             usuarioId={usuario.id}
-            deporteSlug={deporte}
+            deporteSlugs={slugsFiltro}
             soloCiudad={ambito === 'todos' ? null : usuario.ciudad}
           />
         </>
@@ -133,39 +133,26 @@ export default async function Explorar({
               <span className="text-verde-txt">→</span>
             </Link>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {deportes.map((d) => (
-              <Link
-                key={d.id}
-                href={armarUrl({
-                  tab: 'canchas',
-                  deporte: d.slug === deporte ? undefined : d.slug,
-                  q,
-                  vista,
-                })}
-                className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {d.nombre}
-              </Link>
-            ))}
-          </div>
-          <Canchas deporte={deporte} q={q} usuario={usuario} vista={vista} />
+          <ChipsDeportes
+            deportes={deportes}
+            activo={deporte}
+            conTodos={false}
+            envolver
+            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista })}
+          />
+          <Canchas deporteSlugs={slugsFiltro} q={q} usuario={usuario} vista={vista} />
         </>
       ) : (
         <>
           <AlternarVista deporte={deporte} q={q} vista={vista} />
-          <div className="flex flex-wrap gap-2">
-            {deportes.map((d) => (
-              <Link
-                key={d.id}
-                href={armarUrl({ deporte: d.slug === deporte ? undefined : d.slug, q, vista })}
-                className={d.slug === deporte ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {d.nombre}
-              </Link>
-            ))}
-          </div>
-          <Partidos deporte={deporte} q={q} usuario={usuario} vista={vista} />
+          <ChipsDeportes
+            deportes={deportes}
+            activo={deporte}
+            conTodos={false}
+            envolver
+            href={(clave) => armarUrl({ deporte: clave ?? undefined, q, vista })}
+          />
+          <Partidos deporteSlugs={slugsFiltro} q={q} usuario={usuario} vista={vista} />
         </>
       )}
     </div>
@@ -226,12 +213,12 @@ function Solapa({ activa, href, children }: { activa: boolean; href: string; chi
 }
 
 async function Partidos({
-  deporte,
+  deporteSlugs,
   q,
   usuario,
   vista,
 }: {
-  deporte?: string;
+  deporteSlugs?: string[] | null;
   q?: string;
   usuario: { latitud: number | null; longitud: number | null };
   vista?: string;
@@ -241,7 +228,7 @@ async function Partidos({
       visibilidad: 'ABIERTO',
       estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
       fecha: { gte: new Date() },
-      ...(deporte ? { deporte: { slug: deporte } } : {}),
+      ...(deporteSlugs ? { deporte: { slug: { in: deporteSlugs } } } : {}),
     },
     include: {
       deporte: true,
@@ -367,12 +354,12 @@ async function Partidos({
 }
 
 async function Canchas({
-  deporte,
+  deporteSlugs,
   q,
   usuario,
   vista,
 }: {
-  deporte?: string;
+  deporteSlugs?: string[] | null;
   q?: string;
   usuario: { tipoCuenta: string; latitud: number | null; longitud: number | null };
   vista?: string;
@@ -382,7 +369,7 @@ async function Canchas({
       activa: true,
       // Solo publicaciones de dueños con la suscripción al día.
       dueno: { suscripcionHasta: { gt: new Date() } },
-      ...(deporte ? { deporte: { slug: deporte } } : {}),
+      ...(deporteSlugs ? { deporte: { slug: { in: deporteSlugs } } } : {}),
     },
     include: { deporte: true, dueno: { select: { verificacion: true } } },
     orderBy: { creadoEn: 'desc' },
@@ -514,14 +501,14 @@ async function Canchas({
 
 async function Ranking({
   usuarioId,
-  deporteSlug,
+  deporteSlugs,
   soloCiudad,
 }: {
   usuarioId: string;
-  deporteSlug?: string;
+  deporteSlugs?: string[] | null;
   soloCiudad?: string | null;
 }) {
-  const { filas, mia } = await calcularRanking(usuarioId, { deporteSlug, soloCiudad });
+  const { filas, mia } = await calcularRanking(usuarioId, { deporteSlugs, soloCiudad });
 
   if (filas.length === 0) {
     return (

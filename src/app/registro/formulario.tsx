@@ -1,5 +1,6 @@
 'use client';
 
+import { SelectorDeportes } from '@/components/selector-deporte';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
@@ -7,6 +8,7 @@ import { SelectorCiudad } from '@/components/selector-ciudad';
 interface Deporte {
   id: string;
   nombre: string;
+  slug: string;
 }
 
 export function FormularioRegistro({
@@ -36,11 +38,6 @@ export function FormularioRegistro({
     return respuesta.ok ? (datos.nombre as string) : null;
   }
 
-  function alternarDeporte(id: string) {
-    setElegidos((actuales) =>
-      actuales.includes(id) ? actuales.filter((otro) => otro !== id) : [...actuales, id].slice(0, 5)
-    );
-  }
 
   async function alEnviar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -307,21 +304,13 @@ export function FormularioRegistro({
             ? 'Qué canchas alquilás · los deportes de tu complejo'
             : 'Tus deportes · hasta 5, el 1º es el principal'}
         </span>
-        <div className="mt-1 flex flex-wrap gap-2">
-          {deportes.map((deporte) => {
-            const activo = elegidos.includes(deporte.id);
-            return (
-              <button
-                key={deporte.id}
-                type="button"
-                onClick={() => alternarDeporte(deporte.id)}
-                className={activo ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {activo && elegidos[0] === deporte.id ? '★ ' : ''}
-                {deporte.nombre}
-              </button>
-            );
-          })}
+        <div className="mt-1">
+          <SelectorDeportes deportes={deportes} elegidos={elegidos} alCambiar={setElegidos} maximo={5} />
+          {elegidos.length > 0 ? (
+            <p className="mt-2 text-xs text-tinta-3">
+              ★ Principal: {deportes.find((d) => d.id === elegidos[0])?.nombre}
+            </p>
+          ) : null}
         </div>
       </div>
 

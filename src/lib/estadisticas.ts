@@ -26,9 +26,9 @@ export interface FilaRanking {
  */
 export async function calcularRanking(
   usuarioId: string,
-  opciones: { deporteSlug?: string; soloCiudad?: string | null } = {}
+  opciones: { deporteSlugs?: string[] | null; soloCiudad?: string | null } = {}
 ): Promise<{ filas: FilaRanking[]; mia: FilaRanking | null }> {
-  const filtroDeporte = opciones.deporteSlug ? { deporte: { slug: opciones.deporteSlug } } : {};
+  const filtroDeporte = opciones.deporteSlugs ? { deporte: { slug: { in: opciones.deporteSlugs } } } : {};
 
   const [jugadosPor, organizadosPor, ocultos] = await Promise.all([
     prisma.participacion.groupBy({

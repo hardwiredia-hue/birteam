@@ -33,7 +33,7 @@ export default async function PaginaRegistro({
   if (usuario) redirect(destino ?? '/panel');
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
-    select: { id: true, nombre: true },
+    select: { id: true, nombre: true, slug: true },
   });
 
   return (

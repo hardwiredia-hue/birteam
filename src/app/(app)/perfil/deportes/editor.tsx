@@ -1,5 +1,6 @@
 'use client';
 
+import { SelectorDeportes } from '@/components/selector-deporte';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -20,7 +21,7 @@ export function EditorDeportes({
   deportes,
   inicial,
 }: {
-  deportes: { id: string; nombre: string }[];
+  deportes: { id: string; nombre: string; slug: string }[];
   inicial: Eleccion[];
 }) {
   const router = useRouter();
@@ -87,21 +88,18 @@ export function EditorDeportes({
         <span className="rotulo-campo">
           Tus deportes · hasta {MAX_DEPORTES_USUARIO} ({elegidos.length} elegidos)
         </span>
-        <div className="mt-1 flex flex-wrap gap-2">
-          {deportes.map((deporte) => {
-            const activo = elegidos.some((e) => e.deporteId === deporte.id);
-            return (
-              <button
-                key={deporte.id}
-                type="button"
-                onClick={() => alternar(deporte.id)}
-                disabled={!activo && elegidos.length >= MAX_DEPORTES_USUARIO}
-                className={activo ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {deporte.nombre}
-              </button>
-            );
-          })}
+        <div className="mt-1">
+          <SelectorDeportes
+            deportes={deportes}
+            elegidos={elegidos.map((e) => e.deporteId)}
+            maximo={MAX_DEPORTES_USUARIO}
+            alCambiar={(ids) => {
+              const sacado = elegidos.find((e) => !ids.includes(e.deporteId));
+              const agregado = ids.find((id) => !elegidos.some((e) => e.deporteId === id));
+              if (sacado) alternar(sacado.deporteId);
+              else if (agregado) alternar(agregado);
+            }}
+          />
         </div>
       </div>
 

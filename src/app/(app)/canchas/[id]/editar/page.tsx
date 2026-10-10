@@ -17,7 +17,7 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
 
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
-    select: { id: true, nombre: true },
+    select: { id: true, nombre: true, slug: true },
   });
 
   let fotos: string[] = [];

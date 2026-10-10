@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export default async function NuevoTorneo() {
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
-    select: { id: true, nombre: true },
+    select: { id: true, nombre: true, slug: true },
   });
 
   return (

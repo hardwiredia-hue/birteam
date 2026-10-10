@@ -3,10 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
+import { SelectorDeporte } from '@/components/selector-deporte';
 
 interface Deporte {
   id: string;
   nombre: string;
+  slug: string;
 }
 
 const TOTAL_PASOS = 6;
@@ -334,18 +336,7 @@ export function Asistente({
       {paso === 1 ? (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Qué<br />juegan?</h1>
-          <div className="flex flex-wrap gap-2">
-            {deportes.map((deporte) => (
-              <button
-                key={deporte.id}
-                type="button"
-                onClick={() => setDeporteId(deporte.id)}
-                className={deporteId === deporte.id ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {deporte.nombre}
-              </button>
-            ))}
-          </div>
+          <SelectorDeporte deportes={deportes} valor={deporteId} alCambiar={setDeporteId} />
         </section>
       ) : paso === 3 ? (
         <section className="flex flex-col gap-4">
