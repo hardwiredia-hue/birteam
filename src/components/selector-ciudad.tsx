@@ -188,7 +188,7 @@ export function SelectorCiudad({
           </div>
         </div>
       ) : (
-        <button type="button" className="mt-2 text-xs font-semibold text-azul-txt" onClick={abrirCascada}>
+        <button type="button" className="mt-2 text-xs font-semibold text-tinta-2 underline decoration-borde-2 underline-offset-4 hover:text-tinta" onClick={abrirCascada}>
           O elegí país, provincia y ciudad paso a paso
         </button>
       )}

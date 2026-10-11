@@ -4,6 +4,8 @@ import { SelectorDeporte } from '@/components/selector-deporte';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
+import { Interruptor } from '@/components/interruptor';
+import { nombresEnSerie, siguienteNombre } from '@/lib/serie';
 
 interface Deporte {
   id: string;
@@ -11,7 +13,7 @@ interface Deporte {
   slug: string;
 }
 
-interface CanchaExistente {
+export interface CanchaExistente {
   id: string;
   nombre: string;
   descripcion: string | null;
@@ -36,8 +38,11 @@ interface CanchaExistente {
   activa: boolean;
 }
 
+/** Canchas iguales que se pueden publicar de una vez. */
+const MAXIMO_EN_SERIE = 10;
+
 const HORAS = Array.from({ length: 25 }, (_, hora) => hora);
-const rotuloHora = (hora: number) => (hora === 24 ? '24:00 (medianoche)' : `${String(hora).padStart(2, '0')}:00`);
+const rotuloHora = (hora: number) => `${String(hora).padStart(2, '0')}:00`;
 
 // Semana de lunes a domingo, con el índice que usa Date.getDay().
 const DIAS_SEMANA = [
@@ -54,33 +59,46 @@ const DIAS_SEMANA = [
 export function FormularioCancha({
   deportes,
   cancha,
+  plantilla,
   predeterminados,
   mercadoPago,
 }: {
   deportes: Deporte[];
   cancha?: CanchaExistente;
-  /** Dirección y teléfono del complejo (del registro), para no tipear dos veces. */
-  predeterminados?: { direccion?: string | null; telefono?: string | null };
+  /** Al publicar: otra cancha del complejo de la que se copian los datos. */
+  plantilla?: CanchaExistente | null;
+  /** Datos del complejo (del registro), para no tipear dos veces. */
+  predeterminados?: {
+    direccion?: string | null;
+    telefono?: string | null;
+    ciudad?: string | null;
+    provincia?: string | null;
+  };
   /** Estado de Mercado Pago del dueño: habilita el cobro online. */
   mercadoPago?: { conectada: boolean; comision: number };
 }) {
   const router = useRouter();
-  const [deporteId, setDeporteId] = useState(cancha?.deporteId ?? deportes[0]?.id ?? '');
+  // Valores de arranque: la cancha que se edita o la que se usa de modelo.
+  const base = cancha ?? plantilla ?? undefined;
+  const [cantidad, setCantidad] = useState(1);
+  const [nombreActual, setNombreActual] = useState(cancha?.nombre ?? (plantilla ? siguienteNombre(plantilla.nombre) : ''));
+  const [deporteId, setDeporteId] = useState(base?.deporteId ?? deportes[0]?.id ?? '');
   const [fotos, setFotos] = useState<{ valor: string; url: string }[]>(
-    (cancha?.fotos ?? []).map((url) => ({ valor: url, url }))
+    // Copiadas de otra cancha: viajan como archivo nuevo (nombre), no como URL guardada.
+    (base?.fotos ?? []).map((url) => ({ valor: cancha ? url : url.replace(/^\/api\/archivos\//, ''), url }))
   );
-  const [activa, setActiva] = useState(cancha?.activa ?? true);
-  const [dias, setDias] = useState<number[]>(cancha?.diasDisponibles ?? [0, 1, 2, 3, 4, 5, 6]);
-  const [apertura, setApertura] = useState(cancha?.horaApertura ?? 9);
-  const [cierre, setCierre] = useState(cancha?.horaCierre ?? 23);
-  const [duracion, setDuracion] = useState(cancha?.duracionTurno ?? 60);
-  const [reservasOnline, setReservasOnline] = useState(cancha?.reservasOnline ?? true);
-  const [cobroOnline, setCobroOnline] = useState(cancha?.cobroOnline ?? 'NO');
-  const [horasCancelacion, setHorasCancelacion] = useState(cancha?.horasCancelacion ?? 6);
-  const [conPico, setConPico] = useState(cancha?.precioPico != null);
-  const [picoDesde, setPicoDesde] = useState<number | null>(cancha?.picoDesdeHora ?? 18);
-  const [picoFinde, setPicoFinde] = useState(cancha?.picoFinDeSemana ?? false);
-  const [senaPorcentaje, setSenaPorcentaje] = useState(cancha?.senaPorcentaje ?? 30);
+  const [activa, setActiva] = useState(base?.activa ?? true);
+  const [dias, setDias] = useState<number[]>(base?.diasDisponibles ?? [0, 1, 2, 3, 4, 5, 6]);
+  const [apertura, setApertura] = useState(base?.horaApertura ?? 9);
+  const [cierre, setCierre] = useState(base?.horaCierre ?? 23);
+  const [duracion, setDuracion] = useState(base?.duracionTurno ?? 60);
+  const [reservasOnline, setReservasOnline] = useState(base?.reservasOnline ?? true);
+  const [cobroOnline, setCobroOnline] = useState(base?.cobroOnline ?? 'NO');
+  const [horasCancelacion, setHorasCancelacion] = useState(base?.horasCancelacion ?? 6);
+  const [conPico, setConPico] = useState(base?.precioPico != null);
+  const [picoDesde, setPicoDesde] = useState<number | null>(base?.picoDesdeHora ?? 18);
+  const [picoFinde, setPicoFinde] = useState(base?.picoFinDeSemana ?? false);
+  const [senaPorcentaje, setSenaPorcentaje] = useState(base?.senaPorcentaje ?? 30);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -143,7 +161,7 @@ export function FormularioCancha({
       precioPico: conPico ? numero(form.get('precioPico')) : null,
       picoDesdeHora: conPico ? picoDesde : null,
       picoFinDeSemana: conPico && picoFinde,
-      ...(cancha ? { activa } : {}),
+      ...(cancha ? { activa } : { cantidad }),
     };
 
     const respuesta = await fetch(cancha ? `/api/canchas/${cancha.id}` : '/api/canchas', {
@@ -161,7 +179,8 @@ export function FormularioCancha({
     }
 
     const datos = await respuesta.json().catch(() => ({}));
-    router.push(`/canchas/${cancha ? cancha.id : datos.id}`);
+    // Varias de una: al panel del complejo, donde se ven todas.
+    router.push(!cancha && cantidad > 1 ? '/complejo' : `/canchas/${cancha ? cancha.id : datos.id}`);
     router.refresh();
   }
 
@@ -176,7 +195,8 @@ export function FormularioCancha({
           name="nombre"
           className="campo"
           placeholder="Complejo El Potrero"
-          defaultValue={cancha?.nombre ?? ''}
+          defaultValue={nombreActual}
+          onChange={(evento) => setNombreActual(evento.target.value)}
           required
         />
         <ErrorDeCampo mensajes={errores.nombre} />
@@ -199,7 +219,7 @@ export function FormularioCancha({
           name="direccion"
           className="campo"
           placeholder="Av. Siempreviva 742"
-          defaultValue={cancha?.direccion ?? predeterminados?.direccion ?? ''}
+          defaultValue={base?.direccion ?? predeterminados?.direccion ?? ''}
           required
         />
         <ErrorDeCampo mensajes={errores.direccion} />
@@ -210,7 +230,13 @@ export function FormularioCancha({
           Ciudad
         </label>
         <SelectorCiudad
-          inicial={cancha ? { ciudad: cancha.ciudad, provincia: cancha.provincia } : undefined}
+          inicial={
+            base
+              ? { ciudad: base.ciudad, provincia: base.provincia }
+              : predeterminados?.ciudad
+                ? { ciudad: predeterminados.ciudad, provincia: predeterminados.provincia ?? null }
+                : undefined
+          }
         />
       </div>
 
@@ -227,7 +253,7 @@ export function FormularioCancha({
             step="any"
             className="campo"
             placeholder="En pesos"
-            defaultValue={cancha?.precioPorHora ?? ''}
+            defaultValue={base?.precioPorHora ?? ''}
           />
           <ErrorDeCampo mensajes={errores.precioPorHora} />
         </div>
@@ -240,7 +266,7 @@ export function FormularioCancha({
             name="telefono"
             className="campo"
             placeholder="Para reservas"
-            defaultValue={cancha?.telefono ?? predeterminados?.telefono ?? ''}
+            defaultValue={base?.telefono ?? predeterminados?.telefono ?? ''}
           />
           <ErrorDeCampo mensajes={errores.telefono} />
         </div>
@@ -252,7 +278,7 @@ export function FormularioCancha({
             type="checkbox"
             checked={conPico}
             onChange={(evento) => setConPico(evento.target.checked)}
-            className="h-4 w-4 accent-[#a8e617]"
+           
           />
           Precio distinto en horario pico
         </label>
@@ -269,7 +295,7 @@ export function FormularioCancha({
                   step="any"
                   className="campo"
                   placeholder="En pesos"
-                  defaultValue={cancha?.precioPico ?? ''}
+                  defaultValue={base?.precioPico ?? ''}
                   required
                 />
               </div>
@@ -295,7 +321,7 @@ export function FormularioCancha({
                 type="checkbox"
                 checked={picoFinde}
                 onChange={(evento) => setPicoFinde(evento.target.checked)}
-                className="h-4 w-4 accent-[#a8e617]"
+               
               />
               Todo el día los sábados y domingos
             </label>
@@ -392,21 +418,15 @@ export function FormularioCancha({
             ))}
           </div>
         </div>
-        <label className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <span>
-            <span className="block text-sm font-semibold">Recibir pedidos de turno online</span>
+            <span className="block text-sm font-semibold">Pedidos de turno online</span>
             <span className="block text-xs text-tinta-3">
-              Cada pedido te llega como aviso y lo confirmás o rechazás vos. Apagado, se
-              reserva solo por teléfono.
+              Te llega cada pedido y lo confirmás vos. Apagado, se reserva por teléfono.
             </span>
           </span>
-          <input
-            type="checkbox"
-            checked={reservasOnline}
-            onChange={(evento) => setReservasOnline(evento.target.checked)}
-            className="h-5 w-5 shrink-0 accent-[#a8e617]"
-          />
-        </label>
+          <Interruptor prendido={reservasOnline} alCambiar={setReservasOnline} rotulo="Pedidos de turno online" />
+        </div>
         {reservasOnline ? (
           <label className="flex flex-col gap-1 border-t border-borde pt-3 text-sm">
             <span className="font-semibold">Cancelación sin cargo hasta</span>
@@ -493,7 +513,7 @@ export function FormularioCancha({
           name="descripcion"
           className="campo min-h-24"
           placeholder="Césped sintético, vestuarios, estacionamiento, iluminación…"
-          defaultValue={cancha?.descripcion ?? ''}
+          defaultValue={base?.descripcion ?? ''}
         />
         <ErrorDeCampo mensajes={errores.descripcion} />
       </div>
@@ -539,26 +559,61 @@ export function FormularioCancha({
       </div>
 
       {cancha ? (
-        <label className="tarjeta flex items-center justify-between p-4">
+        <div className="tarjeta flex items-center justify-between gap-3 p-4">
           <span>
             <span className="block text-sm font-semibold">Publicada</span>
             <span className="block text-xs text-tinta-3">
               Pausala si está en obras o no querés recibir consultas.
             </span>
           </span>
-          <input
-            type="checkbox"
-            checked={activa}
-            onChange={(evento) => setActiva(evento.target.checked)}
-            className="h-5 w-5 accent-[#a8e617]"
-          />
-        </label>
+          <Interruptor prendido={activa} alCambiar={setActiva} rotulo="Publicada" />
+        </div>
+      ) : null}
+
+      {!cancha ? (
+        <div className="tarjeta flex items-center justify-between gap-3 p-4">
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold">Canchas iguales</span>
+            <span className="block text-xs text-tinta-3">
+              {cantidad > 1
+                ? `Se publican ${nombresEnSerie(nombreActual || 'Cancha', cantidad).join(', ')}.`
+                : '¿Tenés varias con el mismo precio y horario? Publicalas de una.'}
+            </span>
+          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              className="chip-sel h-9 w-9 justify-center p-0"
+              onClick={() => setCantidad(Math.max(1, cantidad - 1))}
+              disabled={cantidad <= 1}
+              aria-label="Una menos"
+            >
+              −
+            </button>
+            <span className="t-display w-8 text-center text-[20px] tabular">{cantidad}</span>
+            <button
+              type="button"
+              className="chip-sel h-9 w-9 justify-center p-0"
+              onClick={() => setCantidad(Math.min(MAXIMO_EN_SERIE, cantidad + 1))}
+              disabled={cantidad >= MAXIMO_EN_SERIE}
+              aria-label="Una más"
+            >
+              +
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {error ? <p className="aviso-error">{error}</p> : null}
 
       <button type="submit" className="btn btn-primario mt-2" disabled={enviando || subiendo}>
-        {enviando ? 'Guardando…' : cancha ? 'Guardar cambios' : 'Publicar la cancha'}
+        {enviando
+          ? 'Guardando…'
+          : cancha
+            ? 'Guardar cambios'
+            : cantidad > 1
+              ? `Publicar ${cantidad} canchas`
+              : 'Publicar la cancha'}
       </button>
     </form>
   );

@@ -3,7 +3,8 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { suscripcionActiva } from '@/lib/suscripcion';
 import { comisionPorcentaje, duenoCobraOnline } from '@/lib/mercadopago';
-import { FormularioCancha } from '@/components/formulario-cancha';
+import { canchaParaFormulario } from '@/lib/cancha-formulario';
+import { NuevaConModelo } from './con-modelo';
 
 export const metadata = { title: 'Publicar cancha' };
 export const dynamic = 'force-dynamic';
@@ -49,20 +50,32 @@ export default async function NuevaCancha() {
     );
   }
 
-  const deportes = await prisma.deporte.findMany({
-    orderBy: { orden: 'asc' },
-    select: { id: true, nombre: true, slug: true },
-  });
+  const [deportes, propias] = await Promise.all([
+    prisma.deporte.findMany({
+      orderBy: { orden: 'asc' },
+      select: { id: true, nombre: true, slug: true },
+    }),
+    // La más reciente primero: es la que se propone copiar.
+    prisma.cancha.findMany({ where: { duenoId: usuario.id }, orderBy: { creadoEn: 'desc' }, take: 6 }),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="t-pantalla">Publicar cancha</h1>
       <p className="text-sm text-tinta-2">
-        Contá lo importante: dónde queda, cuánto sale y cómo te reservan.
+        {propias.length > 0
+          ? 'Arranca con los datos de tu última cancha: cambiá solo lo que sea distinto.'
+          : 'Dónde queda, cuánto sale y cómo te reservan. Lo demás se puede completar después.'}
       </p>
-      <FormularioCancha
+      <NuevaConModelo
+        modelos={propias.map(canchaParaFormulario)}
         deportes={deportes}
-        predeterminados={{ direccion: usuario.complejoDireccion, telefono: usuario.telefono }}
+        predeterminados={{
+          direccion: usuario.complejoDireccion,
+          telefono: usuario.telefono,
+          ciudad: usuario.ciudad,
+          provincia: usuario.provincia,
+        }}
         mercadoPago={{
           conectada: await duenoCobraOnline(usuario.id),
           comision: await comisionPorcentaje(),

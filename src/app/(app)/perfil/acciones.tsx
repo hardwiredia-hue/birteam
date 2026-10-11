@@ -3,28 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ActivarPush } from '@/components/activar-push';
-
-function Interruptor({ prendido, alCambiar, rotulo }: { prendido: boolean; alCambiar: () => void; rotulo: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={prendido}
-      aria-label={rotulo}
-      onClick={alCambiar}
-      className="relative h-[22px] w-10 shrink-0 rounded-[6px] border-0 transition-colors"
-      style={{ background: prendido ? 'var(--verde)' : 'var(--borde-2)' }}
-    >
-      <span
-        className="absolute top-[2px] h-[18px] w-[18px] rounded-[4px] transition-all"
-        style={{
-          left: prendido ? 20 : 2,
-          background: prendido ? 'var(--sobre-verde)' : 'var(--tinta-2)',
-        }}
-      />
-    </button>
-  );
-}
+import { Interruptor } from '@/components/interruptor';
+import { CampoClave } from '@/components/campo-clave';
 
 const AVISOS = [
   { clave: 'avisosSociales', titulo: 'Avisos sociales', detalle: 'Me gusta, comentarios y seguidores nuevos.' },
@@ -92,22 +72,7 @@ export function AccionesPerfil({
           <p className="text-sm font-semibold">Tema claro</p>
           <p className="text-xs text-tinta-3">La app arranca en oscuro; esto lo cambia para vos.</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={tema === 'claro'}
-          onClick={cambiarTema}
-          className="relative h-[22px] w-10 rounded-[6px] border-0 transition-colors"
-          style={{ background: tema === 'claro' ? 'var(--verde)' : 'var(--borde-2)' }}
-        >
-          <span
-            className="absolute top-[2px] h-[18px] w-[18px] rounded-[4px] transition-all"
-            style={{
-              left: tema === 'claro' ? 20 : 2,
-              background: tema === 'claro' ? 'var(--sobre-verde)' : 'var(--tinta-2)',
-            }}
-          />
-        </button>
+        <Interruptor prendido={tema === 'claro'} alCambiar={cambiarTema} rotulo="Tema claro" />
       </div>
 
       <ActivarPush />
@@ -195,9 +160,7 @@ function EliminarCuenta({ usuario, conClave }: { usuario: string; conClave: bool
         autoComplete="off"
       />
       {conClave ? (
-        <input
-          className="campo"
-          type="password"
+        <CampoClave
           value={clave}
           onChange={(evento) => setClave(evento.target.value)}
           placeholder="Tu contraseña"

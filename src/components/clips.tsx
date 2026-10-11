@@ -186,13 +186,17 @@ function Clip({
               borderColor: meGusta ? 'var(--verde)' : 'rgba(255,255,255,0.25)',
             }}
           >
-            ▲
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>
+              <path d="M12 5 4 15h16z" fill={meGusta ? 'currentColor' : 'none'} />
+            </svg>
           </span>
           <span className="text-xs font-bold text-white tabular">{total > 0 ? total : ''}</span>
         </button>
         <button type="button" onClick={abrirComentarios} className="flex flex-col items-center gap-1">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[6px] border border-white/25 bg-black/45 text-lg text-white">
-            💬
+          <span className="flex h-11 w-11 items-center justify-center rounded-[6px] border border-white/25 bg-black/45 text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden>
+              <path d="M4 5h16v11H9l-5 4z" />
+            </svg>
           </span>
           <span className="text-xs font-bold text-white tabular">
             {totalComentarios > 0 ? totalComentarios : ''}

@@ -2,8 +2,9 @@
 
 import { SelectorDeportes } from '@/components/selector-deporte';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
+import { CampoClave } from '@/components/campo-clave';
 
 interface Deporte {
   id: string;
@@ -28,6 +29,34 @@ export function FormularioRegistro({
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  // @usuario: se propone solo a partir del nombre hasta que la persona lo toque.
+  const [usuario, setUsuario] = useState('');
+  const [usuarioTocado, setUsuarioTocado] = useState(false);
+  const [libre, setLibre] = useState<{ disponible: boolean; sugerencia?: string | null } | null>(null);
+
+  function usuarioDesdeNombre(nombre: string) {
+    return nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '')
+      .slice(0, 24);
+  }
+
+  // Se consulta si está libre un rato después de dejar de escribir.
+  useEffect(() => {
+    setLibre(null);
+    if (!/^[a-z0-9._]{3,24}$/.test(usuario)) return;
+    const consulta = setTimeout(async () => {
+      try {
+        const respuesta = await fetch(`/api/auth/usuario?u=${encodeURIComponent(usuario)}`);
+        if (respuesta.ok) setLibre(await respuesta.json());
+      } catch {
+        setLibre(null);
+      }
+    }, 400);
+    return () => clearTimeout(consulta);
+  }, [usuario]);
 
   /** Sube una imagen ya con sesión creada y devuelve el nombre de archivo. */
   async function subirImagen(archivo: File) {
@@ -212,7 +241,16 @@ export function FormularioRegistro({
         <label className="rotulo-campo" htmlFor="nombre">
           {tipoCuenta === 'CANCHA' ? 'Nombre y apellido del titular' : 'Nombre y apellido'}
         </label>
-        <input id="nombre" name="nombre" className="campo" autoComplete="name" required />
+        <input
+          id="nombre"
+          name="nombre"
+          className="campo"
+          autoComplete="name"
+          required
+          onChange={(evento) => {
+            if (!usuarioTocado) setUsuario(usuarioDesdeNombre(evento.target.value));
+          }}
+        />
         <ErrorDeCampo mensajes={errores.nombre} />
       </div>
 
@@ -267,20 +305,48 @@ export function FormularioRegistro({
               placeholder="tuusuario"
               pattern="[A-Za-z0-9._]+"
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={usuario}
+              onChange={(evento) => {
+                setUsuarioTocado(true);
+                setUsuario(evento.target.value.toLowerCase().replace(/^@/, ''));
+              }}
+              aria-invalid={libre?.disponible === false}
               required
             />
           </div>
+          {libre?.disponible === false ? (
+            <p className="mt-1 text-xs text-rojo">
+              Ya está tomado.
+              {libre.sugerencia ? (
+                <>
+                  {' '}
+                  <button
+                    type="button"
+                    className="font-semibold text-tinta underline underline-offset-2"
+                    onClick={() => {
+                      setUsuario(libre.sugerencia!);
+                      setUsuarioTocado(true);
+                    }}
+                  >
+                    Usar @{libre.sugerencia}
+                  </button>
+                </>
+              ) : null}
+            </p>
+          ) : libre?.disponible ? (
+            <p className="mt-1 text-xs text-verde-txt">Disponible</p>
+          ) : null}
           <ErrorDeCampo mensajes={errores.usuario} />
         </div>
         <div>
           <label className="rotulo-campo" htmlFor="clave">
             Contraseña
           </label>
-          <input
+          <CampoClave
             id="clave"
             name="clave"
-            type="password"
-            className="campo"
             minLength={8}
             placeholder="Mínimo 8"
             autoComplete="new-password"
@@ -322,7 +388,7 @@ export function FormularioRegistro({
       </div>
 
       <label className="flex items-start gap-2.5 text-sm text-tinta-2">
-        <input type="checkbox" name="aceptaTerminos" required className="mt-1 accent-[#a8e617]" />
+        <input type="checkbox" name="aceptaTerminos" required className="mt-1" />
         <span>
           Acepto los{' '}
           <a href="/terminos" target="_blank" className="font-semibold text-verde-txt">

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
+import { jugadoresPorLado } from '@/lib/deportes';
 
 interface MiGrupo {
   id: string;
@@ -18,21 +19,6 @@ interface Candidato {
   deporteId: string;
   miembros: number;
 }
-
-/** Jugadores por lado más comunes según el deporte (se puede cambiar). */
-const POR_LADO: Record<string, number> = {
-  'Fútbol 5': 5,
-  'Fútbol 7': 7,
-  'Fútbol 11': 11,
-  Básquet: 5,
-  'Básquet 3x3': 3,
-  Vóley: 6,
-  Rugby: 15,
-  Hockey: 11,
-  Handball: 7,
-  Pádel: 2,
-  Tenis: 1,
-};
 
 export function FormularioDesafio({
   misGrupos,
@@ -62,7 +48,7 @@ export function FormularioDesafio({
   const [lugarNombre, setLugarNombre] = useState('');
   const [direccion, setDireccion] = useState('');
   const [canchaId, setCanchaId] = useState<string | null>(null);
-  const [porLado, setPorLado] = useState(POR_LADO[retador.deporte] ?? 5);
+  const [porLado, setPorLado] = useState(jugadoresPorLado(retador.deporte) ?? 5);
   const [nivel, setNivel] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -85,7 +71,7 @@ export function FormularioDesafio({
   function cambiarGrupo(id: string) {
     setRetadorId(id);
     const grupo = misGrupos.find((g) => g.id === id)!;
-    setPorLado(POR_LADO[grupo.deporte] ?? 5);
+    setPorLado(jugadoresPorLado(grupo.deporte) ?? 5);
     if (rival && rival.deporteId !== grupo.deporteId) setRivalId(null);
     setCanchaId(null);
   }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { suscripcionActiva } from '@/lib/suscripcion';
 import { esquemaCancha, erroresDeZod } from '@/lib/validacion';
+import { nombresEnSerie } from '@/lib/serie';
 
 /** Publicar una cancha: solo cuentas de dueño con suscripción activa. */
 export async function POST(request: Request) {
@@ -34,34 +35,46 @@ export async function POST(request: Request) {
   const deporte = await prisma.deporte.findUnique({ where: { id: d.deporteId } });
   if (!deporte) return NextResponse.json({ error: 'Ese deporte no existe.' }, { status: 400 });
 
-  const cancha = await prisma.cancha.create({
-    data: {
-      duenoId: usuario.id,
-      nombre: d.nombre,
-      descripcion: d.descripcion ?? null,
-      deporteId: d.deporteId,
-      direccion: d.direccion,
-      ciudad: d.ciudad ?? null,
-      provincia: d.provincia ?? null,
-      pais: d.pais,
-      latitud: d.latitud ?? null,
-      longitud: d.longitud ?? null,
-      precioPorHora: d.precioPorHora ?? null,
-      telefono: d.telefono ?? null,
-      fotos: JSON.stringify(d.fotos.map((nombre) => `/api/archivos/${nombre}`)),
-      diasDisponibles: JSON.stringify([...new Set(d.diasDisponibles)].sort()),
-      horaApertura: d.horaApertura,
-      horaCierre: d.horaCierre,
-      duracionTurno: d.duracionTurno,
-      reservasOnline: d.reservasOnline,
-      cobroOnline: d.cobroOnline,
-      horasCancelacion: d.horasCancelacion,
-      precioPico: d.precioPico ?? null,
-      picoDesdeHora: d.precioPico != null ? (d.picoDesdeHora ?? null) : null,
-      picoFinDeSemana: d.precioPico != null ? d.picoFinDeSemana : false,
-      senaPorcentaje: d.senaPorcentaje,
-    },
-  });
+  const nombres = nombresEnSerie(d.nombre, d.cantidad);
+  if (nombres.some((nombre) => nombre.length > 80)) {
+    return NextResponse.json(
+      { error: 'Revisá los datos marcados.', detalles: { nombre: ['El nombre es muy largo.'] } },
+      { status: 400 }
+    );
+  }
+  // Una o varias iguales: todas o ninguna.
+  const creadas = await prisma.$transaction(
+    nombres.map((nombre) =>
+      prisma.cancha.create({
+        data: {
+          duenoId: usuario.id,
+          nombre,
+          descripcion: d.descripcion ?? null,
+          deporteId: d.deporteId,
+          direccion: d.direccion,
+          ciudad: d.ciudad ?? null,
+          provincia: d.provincia ?? null,
+          pais: d.pais,
+          latitud: d.latitud ?? null,
+          longitud: d.longitud ?? null,
+          precioPorHora: d.precioPorHora ?? null,
+          telefono: d.telefono ?? null,
+          fotos: JSON.stringify(d.fotos.map((nombre) => `/api/archivos/${nombre}`)),
+          diasDisponibles: JSON.stringify([...new Set(d.diasDisponibles)].sort()),
+          horaApertura: d.horaApertura,
+          horaCierre: d.horaCierre,
+          duracionTurno: d.duracionTurno,
+          reservasOnline: d.reservasOnline,
+          cobroOnline: d.cobroOnline,
+          horasCancelacion: d.horasCancelacion,
+          precioPico: d.precioPico ?? null,
+          picoDesdeHora: d.precioPico != null ? (d.picoDesdeHora ?? null) : null,
+          picoFinDeSemana: d.precioPico != null ? d.picoFinDeSemana : false,
+          senaPorcentaje: d.senaPorcentaje,
+        },
+      })
+    )
+  );
 
-  return NextResponse.json({ id: cancha.id }, { status: 201 });
+  return NextResponse.json({ id: creadas[0].id, ids: creadas.map((c) => c.id) }, { status: 201 });
 }

@@ -134,7 +134,7 @@ export function FormularioEditarPartido({
       </div>
 
       <label className="flex items-center gap-2.5 text-sm">
-        <input type="checkbox" name="recurrenteSemanal" defaultChecked={inicial.recurrenteSemanal} className="accent-[#a8e617]" />
+        <input type="checkbox" name="recurrenteSemanal" defaultChecked={inicial.recurrenteSemanal}  />
         Se repite todas las semanas
       </label>
 

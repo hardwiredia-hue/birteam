@@ -180,7 +180,7 @@ export function FormularioCompletar({
       </div>
 
       <label className="flex items-start gap-2.5 text-sm text-tinta-2">
-        <input type="checkbox" name="aceptaTerminos" required className="mt-1 accent-[#a8e617]" />
+        <input type="checkbox" name="aceptaTerminos" required className="mt-1" />
         <span>
           Acepto los{' '}
           <a href="/terminos" target="_blank" className="font-semibold text-verde-txt">términos de uso</a>{' '}

@@ -59,7 +59,7 @@ export function BotoneraRsvp({
           avisamos.
         </p>
       ) : null}
-      <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-2">
+      <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-2 [&>.btn]:whitespace-nowrap [&>.btn]:px-3">
         <button
           type="button"
           className={estadoActual === 'VOY' || enEspera ? 'btn btn-primario' : 'btn btn-secundario'}

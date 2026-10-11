@@ -54,7 +54,7 @@ export default async function InvitacionGrupo({ params }: { params: Promise<{ to
 
         {yaMiembro ? (
           <Link href={`/grupos/${grupo.id}`} className="btn btn-primario">
-            Ya sos parte — abrir el grupo
+            Ya sos parte. Abrir el grupo
           </Link>
         ) : usuario ? (
           <BotonUnirse token={token} grupoId={grupo.id} />

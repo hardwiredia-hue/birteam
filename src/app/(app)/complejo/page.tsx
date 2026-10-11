@@ -321,7 +321,7 @@ export default async function MiComplejo({
                 {huecos.length > 0 ? (
                   <div className="flex flex-col gap-1.5">
                     <p className="text-xs text-tinta-2">
-                      Libres hoy y mañana — tocá uno para bloquearlo o publicarlo en el Radar:
+                      Libres hoy y mañana. Tocá uno para bloquearlo o publicarlo en el Radar:
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {huecos.slice(0, 12).map((hueco) => (
@@ -344,7 +344,7 @@ export default async function MiComplejo({
                     </div>
                   </div>
                 ) : total > 0 ? (
-                  <p className="text-xs text-verde-txt">Hoy y mañana, todo tomado. 🙌</p>
+                  <p className="text-xs text-verde-txt">Hoy y mañana está todo tomado.</p>
                 ) : null}
                 <div className="flex gap-2">
                   <Link href={`/canchas/${cancha.id}`} className="btn btn-secundario btn-sm">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Interruptor } from '@/components/interruptor';
 
 /** La clave VAPID viaja en base64 URL-safe; el navegador la quiere en bytes. */
 function claveABytes(clave: string) {
@@ -99,23 +100,7 @@ export function ActivarPush() {
             : 'Lugar liberado, recordatorios y mensajes, aunque la app esté cerrada.'}
         </p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={activo}
-        onClick={alternar}
-        disabled={ocupado || bloqueado}
-        className="relative h-[22px] w-10 shrink-0 rounded-[6px] border-0 transition-colors"
-        style={{ background: activo ? 'var(--verde)' : 'var(--borde-2)' }}
-      >
-        <span
-          className="absolute top-[2px] h-[18px] w-[18px] rounded-[4px] transition-all"
-          style={{
-            left: activo ? 20 : 2,
-            background: activo ? 'var(--sobre-verde)' : 'var(--tinta-2)',
-          }}
-        />
-      </button>
+      <Interruptor prendido={activo} alCambiar={alternar} deshabilitado={ocupado || bloqueado} rotulo="Avisos en este dispositivo" />
     </div>
   );
 }

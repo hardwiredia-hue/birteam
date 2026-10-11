@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { FormularioCancha } from '@/components/formulario-cancha';
+import { canchaParaFormulario } from '@/lib/cancha-formulario';
 import { comisionPorcentaje, duenoCobraOnline } from '@/lib/mercadopago';
 
 export const metadata = { title: 'Editar cancha' };
@@ -20,19 +21,6 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
     select: { id: true, nombre: true, slug: true },
   });
 
-  let fotos: string[] = [];
-  try {
-    fotos = JSON.parse(cancha.fotos);
-  } catch {
-    fotos = [];
-  }
-  let diasDisponibles: number[] = [0, 1, 2, 3, 4, 5, 6];
-  try {
-    diasDisponibles = JSON.parse(cancha.diasDisponibles);
-  } catch {
-    diasDisponibles = [0, 1, 2, 3, 4, 5, 6];
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <h1 className="t-pantalla">Editar cancha</h1>
@@ -42,30 +30,7 @@ export default async function EditarCancha({ params }: { params: Promise<{ id: s
           conectada: await duenoCobraOnline(cancha.duenoId),
           comision: await comisionPorcentaje(),
         }}
-        cancha={{
-          id: cancha.id,
-          nombre: cancha.nombre,
-          descripcion: cancha.descripcion,
-          deporteId: cancha.deporteId,
-          direccion: cancha.direccion,
-          ciudad: cancha.ciudad,
-          provincia: cancha.provincia,
-          telefono: cancha.telefono,
-          precioPorHora: cancha.precioPorHora,
-          fotos,
-          diasDisponibles,
-          horaApertura: cancha.horaApertura,
-          horaCierre: cancha.horaCierre,
-          duracionTurno: cancha.duracionTurno,
-          reservasOnline: cancha.reservasOnline,
-          cobroOnline: cancha.cobroOnline,
-          horasCancelacion: cancha.horasCancelacion,
-          precioPico: cancha.precioPico,
-          picoDesdeHora: cancha.picoDesdeHora,
-          picoFinDeSemana: cancha.picoFinDeSemana,
-          senaPorcentaje: cancha.senaPorcentaje,
-          activa: cancha.activa,
-        }}
+        cancha={canchaParaFormulario(cancha)}
       />
     </div>
   );

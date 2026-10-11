@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Interruptor } from '@/components/interruptor';
 
 /** Una imagen de marca: vista previa, subir reemplazo y restaurar la de fábrica. */
 export function ImagenDeMarca({
@@ -146,20 +147,7 @@ export function InterruptorConstruccion({ activo: inicial }: { activo: boolean }
             : 'Apagado: el sitio funciona normal para todo el mundo.'}
         </p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={activo}
-        onClick={alternar}
-        disabled={ocupado}
-        className="relative h-[22px] w-10 shrink-0 rounded-[6px] border-0 transition-colors"
-        style={{ background: activo ? 'var(--rojo)' : 'var(--borde-2)' }}
-      >
-        <span
-          className="absolute top-[2px] h-[18px] w-[18px] rounded-[4px] transition-all"
-          style={{ left: activo ? 20 : 2, background: activo ? '#fff' : 'var(--tinta-2)' }}
-        />
-      </button>
+      <Interruptor prendido={activo} alCambiar={alternar} deshabilitado={ocupado} peligro rotulo="Sitio en construcción" />
     </div>
   );
 }

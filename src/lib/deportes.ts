@@ -5,6 +5,8 @@
  * la modalidad); esto es solo cómo se eligen y se muestran.
  */
 
+import { slugificar } from './normalizar';
+
 export interface DeporteBasico {
   id: string;
   nombre: string;
@@ -113,4 +115,43 @@ export function nombreDelFiltro(valor: string | undefined | null, deportes: Depo
   if (!encontrada) return null;
   const opcion = encontrada.opciones.find((o) => o.filtro === modalidad);
   return opcion ? opcion.nombre : encontrada.nombre;
+}
+
+/**
+ * Cuántos juegan por lado en cada deporte (para sugerir cupos y desafíos).
+ * Los que no son de equipos (running, ciclismo…) no tienen "lado".
+ */
+const POR_LADO: Record<string, number> = {
+  'futbol-5': 5,
+  'futbol-7': 7,
+  'futbol-11': 11,
+  basquet: 5,
+  'basquet-3x3': 3,
+  voley: 6,
+  rugby: 15,
+  hockey: 11,
+  handball: 7,
+  padel: 2,
+  'padel-americano': 2,
+  tenis: 1,
+};
+
+/** Jugadores por lado de un deporte, por slug o por nombre ("Fútbol 7"). */
+export function jugadoresPorLado(deporte: { slug?: string; nombre?: string } | string) {
+  const slug =
+    typeof deporte === 'string' ? slugificar(deporte) : (deporte.slug ?? slugificar(deporte.nombre ?? ''));
+  return POR_LADO[slug] ?? null;
+}
+
+/**
+ * Cupo y mínimo sugeridos para un partido: dos equipos completos, y para
+ * confirmar alcanza con casi todos (en los de 1 o 2 por lado, todos).
+ * Sin equipos (running, ciclismo…): grupo abierto de 20, sale con 2.
+ */
+export function cupoSugerido(deporte: { slug?: string; nombre?: string } | string) {
+  const porLado = jugadoresPorLado(deporte);
+  if (porLado == null) return { cupo: 20, minimo: 2 };
+  const cupo = porLado * 2;
+  const minimo = porLado <= 2 ? cupo : cupo - Math.max(2, Math.round(cupo * 0.15));
+  return { cupo, minimo };
 }

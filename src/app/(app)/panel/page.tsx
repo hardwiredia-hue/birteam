@@ -223,43 +223,50 @@ export default async function Inicio() {
         </Link>
       ) : null}
 
-      <Link href="/reservas" className="tarjeta flex items-center justify-between gap-3 p-4">
-        <div>
-          <p className="t-rotulo text-verde-txt">Turnos de cancha</p>
-          <p className="mt-0.5 text-sm font-semibold">
-            {proximoTurno
-              ? `${rotuloDia(proximoTurno.fecha)} · ${proximoTurno.hora} en ${proximoTurno.cancha.nombre}${
-                  proximoTurno.estado === 'SOLICITADA' ? ' (esperando confirmación)' : ''
+      {/* Atajos: una sola lista, no tres tarjetas iguales. */}
+      <nav className="tarjeta flex flex-col" aria-label="Atajos">
+        <Atajo
+          href="/reservas"
+          titulo="Turnos de cancha"
+          detalle={
+            proximoTurno
+              ? `${rotuloDia(proximoTurno.fecha)} ${proximoTurno.hora} en ${proximoTurno.cancha.nombre}${
+                  proximoTurno.estado === 'SOLICITADA' ? ', esperando confirmación' : ''
                 }`
-              : 'Pedí turno en una cancha y el complejo te lo confirma'}
-          </p>
-        </div>
-        <span className="t-display text-[16px] text-verde-txt">→</span>
-      </Link>
-
-      <Link
-        href={deportePrincipal ? `/comunidades/${deportePrincipal.slug}` : '/comunidades'}
-        className="tarjeta flex items-center justify-between gap-3 p-4"
-      >
-        <div>
-          <p className="t-rotulo text-verde-txt">Tu comunidad</p>
-          <p className="mt-0.5 text-sm font-semibold">
-            {deportePrincipal ? deportePrincipal.nombre : 'Elegí tu deporte'} — partidos abiertos,
-            grupos y ranking
-          </p>
-        </div>
-        <span className="t-display text-[16px] text-verde-txt">→</span>
-      </Link>
-
-      <Link href="/torneos" className="tarjeta flex items-center justify-between gap-3 p-4">
-        <div>
-          <p className="t-rotulo text-naranja-txt">Torneos</p>
-          <p className="mt-0.5 text-sm font-semibold">
-            Armá una liga o anotá tu equipo — la tabla se lleva sola
-          </p>
-        </div>
-        <span className="t-display text-[16px] text-naranja-txt">→</span>
-      </Link>
+              : 'Reservá y el complejo te confirma'
+          }
+          icono={
+            <>
+              <rect x="3.5" y="5" width="17" height="15" rx="2" />
+              <path d="M3.5 10h17M8 3v4M16 3v4" />
+            </>
+          }
+        />
+        <Atajo
+          href={deportePrincipal ? `/comunidades/${deportePrincipal.slug}` : '/comunidades'}
+          titulo={deportePrincipal ? `Comunidad de ${deportePrincipal.nombre}` : 'Comunidades'}
+          detalle="Partidos abiertos, grupos y ranking"
+          icono={
+            <>
+              <circle cx="9" cy="9" r="3.2" />
+              <path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6" />
+              <circle cx="16.5" cy="8" r="2.5" />
+              <path d="M16 13.5c2.4 0 4 1.4 4.5 4" />
+            </>
+          }
+        />
+        <Atajo
+          href="/torneos"
+          titulo="Torneos"
+          detalle="Armá una liga o anotá a tu equipo"
+          icono={
+            <>
+              <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
+              <path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7" />
+            </>
+          }
+        />
+      </nav>
 
       <section>
         <div className="mb-2 flex items-baseline justify-between">
@@ -292,5 +299,46 @@ export default async function Inicio() {
         )}
       </section>
     </div>
+  );
+}
+
+function Atajo({
+  href,
+  titulo,
+  detalle,
+  icono,
+}: {
+  href: string;
+  titulo: string;
+  detalle: string;
+  icono: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 border-b border-borde px-4 py-3.5 transition-colors last:border-b-0 hover:bg-fondo/40"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="shrink-0 text-tinta-3"
+        aria-hidden
+      >
+        {icono}
+      </svg>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold">{titulo}</span>
+        <span className="block truncate text-xs text-tinta-3">{detalle}</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="shrink-0 text-tinta-3" aria-hidden>
+        <path d="m6 3.5 4.5 4.5L6 12.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </Link>
   );
 }

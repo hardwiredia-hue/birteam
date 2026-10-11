@@ -358,6 +358,10 @@ const picoCompleto = {
 };
 
 export const esquemaCancha = camposCancha
+  .extend({
+    // Canchas iguales publicadas de una vez ("Cancha 1", "Cancha 2"…).
+    cantidad: z.coerce.number().int().min(1).max(10, 'Hasta 10 canchas de una vez.').default(1),
+  })
   .refine(horarioAlcanza.chequeo, horarioAlcanza.mensaje)
   .refine(cobroConPrecio.chequeo, cobroConPrecio.mensaje)
   .refine(picoCompleto.chequeo, picoCompleto.mensaje);

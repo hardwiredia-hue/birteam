@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
 import { SelectorDeporte } from '@/components/selector-deporte';
+import { Interruptor } from '@/components/interruptor';
+import { cupoSugerido } from '@/lib/deportes';
 
 interface Deporte {
   id: string;
@@ -134,6 +136,40 @@ interface CanchaElegible {
   diasDisponibles: number[];
 }
 
+/** El último partido que organizó, para repetirlo con un toque. */
+export interface PartidoParaRepetir {
+  rotulo: string;
+  deporteId: string;
+  grupoId: string | null;
+  lugarNombre: string;
+  direccion: string | null;
+  lugarTelefono: string | null;
+  canchaId: string | null;
+  diaSemana: number;
+  hora: string;
+  recurrenteSemanal: boolean;
+  cupo: number;
+  minimo: number;
+  costoPorJugador: number | null;
+  nivel: string | null;
+  visibilidad: 'GRUPO' | 'ABIERTO';
+}
+
+/** La próxima fecha (YYYY-MM-DD, hora local) que cae en ese día de la semana y todavía no pasó. */
+function proximaFecha(diaSemana: number, hora: string) {
+  const [horas, minutos] = hora.split(':').map(Number);
+  const fecha = new Date();
+  for (let i = 0; i < 8; i++) {
+    const candidata = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate() + i, horas, minutos);
+    if (candidata.getDay() === diaSemana && candidata.getTime() > Date.now()) {
+      const mes = String(candidata.getMonth() + 1).padStart(2, '0');
+      const dia = String(candidata.getDate()).padStart(2, '0');
+      return `${candidata.getFullYear()}-${mes}-${dia}`;
+    }
+  }
+  return null;
+}
+
 interface TurnoInicial {
   reservaId: string;
   canchaId: string;
@@ -156,7 +192,9 @@ export function Asistente({
   seguidores,
   grupoInicial,
   deporteInicial,
+  deportePrincipal,
   turnoInicial,
+  ultimo,
 }: {
   deportes: Deporte[];
   grupos: { id: string; nombre: string; deporteId: string }[];
@@ -165,7 +203,10 @@ export function Asistente({
   seguidores: { id: string; nombre: string; usuario: string }[];
   grupoInicial: string | null;
   deporteInicial?: string | null;
+  /** El deporte principal del perfil: arranca elegido. */
+  deportePrincipal?: string | null;
   turnoInicial?: TurnoInicial | null;
+  ultimo?: PartidoParaRepetir | null;
 }) {
   const router = useRouter();
 
@@ -180,6 +221,7 @@ export function Asistente({
     turnoInicial?.deporteId ??
       grupos.find((g) => g.id === grupoInicial)?.deporteId ??
       deporteInicial ??
+      deportePrincipal ??
       null
   );
   const [dia, setDia] = useState<string | null>(turnoInicial?.dia ?? null);
@@ -196,8 +238,15 @@ export function Asistente({
   const [grupoNuevoAbierto, setGrupoNuevoAbierto] = useState(false);
   const [grupoNuevoNombre, setGrupoNuevoNombre] = useState('');
   const [creandoGrupo, setCreandoGrupo] = useState(false);
-  const [cupo, setCupo] = useState(10);
-  const [minimo, setMinimo] = useState(8);
+  // Cupo y mínimo sugeridos según el deporte (Fútbol 7 → 14, pádel → 4…)
+  // hasta que el organizador los toque.
+  const sugeridoPara = (id: string | null) => {
+    const deporte = deportes.find((d) => d.id === id);
+    return deporte ? cupoSugerido(deporte) : { cupo: 10, minimo: 8 };
+  };
+  const [cupo, setCupo] = useState(() => sugeridoPara(deporteId).cupo);
+  const [minimo, setMinimo] = useState(() => sugeridoPara(deporteId).minimo);
+  const [cupoTocado, setCupoTocado] = useState(false);
   const [costo, setCosto] = useState('');
   const [nivel, setNivel] = useState<string | null>(null);
   const [visibilidad, setVisibilidad] = useState<'GRUPO' | 'ABIERTO'>('ABIERTO');
@@ -210,6 +259,37 @@ export function Asistente({
     : paso === 3 ? dia !== null && /^\d{2}:\d{2}$/.test(hora)
     : paso === 4 ? cupo >= 2 && minimo >= 2 && minimo <= cupo
     : true;
+
+  function elegirDeporte(id: string | null) {
+    setDeporteId(id);
+    if (!cupoTocado && id) {
+      const sugerido = sugeridoPara(id);
+      setCupo(sugerido.cupo);
+      setMinimo(sugerido.minimo);
+    }
+  }
+
+  /** Carga todo lo del último partido y salta a elegir el día (ya propuesto). */
+  function repetirUltimo() {
+    if (!ultimo) return;
+    setDeporteId(ultimo.deporteId);
+    if (ultimo.grupoId && listaGrupos.some((g) => g.id === ultimo.grupoId)) setGrupoId(ultimo.grupoId);
+    const cancha = canchas.find((c) => c.id === ultimo.canchaId) ?? null;
+    setCanchaElegida(cancha);
+    setLugarNombre(ultimo.lugarNombre);
+    setDireccion(ultimo.direccion ?? '');
+    setLugarTelefono(ultimo.lugarTelefono ?? '');
+    setHora(ultimo.hora);
+    setDia(proximaFecha(ultimo.diaSemana, ultimo.hora));
+    setRepite(ultimo.recurrenteSemanal);
+    setCupo(ultimo.cupo);
+    setMinimo(ultimo.minimo);
+    setCupoTocado(true);
+    setCosto(ultimo.costoPorJugador != null ? String(ultimo.costoPorJugador) : '');
+    setNivel(ultimo.nivel);
+    setVisibilidad(ultimo.visibilidad);
+    setPaso(3);
+  }
 
   function elegirCancha(cancha: CanchaElegible) {
     setCanchaElegida(cancha);
@@ -336,7 +416,20 @@ export function Asistente({
       {paso === 1 ? (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Qué<br />juegan?</h1>
-          <SelectorDeporte deportes={deportes} valor={deporteId} alCambiar={setDeporteId} />
+          {ultimo && !turnoInicial ? (
+            <button
+              type="button"
+              onClick={repetirUltimo}
+              className="tarjeta flex items-center justify-between gap-3 p-4 text-left transition-colors hover:border-borde-2"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Repetir el último</span>
+                <span className="block truncate text-xs text-tinta-3">{ultimo.rotulo}</span>
+              </span>
+              <span className="shrink-0 text-sm font-semibold text-verde-txt">Repetir</span>
+            </button>
+          ) : null}
+          <SelectorDeporte deportes={deportes} valor={deporteId} alCambiar={elegirDeporte} />
         </section>
       ) : paso === 3 ? (
         <section className="flex flex-col gap-4">
@@ -397,19 +490,7 @@ export function Asistente({
               <p className="text-sm font-semibold">Se repite todas las semanas</p>
               <p className="text-xs text-tinta-3">Las confirmaciones se reinician en cada edición.</p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={repite}
-              onClick={() => setRepite(!repite)}
-              className="relative h-[22px] w-10 rounded-[6px] border-0"
-              style={{ background: repite ? 'var(--verde)' : 'var(--borde-2)' }}
-            >
-              <span
-                className="absolute top-[2px] h-[18px] w-[18px] rounded-[4px] transition-all"
-                style={{ left: repite ? 20 : 2, background: repite ? 'var(--sobre-verde)' : 'var(--tinta-2)' }}
-              />
-            </button>
+            <Interruptor prendido={repite} alCambiar={setRepite} rotulo="Se repite todas las semanas" />
           </div>
         </section>
       ) : paso === 2 ? (
@@ -526,7 +607,10 @@ export function Asistente({
                 max={200}
                 className="campo tabular"
                 value={cupo}
-                onChange={(evento) => setCupo(Number(evento.target.value))}
+                onChange={(evento) => {
+                  setCupo(Number(evento.target.value));
+                  setCupoTocado(true);
+                }}
               />
             </div>
             <div>
@@ -538,7 +622,10 @@ export function Asistente({
                 max={200}
                 className="campo tabular"
                 value={minimo}
-                onChange={(evento) => setMinimo(Number(evento.target.value))}
+                onChange={(evento) => {
+                  setMinimo(Number(evento.target.value));
+                  setCupoTocado(true);
+                }}
               />
             </div>
           </div>

@@ -63,7 +63,7 @@ export default async function Mensajes() {
         <div className="tarjeta p-5">
           <p className="text-sm text-tinta-2">
             Todavía no hablaste con nadie por acá. Entrá al perfil de un jugador y tocá
-            "Mensaje" — para coordinar un partido, sumar un refuerzo o lo que haga falta.
+            "Mensaje" para coordinar un partido, sumar un refuerzo o lo que haga falta.
           </p>
           <Link href="/explorar?tab=jugadores" className="btn btn-secundario mt-4">
             Buscar jugadores

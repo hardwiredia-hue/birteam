@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { CampoClave } from '@/components/campo-clave';
 
 export function FormularioEntrar({ volver }: { volver?: string | null }) {
   const router = useRouter();
@@ -46,7 +47,7 @@ export function FormularioEntrar({ volver }: { volver?: string | null }) {
         <label className="rotulo-campo" htmlFor="clave">
           Contraseña
         </label>
-        <input id="clave" name="clave" type="password" className="campo" autoComplete="current-password" required />
+        <CampoClave id="clave" name="clave" autoComplete="current-password" required />
       </div>
 
       {error ? <p className="aviso-error">{error}</p> : null}

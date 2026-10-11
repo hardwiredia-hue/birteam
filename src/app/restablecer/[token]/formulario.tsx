@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { CampoClave } from '@/components/campo-clave';
 
 export function FormularioRestablecer({ token }: { token: string }) {
   const router = useRouter();
@@ -39,11 +40,9 @@ export function FormularioRestablecer({ token }: { token: string }) {
     <form onSubmit={alEnviar} className="mt-8 flex flex-col gap-4">
       <div>
         <label className="rotulo-campo" htmlFor="clave">Nueva contraseña</label>
-        <input
+        <CampoClave
           id="clave"
           name="clave"
-          type="password"
-          className="campo"
           minLength={8}
           placeholder="Mínimo 8 caracteres"
           autoComplete="new-password"

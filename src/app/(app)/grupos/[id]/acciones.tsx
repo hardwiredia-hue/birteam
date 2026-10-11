@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Interruptor } from '@/components/interruptor';
 
 export function CopiarInvitacion({ ruta }: { ruta: string }) {
   const [copiado, setCopiado] = useState(false);
@@ -97,20 +98,15 @@ export function EditarGrupo({
           onChange={(evento) => setDescripcion(evento.target.value)}
         />
       </div>
-      <label className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <span className="text-sm">
           <span className="block font-semibold">Grupo abierto</span>
           <span className="block text-xs text-tinta-3">
             Aparece en Explorar con botón Sumarme. Cerrado: solo entran por link.
           </span>
         </span>
-        <input
-          type="checkbox"
-          checked={abierto}
-          onChange={(evento) => setAbierto(evento.target.checked)}
-          className="h-5 w-5 accent-[#a8e617]"
-        />
-      </label>
+        <Interruptor prendido={abierto} alCambiar={setAbierto} rotulo="Grupo abierto" />
+      </div>
       {error ? <p className="aviso-error">{error}</p> : null}
       <div className="flex gap-2">
         <button type="button" className="btn btn-fantasma btn-sm flex-1" onClick={() => setAbiertoPanel(false)}>

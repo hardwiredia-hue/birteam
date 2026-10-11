@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
-import { Asistente } from './asistente';
+import { Asistente, type PartidoParaRepetir } from './asistente';
+import { ZONA, claveDia, diaDeSemana, rotuloDia } from '@/lib/reservas';
 
 export const metadata = { title: 'Crear partido' };
 export const dynamic = 'force-dynamic';
@@ -75,6 +76,58 @@ export default async function Crear({
     canchasPublicadas.unshift(reserva.cancha);
   }
 
+  const [principal, anterior] = await Promise.all([
+    prisma.usuarioDeporte.findFirst({
+      where: { usuarioId: usuario.id },
+      orderBy: { principal: 'desc' },
+      select: { deporteId: true },
+    }),
+    prisma.partido.findFirst({
+      where: { organizadorId: usuario.id, estado: { not: 'CANCELADO' } },
+      orderBy: { creadoEn: 'desc' },
+      include: { deporte: { select: { nombre: true } } },
+    }),
+  ]);
+  // La cancha del último partido tiene que estar entre las elegibles para repetirlo.
+  if (anterior?.canchaId && !canchasPublicadas.some((cancha) => cancha.id === anterior.canchaId)) {
+    const sede = await prisma.cancha.findFirst({
+      where: { id: anterior.canchaId, activa: true, dueno: { suscripcionHasta: { gt: new Date() } } },
+      select: {
+        id: true,
+        nombre: true,
+        direccion: true,
+        telefono: true,
+        ciudad: true,
+        diasDisponibles: true,
+        deporteId: true,
+        deporte: { select: { nombre: true } },
+      },
+    });
+    if (sede) canchasPublicadas.unshift(sede);
+  }
+  let ultimo: PartidoParaRepetir | null = null;
+  if (anterior) {
+    const hora = anterior.fecha.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ZONA });
+    const diaSemana = diaDeSemana(claveDia(anterior.fecha));
+    ultimo = {
+      rotulo: `${anterior.deporte.nombre} · ${rotuloDia(claveDia(anterior.fecha)).split(' ')[0]} ${hora} · ${anterior.lugarNombre}`,
+      deporteId: anterior.deporteId,
+      grupoId: anterior.grupoId,
+      lugarNombre: anterior.lugarNombre,
+      direccion: anterior.direccion,
+      lugarTelefono: anterior.lugarTelefono,
+      canchaId: anterior.canchaId,
+      diaSemana,
+      hora,
+      recurrenteSemanal: anterior.recurrenteSemanal,
+      cupo: anterior.cupo,
+      minimo: anterior.minimo,
+      costoPorJugador: anterior.costoPorJugador,
+      nivel: anterior.nivel,
+      visibilidad: anterior.visibilidad === 'ABIERTO' ? 'ABIERTO' : 'GRUPO',
+    };
+  }
+
   const grupos = membresias.map((membresia) => membresia.grupo);
   const grupoInicial = grupos.find((g) => g.id === grupo) ?? null;
   const deporteInicial = deportes.find((d) => d.slug === deporte)?.id ?? null;
@@ -105,6 +158,8 @@ export default async function Crear({
       seguidores={seguimientos.map((s) => s.seguidor)}
       grupoInicial={grupoInicial?.id ?? null}
       deporteInicial={deporteInicial}
+      deportePrincipal={principal?.deporteId ?? null}
+      ultimo={ultimo}
       turnoInicial={
         reserva
           ? {
