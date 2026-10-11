@@ -260,7 +260,7 @@ export function GrillaTurnos({
             let estilo: React.CSSProperties = {};
             let rotulo = 'Libre';
             if (turno.estado === 'OCUPADO') {
-              rotulo = esDueno && turno.detalle ? (turno.detalle.estado === 'SOLICITADA' ? 'Pedido' : turno.detalle.estado === 'BLOQUEO' ? 'Bloqueado' : 'Reservado') : turno.pendiente ? 'En espera' : 'Ocupado';
+              rotulo = esDueno && turno.detalle ? (turno.detalle.fijo ? 'Fijo' : turno.detalle.estado === 'SOLICITADA' ? 'Pedido' : turno.detalle.estado === 'BLOQUEO' ? 'Bloqueado' : 'Reservado') : turno.pendiente ? 'En espera' : 'Ocupado';
               estilo =
                 esDueno && turno.detalle?.estado === 'SOLICITADA'
                   ? { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' }
@@ -269,7 +269,7 @@ export function GrillaTurnos({
               rotulo = 'Pasado';
               estilo = { opacity: 0.4 };
             } else if (turno.estado === 'MIA') {
-              rotulo = ROTULO_MIO[turno.estadoMio ?? ''] ?? 'Tuyo';
+              rotulo = turno.fijo ? 'Tu fijo' : (ROTULO_MIO[turno.estadoMio ?? ''] ?? 'Tuyo');
               estilo = { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' };
             } else if (turno.oferta) {
               rotulo = turno.oferta.descuento ? `−${turno.oferta.descuento}%` : 'Oferta';
@@ -419,7 +419,9 @@ export function GrillaTurnos({
           {elegido.estado === 'MIA' ? (
             <>
               <p className="text-xs text-tinta-3">
-                {elegido.estadoMio === 'CONFIRMADA'
+                {elegido.fijo
+                  ? 'Es tu turno fijo de todas las semanas. Si esta semana no van, avisá con tiempo y se libera solo este día.'
+                  : elegido.estadoMio === 'CONFIRMADA'
                   ? 'Turno confirmado. Si no van, cancelalo con tiempo así lo aprovecha otro.'
                   : elegido.estadoMio === 'PENDIENTE_PAGO'
                     ? 'Te lo guardamos unos minutos mientras pagás. Si no se completa el pago, se libera.'
@@ -445,7 +447,11 @@ export function GrillaTurnos({
                   disabled={enviando}
                   onClick={() => responder('cancelar')}
                 >
-                  {elegido.estadoMio === 'CONFIRMADA' ? 'Cancelar el turno' : 'Cancelar el pedido'}
+                  {elegido.fijo
+                    ? 'No vamos esta semana'
+                    : elegido.estadoMio === 'CONFIRMADA'
+                      ? 'Cancelar el turno'
+                      : 'Cancelar el pedido'}
                 </button>
               </div>
             </>
@@ -454,6 +460,7 @@ export function GrillaTurnos({
           {esDueno && elegido.estado === 'OCUPADO' && elegido.detalle ? (
             <>
               <p className="text-xs text-tinta-3">
+                {elegido.detalle.fijo ? 'Turno fijo · ' : ''}
                 {ROTULO_DETALLE[elegido.detalle.estado] ?? elegido.detalle.estado}
                 {elegido.detalle.pagado ? ' · pagado online' : ''}
                 {elegido.detalle.estado !== 'BLOQUEO' ? (
@@ -487,7 +494,11 @@ export function GrillaTurnos({
                   </>
                 ) : (
                   <button type="button" className="btn btn-secundario btn-sm" disabled={enviando} onClick={() => responder('cancelar')}>
-                    {elegido.detalle.estado === 'BLOQUEO' ? 'Liberar el turno' : 'Cancelar el turno'}
+                    {elegido.detalle.fijo
+                      ? 'Liberar solo esta semana'
+                      : elegido.detalle.estado === 'BLOQUEO'
+                        ? 'Liberar el turno'
+                        : 'Cancelar el turno'}
                   </button>
                 )}
                 <Link href="/reservas" className="btn btn-fantasma btn-sm">

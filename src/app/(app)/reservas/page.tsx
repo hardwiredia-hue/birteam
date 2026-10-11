@@ -4,7 +4,9 @@ import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
 import { ROTULOS_ESTADO, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { rotuloFijo } from '@/lib/turnos-fijos';
 import { AccionesReserva } from './acciones';
+import { DejarFijo } from './dejar-fijo';
 
 export const metadata = { title: 'Reservas' };
 export const dynamic = 'force-dynamic';
@@ -31,7 +33,7 @@ export default async function Reservas() {
   const duenos = await duenosQueGestiono(usuario.id, usuario.tipoCuenta);
   const esDueno = duenos.length > 0;
 
-  const [mias, historial, pendientes, agenda] = await Promise.all([
+  const [mias, historial, pendientes, agenda, misFijos] = await Promise.all([
     prisma.reserva.findMany({
       where: {
         usuarioId: usuario.id,
@@ -80,6 +82,11 @@ export default async function Reservas() {
           take: 40,
         })
       : [],
+    prisma.turnoFijo.findMany({
+      where: { usuarioId: usuario.id, activo: true },
+      include: { cancha: { select: { id: true, nombre: true, direccion: true } } },
+      orderBy: [{ diaSemana: 'asc' }, { hora: 'asc' }],
+    }),
   ]);
 
   const nada = mias.length === 0 && historial.length === 0 && pendientes.length === 0 && agenda.length === 0;
@@ -143,10 +150,30 @@ export default async function Reservas() {
                 <p className="mt-0.5 text-xs" style={{ color: COLOR_ESTADO[reserva.estado] }}>
                   {reserva.estado === 'BLOQUEO'
                     ? `Bloqueado${reserva.nota ? ` · ${reserva.nota}` : ''}`
-                    : `${reserva.usuario.nombre}${reserva.precio != null ? ` · ${formatearPlata(reserva.precio)}` : ''}`}
+                    : `${reserva.usuario.nombre}${reserva.turnoFijoId ? ' · turno fijo' : ''}${reserva.precio != null ? ` · ${formatearPlata(reserva.precio)}` : ''}`}
                 </p>
               </div>
               <AccionesReserva reservaId={reserva.id} estado={reserva.estado} esDueno />
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {misFijos.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <p className="t-rotulo">Tus turnos fijos</p>
+          {misFijos.map((fijo) => (
+            <div key={fijo.id} className="tarjeta flex items-start justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="t-display text-[18px]">{rotuloFijo(fijo)}</p>
+                <Link href={`/canchas/${fijo.cancha.id}`} className="text-sm font-semibold">
+                  {fijo.cancha.nombre}
+                </Link>
+                <p className="mt-0.5 text-xs text-tinta-3">
+                  Todas las semanas · {fijo.cancha.direccion}. Si una semana no van, cancelala abajo.
+                </p>
+              </div>
+              <DejarFijo canchaId={fijo.cancha.id} fijoId={fijo.id} rotulo={rotuloFijo(fijo).toLowerCase()} />
             </div>
           ))}
         </section>
@@ -172,6 +199,7 @@ export default async function Reservas() {
                 </Link>
                 <p className="t-display mt-1 text-[20px]">
                   {rotuloDia(reserva.fecha)} · {reserva.hora}
+                  {reserva.turnoFijoId ? <span className="t-rotulo ml-2 text-verde-txt">fijo</span> : null}
                 </p>
                 <p className="mt-1 text-xs" style={{ color: COLOR_ESTADO[reserva.estado] }}>
                   {ROTULOS_ESTADO[reserva.estado]}

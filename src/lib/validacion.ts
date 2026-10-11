@@ -379,6 +379,17 @@ export const esquemaReserva = z.object({
   nota: z.string().trim().max(200, 'La nota es muy larga.').nullish(),
 });
 
+export const esquemaTurnoFijo = z.object({
+  diaSemana: z.coerce.number().int().min(0).max(6),
+  hora: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora inválida.'),
+  titular: z.string().trim().min(2, 'Poné a nombre de quién está.').max(60, 'El nombre es muy largo.'),
+  // @usuario de birteam (opcional): el turno le aparece en sus reservas.
+  usuario: z.string().trim().max(40).nullish(),
+  telefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
+  nota: z.string().trim().max(200, 'La nota es muy larga.').nullish(),
+  desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida.').nullish(),
+});
+
 export const esquemaAccionReserva = z.object({
   accion: z.enum(['confirmar', 'rechazar', 'cancelar']),
   motivo: z.string().trim().max(200, 'El motivo es muy largo.').nullish(),

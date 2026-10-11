@@ -6,7 +6,8 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
 import { GrillaTurnos } from '@/components/turnos';
-import { grillaDeTurnos, precioDelTurno } from '@/lib/reservas';
+import { diasDeLaCancha, grillaDeTurnos, horariosDelDia, precioDelTurno, rotuloDia } from '@/lib/reservas';
+import { TurnosFijos } from './turnos-fijos';
 import { duenoCobraOnline } from '@/lib/mercadopago';
 import { gestionaCancha } from '@/lib/gestion';
 import { formatearPuntaje, jugoEnLaCancha } from '@/lib/resenas';
@@ -55,6 +56,21 @@ export default async function DetalleCancha({
   const conGrilla = gestiona || (visible && cancha.reservasOnline);
   const dias = conGrilla ? await grillaDeTurnos(cancha, usuario.id, gestiona) : [];
   const precioTurno = precioDelTurno(cancha.precioPorHora, cancha.duracionTurno);
+  // Turnos fijos (solo para quien gestiona): con la próxima semana tomada de cada uno.
+  const fijos = gestiona
+    ? await prisma.turnoFijo.findMany({
+        where: { canchaId: cancha.id, activo: true },
+        include: {
+          usuario: { select: { usuario: true } },
+          reservas: {
+            where: { estado: { in: ['CONFIRMADA', 'BLOQUEO'] }, inicio: { gt: new Date() } },
+            orderBy: { inicio: 'asc' },
+            take: 1,
+            select: { fecha: true },
+          },
+        },
+      })
+    : [];
 
   const [resenas, resumen, puedeResenar] = await Promise.all([
     prisma.resenaCancha.findMany({
@@ -203,6 +219,24 @@ export default async function DetalleCancha({
           }
           duracion={cancha.duracionTurno}
           telefono={cancha.telefono}
+        />
+      ) : null}
+
+      {gestiona ? (
+        <TurnosFijos
+          canchaId={cancha.id}
+          dias={diasDeLaCancha(cancha.diasDisponibles)}
+          horarios={horariosDelDia(cancha)}
+          fijos={fijos.map((fijo) => ({
+            id: fijo.id,
+            diaSemana: fijo.diaSemana,
+            hora: fijo.hora,
+            titular: fijo.titular,
+            usuario: fijo.usuario?.usuario ?? null,
+            telefono: fijo.telefono,
+            nota: fijo.nota,
+            proxima: fijo.reservas[0] ? rotuloDia(fijo.reservas[0].fecha) : null,
+          }))}
         />
       ) : null}
 

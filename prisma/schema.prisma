@@ -81,6 +81,7 @@ model Usuario {
   lugares          LugarGuardado[]
   reservas         Reserva[]
   resenasCancha    ResenaCancha[]
+  turnosFijos      TurnoFijo[]
   // Preferencias de avisos (los de partidos y reservas no se apagan).
   avisosSociales   Boolean @default(true)
   avisosRadar      Boolean @default(true)
@@ -161,6 +162,7 @@ model Cancha {
   reservas Reserva[]
   ofertas  OfertaTurno[]
   resenas  ResenaCancha[]
+  turnosFijos TurnoFijo[]
 
   @@index([deporteId, activa])
 }
@@ -200,12 +202,45 @@ model Reserva {
   mpPreferenciaId String?
   mpLinkPago      String?
   pagos           PagoMercadoPago[]
+  // Semana de un turno fijo: se genera sola y, si se cancela, no vuelve a crearse.
+  turnoFijoId     String?
+  turnoFijo       TurnoFijo? @relation(fields: [turnoFijoId], references: [id], onDelete: SetNull)
   creadoEn    DateTime  @default(now())
   actualizadoEn DateTime @updatedAt
 
+  @@unique([turnoFijoId, fecha])
   @@index([canchaId, fecha])
   @@index([usuarioId, inicio])
   @@index([estado, venceEn])
+}
+
+// Turno fijo: el mismo día y horario todas las semanas (lo arma el complejo).
+// Se materializa como reservas semana a semana dentro de los días reservables,
+// así ocupa el turno con la misma garantía que una reserva común.
+model TurnoFijo {
+  id          String    @id @default(cuid())
+  canchaId    String
+  cancha      Cancha    @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  // 0=domingo … 6=sábado y "21:00".
+  diaSemana   Int
+  hora        String
+  // Quién lo tiene: un nombre ("Los Pibes del martes") y, si está en birteam,
+  // el jugador, que lo ve en sus reservas y puede avisar que una semana no va.
+  titular     String
+  usuarioId   String?
+  usuario     Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  telefono    String?
+  nota        String?
+  // Primer día en que rige ("2026-10-13").
+  desde       String
+  activo      Boolean   @default(true)
+  creadoPorId String
+  creadoEn    DateTime  @default(now())
+  terminadoEn DateTime?
+  reservas    Reserva[]
+
+  @@index([canchaId, activo])
+  @@index([usuarioId])
 }
 
 // Radar de turnos libres: el dueño ofrece con descuento un turno que está libre.

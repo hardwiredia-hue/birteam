@@ -1,6 +1,7 @@
 import { prisma } from './db';
 import { enviarPush } from './push';
 import { equipoDelComplejo } from './gestion';
+import { materializarFijos } from './turnos-fijos';
 
 /**
  * Turnos de cancha. Todo se calcula en horario argentino (sin horario de
@@ -127,9 +128,10 @@ export function seSuperponen(inicioA: number, duracionA: number, inicioB: number
 }
 
 /**
- * Las solicitudes que el dueño no contestó a tiempo vencen y liberan el turno.
- * Se llama antes de mostrar o pedir turnos (y desde las tareas programadas),
- * así nunca queda un turno trabado por una solicitud olvidada.
+ * Las solicitudes que el dueño no contestó a tiempo vencen y liberan el turno,
+ * y se generan las semanas nuevas de los turnos fijos. Se llama antes de
+ * mostrar o pedir turnos (y desde las tareas programadas), así nunca queda un
+ * turno trabado por una solicitud olvidada ni un fijo sin ocupar su lugar.
  */
 export async function liberarVencidas(canchaId?: string) {
   // Turnos retenidos para pagar que no se pagaron a tiempo: se liberan.
@@ -185,6 +187,8 @@ export async function liberarVencidas(canchaId?: string) {
     });
     await enviarPush(reserva.usuarioId, { titulo, cuerpo, url: `/canchas/${reserva.cancha.id}` });
   }
+  // Las semanas de los turnos fijos que entraron en los días reservables.
+  await materializarFijos(canchaId);
   return vencidas.length + sinPagar.length;
 }
 
@@ -204,7 +208,9 @@ export interface TurnoDeGrilla {
   /** Turno propio retenido para pagar: el link de Mercado Pago. */
   linkPago?: string | null;
   /** Solo para el dueño: quién lo tiene y en qué estado. */
-  detalle?: { estado: string; nombre: string; usuario: string; nota: string | null; pagado: boolean };
+  detalle?: { estado: string; nombre: string; usuario: string; nota: string | null; pagado: boolean; fijo: boolean };
+  /** Semana de un turno fijo propio (para el jugador). */
+  fijo?: boolean;
 }
 
 export interface DiaDeGrilla {
@@ -258,6 +264,7 @@ export async function grillaDeTurnos(
               estadoMio: tomada.estado,
               reservaId: tomada.id,
               linkPago: tomada.estado === 'PENDIENTE_PAGO' ? tomada.mpLinkPago : null,
+              fijo: tomada.turnoFijoId != null,
             };
           }
           if (tomada) {
@@ -274,6 +281,7 @@ export async function grillaDeTurnos(
                       usuario: tomada.usuario.usuario,
                       nota: tomada.nota,
                       pagado: tomada.pagoEstado === 'APROBADO',
+                      fijo: tomada.turnoFijoId != null,
                     },
                   }
                 : {}),

@@ -1,5 +1,6 @@
 import { prisma } from './db';
 import { enviarPush } from './push';
+import { terminarFijo } from './turnos-fijos';
 
 /**
  * Baja de cuenta pedida por su titular. No se borra la fila del usuario
@@ -11,15 +12,18 @@ import { enviarPush } from './push';
 /** Motivo por el que todavía no se puede dar de baja, o null si se puede. */
 export async function impedimentoParaBaja(usuarioId: string) {
   const ahora = new Date();
-  const [comoJugador, enSusCanchas] = await Promise.all([
+  const [comoJugador, fijosEnSusCanchas, enSusCanchas] = await Promise.all([
     prisma.reserva.count({
       where: {
         usuarioId,
         estado: { in: ['SOLICITADA', 'PENDIENTE_PAGO', 'CONFIRMADA'] },
         inicio: { gt: ahora },
         cancha: { duenoId: { not: usuarioId } },
+        // Las semanas de sus turnos fijos se liberan solas al cerrar la cuenta.
+        turnoFijoId: null,
       },
     }),
+    prisma.turnoFijo.count({ where: { activo: true, cancha: { duenoId: usuarioId } } }),
     prisma.reserva.count({
       where: {
         cancha: { duenoId: usuarioId },
@@ -30,6 +34,9 @@ export async function impedimentoParaBaja(usuarioId: string) {
   ]);
   if (comoJugador > 0) {
     return `Tenés ${comoJugador} ${comoJugador === 1 ? 'turno reservado' : 'turnos reservados'} por delante. Cancelalos desde Reservas (así se devuelve lo pagado) y después volvé.`;
+  }
+  if (fijosEnSusCanchas > 0) {
+    return `Tus canchas tienen ${fijosEnSusCanchas} ${fijosEnSusCanchas === 1 ? 'turno fijo' : 'turnos fijos'}. Terminalos desde cada cancha (así se avisa a quienes los tienen) antes de cerrar la cuenta.`;
   }
   if (enSusCanchas > 0) {
     return `Tus canchas tienen ${enSusCanchas} ${enSusCanchas === 1 ? 'turno tomado' : 'turnos tomados'} por delante. Resolvelos desde Reservas antes de cerrar la cuenta.`;
@@ -66,6 +73,10 @@ export async function eliminarCuenta(usuarioId: string) {
     }
   }
   await prisma.partido.updateMany({ where: { coOrganizadorId: usuarioId }, data: { coOrganizadorId: null } });
+
+  // Turnos fijos que tenía como jugador: se terminan y se avisa al complejo.
+  const fijos = await prisma.turnoFijo.findMany({ where: { usuarioId, activo: true }, select: { id: true } });
+  for (const fijo of fijos) await terminarFijo(fijo.id, 'JUGADOR');
 
   // Grupos: si era el único admin, pasa a serlo el miembro más antiguo.
   const membresias = await prisma.miembroGrupo.findMany({ where: { usuarioId, rol: 'ADMIN' } });

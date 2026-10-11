@@ -47,6 +47,8 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   const esDueno = await gestionaCancha(usuario.id, reserva.cancha);
   const esJugador = reserva.usuarioId === usuario.id;
   const turno = `${rotuloDia(reserva.fecha)} a las ${reserva.hora}`;
+  // Semana de un turno fijo: se cancela solo ese día, el fijo sigue.
+  const deFijo = reserva.turnoFijoId != null;
   const cambiar = (desde: string[], cambios: { estado: string; ocupa?: null; motivo?: string | null }) =>
     prisma.reserva.updateMany({
       where: { id: reserva.id, estado: { in: desde } },
@@ -105,8 +107,8 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     await avisarReserva(
       reserva.usuarioId,
       'RESERVA_CANCELADA',
-      `Turno cancelado · ${reserva.cancha.nombre}`,
-      `El complejo canceló tu turno del ${turno}.${motivo ? ` Motivo: ${motivo.replace(/\.?$/, '.')}` : ''}${
+      deFijo ? `Esta semana no hay turno fijo · ${reserva.cancha.nombre}` : `Turno cancelado · ${reserva.cancha.nombre}`,
+      `El complejo canceló tu turno del ${turno}${deFijo ? ' (las otras semanas siguen igual)' : ''}.${motivo ? ` Motivo: ${motivo.replace(/\.?$/, '.')}` : ''}${
         reserva.pagoEstado === 'APROBADO' ? ' Te devolvemos todo lo pagado por Mercado Pago.' : ''
       }`,
       `/canchas/${reserva.cancha.id}`
@@ -141,7 +143,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     reserva.cancha.duenoId,
     'RESERVA_CANCELADA',
     `Se liberó un turno · ${reserva.cancha.nombre}`,
-    `${reserva.usuario.nombre} canceló el ${turno}.${motivo ? ` Motivo: ${motivo.replace(/\.?$/, '.')}` : ''}`,
+    `${reserva.usuario.nombre} ${deFijo ? 'avisó que no va a su turno fijo del' : 'canceló el'} ${turno}.${motivo ? ` Motivo: ${motivo.replace(/\.?$/, '.')}` : ''}`,
     '/reservas'
   );
   return NextResponse.json({ listo: true });
