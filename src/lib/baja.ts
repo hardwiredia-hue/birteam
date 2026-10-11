@@ -117,6 +117,7 @@ export async function eliminarCuenta(usuarioId: string) {
     }),
     prisma.usuarioDeporte.deleteMany({ where: { usuarioId } }),
     prisma.lugarGuardado.deleteMany({ where: { usuarioId } }),
+    prisma.alertaTurno.deleteMany({ where: { usuarioId } }),
     prisma.notificacion.deleteMany({ where: { usuarioId } }),
     prisma.suscripcionPush.deleteMany({ where: { usuarioId } }),
     prisma.sesion.deleteMany({ where: { usuarioId } }),

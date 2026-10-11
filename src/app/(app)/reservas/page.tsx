@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
-import { ROTULOS_ESTADO, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { ROTULOS_ESTADO, claveDia, liberarVencidas, rotuloDia } from '@/lib/reservas';
 import { rotuloFijo } from '@/lib/turnos-fijos';
 import { AccionesReserva } from './acciones';
 import { DejarFijo } from './dejar-fijo';
@@ -33,7 +33,7 @@ export default async function Reservas() {
   const duenos = await duenosQueGestiono(usuario.id, usuario.tipoCuenta);
   const esDueno = duenos.length > 0;
 
-  const [mias, historial, pendientes, agenda, misFijos] = await Promise.all([
+  const [mias, historial, pendientes, agenda, misFijos, esperando] = await Promise.all([
     prisma.reserva.findMany({
       where: {
         usuarioId: usuario.id,
@@ -86,6 +86,11 @@ export default async function Reservas() {
       where: { usuarioId: usuario.id, activo: true },
       include: { cancha: { select: { id: true, nombre: true, direccion: true } } },
       orderBy: [{ diaSemana: 'asc' }, { hora: 'asc' }],
+    }),
+    prisma.alertaTurno.findMany({
+      where: { usuarioId: usuario.id, avisadoEn: null, fecha: { gte: claveDia() } },
+      include: { cancha: { select: { id: true, nombre: true } } },
+      orderBy: [{ fecha: 'asc' }, { hora: 'asc' }],
     }),
   ]);
 
@@ -249,6 +254,26 @@ export default async function Reservas() {
           ))
         )}
       </section>
+
+      {esperando.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <p className="t-rotulo">Esperando que se liberen</p>
+          <div className="tarjeta flex flex-col">
+            {esperando.map((alerta) => (
+              <Link
+                key={alerta.id}
+                href={`/canchas/${alerta.cancha.id}?fecha=${alerta.fecha}&hora=${alerta.hora}`}
+                className="flex items-center justify-between gap-3 border-b border-borde px-4 py-3 text-sm last:border-b-0"
+              >
+                <span className="min-w-0 truncate">
+                  {rotuloDia(alerta.fecha)} · {alerta.hora} · {alerta.cancha.nombre}
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-azul-txt">Te avisamos</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {historial.length > 0 ? (
         <section className="flex flex-col gap-2">

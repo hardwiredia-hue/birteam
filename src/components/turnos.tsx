@@ -166,6 +166,28 @@ export function GrillaTurnos({
     router.refresh();
   }
 
+  /** Anotarse (o borrarse) para que le avisen si el turno ocupado se libera. */
+  async function alertar(quiere: boolean) {
+    if (!elegido) return;
+    setEnviando(true);
+    setError(null);
+    const respuesta = await fetch(`/api/canchas/${canchaId}/alertas`, {
+      method: quiere ? 'POST' : 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fecha: dia.fecha, hora: elegido.hora }),
+    });
+    const datos = await respuesta.json().catch(() => ({}));
+    setEnviando(false);
+    if (!respuesta.ok) {
+      setError(datos.error ?? 'No pudimos guardarlo.');
+      router.refresh();
+      return;
+    }
+    setAviso(quiere ? 'Listo: si se libera, te avisamos al toque.' : 'Ya no te avisamos por ese turno.');
+    setElegido(null);
+    router.refresh();
+  }
+
   async function responder(accion: 'confirmar' | 'rechazar' | 'cancelar') {
     if (!elegido?.reservaId) return;
     setEnviando(true);
@@ -256,15 +278,19 @@ export function GrillaTurnos({
             const clickeable =
               turno.estado === 'LIBRE' ||
               turno.estado === 'MIA' ||
+              // El jugador toca uno ocupado para que le avisen si se libera.
+              (!esDueno && turno.estado === 'OCUPADO') ||
               (esDueno && turno.estado === 'OCUPADO' && Boolean(turno.reservaId));
             let estilo: React.CSSProperties = {};
             let rotulo = 'Libre';
             if (turno.estado === 'OCUPADO') {
-              rotulo = esDueno && turno.detalle ? (turno.detalle.fijo ? 'Fijo' : turno.detalle.estado === 'SOLICITADA' ? 'Pedido' : turno.detalle.estado === 'BLOQUEO' ? 'Bloqueado' : 'Reservado') : turno.pendiente ? 'En espera' : 'Ocupado';
+              rotulo = esDueno && turno.detalle ? (turno.detalle.fijo ? 'Fijo' : turno.detalle.estado === 'SOLICITADA' ? 'Pedido' : turno.detalle.estado === 'BLOQUEO' ? 'Bloqueado' : 'Reservado') : turno.alerta ? 'Te avisamos' : turno.pendiente ? 'En espera' : 'Ocupado';
               estilo =
                 esDueno && turno.detalle?.estado === 'SOLICITADA'
                   ? { borderColor: 'var(--naranja-txt)', color: 'var(--naranja-txt)' }
-                  : { color: 'var(--gris-estado)', textDecoration: esDueno ? undefined : 'line-through' };
+                  : turno.alerta
+                    ? { borderColor: 'var(--azul-txt)', color: 'var(--azul-txt)' }
+                    : { color: 'var(--gris-estado)', textDecoration: esDueno ? undefined : 'line-through' };
             } else if (turno.estado === 'PASADO') {
               rotulo = 'Pasado';
               estilo = { opacity: 0.4 };
@@ -303,6 +329,26 @@ export function GrillaTurnos({
           <p className="text-sm font-semibold">
             {dia.rotulo} · {elegido.hora}
           </p>
+
+          {!esDueno && elegido.estado === 'OCUPADO' ? (
+            <>
+              <p className="text-xs text-tinta-3">
+                {elegido.alerta
+                  ? 'Estás esperando este turno. Si alguien lo cancela, te avisamos al toque.'
+                  : elegido.pendiente
+                    ? 'Alguien lo pidió y el complejo todavía no confirmó. Si se libera, te avisamos.'
+                    : 'Está tomado. Si se cancela, te avisamos para que lo pidas antes que otro.'}
+              </p>
+              <button
+                type="button"
+                className={elegido.alerta ? 'btn btn-secundario btn-sm self-start' : 'btn btn-primario btn-sm self-start'}
+                disabled={enviando}
+                onClick={() => alertar(!elegido.alerta)}
+              >
+                {elegido.alerta ? 'Dejar de esperar' : 'Avisame si se libera'}
+              </button>
+            </>
+          ) : null}
 
           {elegido.estado === 'LIBRE' ? (
             <>

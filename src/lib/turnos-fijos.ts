@@ -14,6 +14,7 @@ import {
   rotuloDia,
   seSuperponen,
 } from './reservas';
+import { avisarTurnoLibre } from './alertas-turno';
 
 /**
  * Turnos fijos: el mismo día y horario todas las semanas. No se guardan
@@ -167,14 +168,19 @@ export async function terminarFijo(fijoId: string, quien: 'COMPLEJO' | 'JUGADOR'
   });
   if (count === 0) return false;
 
-  await prisma.reserva.updateMany({
+  const liberadas = await prisma.reserva.findMany({
     where: {
       turnoFijoId: fijo.id,
       estado: { in: ['CONFIRMADA', 'BLOQUEO'] },
       inicio: { gt: new Date() },
     },
+    select: { id: true, fecha: true, hora: true },
+  });
+  await prisma.reserva.updateMany({
+    where: { id: { in: liberadas.map((r) => r.id) }, estado: { in: ['CONFIRMADA', 'BLOQUEO'] } },
     data: { estado: 'CANCELADA', ocupa: null, motivo: 'Terminó el turno fijo.' },
   });
+  for (const semana of liberadas) await avisarTurnoLibre(fijo.canchaId, semana.fecha, semana.hora);
 
   const rotulo = rotuloFijo(fijo);
   if (quien === 'COMPLEJO' && fijo.usuarioId) {

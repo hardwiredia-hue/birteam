@@ -2,6 +2,7 @@ import { prisma } from './db';
 import { enviarPush } from './push';
 import { equipoDelComplejo } from './gestion';
 import { materializarFijos } from './turnos-fijos';
+import { avisarTurnoLibre } from './alertas-turno';
 
 /**
  * Turnos de cancha. Todo se calcula en horario argentino (sin horario de
@@ -149,6 +150,7 @@ export async function liberarVencidas(canchaId?: string) {
       data: { estado: 'VENCIDA', ocupa: null },
     });
     if (count === 0) continue;
+    await avisarTurnoLibre(reserva.canchaId, reserva.fecha, reserva.hora);
     await prisma.notificacion.create({
       data: {
         usuarioId: reserva.usuarioId,
@@ -174,6 +176,7 @@ export async function liberarVencidas(canchaId?: string) {
       data: { estado: 'VENCIDA', ocupa: null },
     });
     if (count === 0) continue;
+    await avisarTurnoLibre(reserva.canchaId, reserva.fecha, reserva.hora);
     const titulo = 'Tu pedido de turno venció';
     const cuerpo = `${reserva.cancha.nombre} no respondió a tiempo el turno del ${rotuloDia(reserva.fecha)} a las ${reserva.hora}. Probá otro horario o llamalos.`;
     await prisma.notificacion.create({
@@ -211,6 +214,8 @@ export interface TurnoDeGrilla {
   detalle?: { estado: string; nombre: string; usuario: string; nota: string | null; pagado: boolean; fijo: boolean };
   /** Semana de un turno fijo propio (para el jugador). */
   fijo?: boolean;
+  /** Ocupado, y el jugador pidió que le avisen si se libera. */
+  alerta?: boolean;
 }
 
 export interface DiaDeGrilla {
@@ -240,12 +245,18 @@ export async function grillaDeTurnos(
   const horarios = horariosDelDia(cancha);
   const limite = Date.now() + MINUTOS_ANTICIPACION * 60_000;
 
-  const [reservas, ofertas] = await Promise.all([
+  const [reservas, ofertas, alertas] = await Promise.all([
     prisma.reserva.findMany({
       where: { canchaId: cancha.id, fecha: { in: dias }, estado: { in: ESTADOS_ACTIVOS } },
       include: { usuario: { select: { nombre: true, usuario: true } } },
     }),
     prisma.ofertaTurno.findMany({ where: { canchaId: cancha.id, fecha: { in: dias } } }),
+    esDueno
+      ? Promise.resolve([])
+      : prisma.alertaTurno.findMany({
+          where: { canchaId: cancha.id, usuarioId, fecha: { in: dias }, avisadoEn: null },
+          select: { fecha: true, hora: true },
+        }),
   ]);
 
   return dias.map((fecha) => {
@@ -272,6 +283,7 @@ export async function grillaDeTurnos(
               hora,
               estado: 'OCUPADO',
               pendiente: tomada.estado === 'SOLICITADA' || tomada.estado === 'PENDIENTE_PAGO',
+              alerta: alertas.some((a) => a.fecha === fecha && a.hora === hora),
               ...(esDueno
                 ? {
                     reservaId: tomada.id,

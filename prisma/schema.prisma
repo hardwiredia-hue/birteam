@@ -82,6 +82,7 @@ model Usuario {
   reservas         Reserva[]
   resenasCancha    ResenaCancha[]
   turnosFijos      TurnoFijo[]
+  alertasTurno     AlertaTurno[]
   // Preferencias de avisos (los de partidos y reservas no se apagan).
   avisosSociales   Boolean @default(true)
   avisosRadar      Boolean @default(true)
@@ -163,6 +164,7 @@ model Cancha {
   ofertas  OfertaTurno[]
   resenas  ResenaCancha[]
   turnosFijos TurnoFijo[]
+  alertas  AlertaTurno[]
 
   @@index([deporteId, activa])
 }
@@ -241,6 +243,24 @@ model TurnoFijo {
 
   @@index([canchaId, activo])
   @@index([usuarioId])
+}
+
+// "Avisame si se libera": el jugador quiere un turno que está tomado. Si se
+// cancela, vence o se rechaza, se avisa a todos los que esperaban (gana el
+// primero que lo pide). Una alerta avisa una sola vez.
+model AlertaTurno {
+  id        String    @id @default(cuid())
+  canchaId  String
+  cancha    Cancha    @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  fecha     String
+  hora      String
+  creadoEn  DateTime  @default(now())
+  avisadoEn DateTime?
+
+  @@unique([canchaId, usuarioId, fecha, hora])
+  @@index([canchaId, fecha, hora])
 }
 
 // Radar de turnos libres: el dueño ofrece con descuento un turno que está libre.

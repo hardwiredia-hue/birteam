@@ -5,6 +5,7 @@ import { usuarioActual } from '@/lib/auth';
 import { esquemaAccionReserva, erroresDeZod } from '@/lib/validacion';
 import { avisarAlComplejo, avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 import { gestionaCancha } from '@/lib/gestion';
+import { avisarTurnoLibre } from '@/lib/alertas-turno';
 
 /**
  * Responder un pedido de turno o cancelarlo.
@@ -49,6 +50,8 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   const turno = `${rotuloDia(reserva.fecha)} a las ${reserva.hora}`;
   // Semana de un turno fijo: se cancela solo ese día, el fijo sigue.
   const deFijo = reserva.turnoFijoId != null;
+  // Quedó libre: avisar a quienes lo esperaban ("avisame si se libera").
+  const avisarLibre = () => avisarTurnoLibre(reserva.canchaId, reserva.fecha, reserva.hora);
   const cambiar = (desde: string[], cambios: { estado: string; ocupa?: null; motivo?: string | null }) =>
     prisma.reserva.updateMany({
       where: { id: reserva.id, estado: { in: desde } },
@@ -76,6 +79,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     } else {
       const { count } = await cambiar(['SOLICITADA'], { estado: 'RECHAZADA', ocupa: null, motivo });
       if (count === 0) return yaCambio;
+      await avisarLibre();
       await avisarReserva(
         reserva.usuarioId,
         'RESERVA_RECHAZADA',
@@ -93,6 +97,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       // Liberar un bloqueo propio: no hay a quién avisar.
       const { count } = await cambiar(['BLOQUEO'], { estado: 'CANCELADA', ocupa: null });
       if (count === 0) return yaCambio;
+      await avisarLibre();
       return NextResponse.json({ listo: true });
     }
     // Si estaba pagado, primero se devuelve: nunca un turno cancelado con la plata cobrada.
@@ -104,6 +109,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       motivo,
     });
     if (count === 0) return yaCambio;
+    await avisarLibre();
     await avisarReserva(
       reserva.usuarioId,
       'RESERVA_CANCELADA',
@@ -138,6 +144,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     motivo,
   });
   if (count === 0) return yaCambio;
+  await avisarLibre();
   if (reserva.estado === 'PENDIENTE_PAGO') return NextResponse.json({ listo: true });
   await avisarAlComplejo(
     reserva.cancha.duenoId,
