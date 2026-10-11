@@ -519,6 +519,11 @@ export function GrillaTurnos({
                 ) : null}
                 {elegido.detalle.nota ? ` · “${elegido.detalle.nota}”` : ''}
               </p>
+              {elegido.detalle.historial ? (
+                <p className="text-xs" style={{ color: elegido.detalle.conFaltas ? 'var(--naranja-txt)' : 'var(--tinta-3)' }}>
+                  {elegido.detalle.historial}
+                </p>
+              ) : null}
               {elegido.detalle.estado !== 'BLOQUEO' ? (
                 <input
                   className="campo"

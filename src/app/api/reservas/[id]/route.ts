@@ -3,8 +3,8 @@ import { prisma } from '@/lib/db';
 import { reembolsarReserva } from '@/lib/cobros';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaAccionReserva, erroresDeZod } from '@/lib/validacion';
-import { avisarAlComplejo, avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
-import { gestionaCancha } from '@/lib/gestion';
+import { DIAS_PARA_MARCAR_FALTA, avisarAlComplejo, avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import { equipoDelComplejo, gestionaCancha } from '@/lib/gestion';
 import { avisarTurnoLibre } from '@/lib/alertas-turno';
 
 /**
@@ -61,6 +61,35 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     { error: 'La reserva ya cambió de estado. Actualizá la página.' },
     { status: 409 }
   );
+
+  // Después del turno: el complejo marca que el jugador no fue (o lo corrige).
+  if (accion === 'no_vino' || accion === 'vino') {
+    if (!esDueno) return NextResponse.json({ error: 'Lo marca el complejo.' }, { status: 403 });
+    const pasado = reserva.inicio.getTime() < Date.now();
+    const reciente = Date.now() - reserva.inicio.getTime() < DIAS_PARA_MARCAR_FALTA * 86400_000;
+    if (reserva.estado !== 'CONFIRMADA' || !pasado || !reciente) {
+      return NextResponse.json(
+        { error: `Se marca en turnos confirmados que ya pasaron (hasta ${DIAS_PARA_MARCAR_FALTA} días).` },
+        { status: 409 }
+      );
+    }
+    if ((await equipoDelComplejo(reserva.cancha.duenoId)).includes(reserva.usuarioId)) {
+      return NextResponse.json({ error: 'Es un turno del propio complejo.' }, { status: 409 });
+    }
+    const noVino = accion === 'no_vino';
+    if (reserva.noVino === noVino) return NextResponse.json({ listo: true });
+    await prisma.reserva.update({ where: { id: reserva.id }, data: { noVino } });
+    if (noVino) {
+      await avisarReserva(
+        reserva.usuarioId,
+        'RESERVA_NO_VINO',
+        `Faltaste a un turno · ${reserva.cancha.nombre}`,
+        `El complejo marcó que no fuiste el ${turno}. Si fue un error, hablá con ellos para que lo corrijan.`,
+        `/canchas/${reserva.cancha.id}`
+      );
+    }
+    return NextResponse.json({ listo: true });
+  }
 
   if (accion === 'confirmar' || accion === 'rechazar') {
     if (!esDueno) {

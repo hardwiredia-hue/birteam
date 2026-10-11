@@ -211,7 +211,17 @@ export interface TurnoDeGrilla {
   /** Turno propio retenido para pagar: el link de Mercado Pago. */
   linkPago?: string | null;
   /** Solo para el dueño: quién lo tiene y en qué estado. */
-  detalle?: { estado: string; nombre: string; usuario: string; nota: string | null; pagado: boolean; fijo: boolean };
+  detalle?: {
+    estado: string;
+    nombre: string;
+    usuario: string;
+    nota: string | null;
+    pagado: boolean;
+    fijo: boolean;
+    /** En los pedidos: "8 turnos jugados · sin faltas" y si tiene faltas. */
+    historial?: string;
+    conFaltas?: boolean;
+  };
   /** Semana de un turno fijo propio (para el jugador). */
   fijo?: boolean;
   /** Ocupado, y el jugador pidió que le avisen si se libera. */
@@ -259,6 +269,10 @@ export async function grillaDeTurnos(
         }),
   ]);
 
+  const antecedentes = esDueno
+    ? await historialDeTurnos(reservas.filter((r) => r.estado === 'SOLICITADA').map((r) => r.usuarioId))
+    : new Map<string, { jugados: number; faltas: number }>();
+
   return dias.map((fecha) => {
     const abierto = abiertos.includes(diaDeSemana(fecha));
     const delDia = reservas.filter((reserva) => reserva.fecha === fecha);
@@ -294,6 +308,12 @@ export async function grillaDeTurnos(
                       nota: tomada.nota,
                       pagado: tomada.pagoEstado === 'APROBADO',
                       fijo: tomada.turnoFijoId != null,
+                      ...(tomada.estado === 'SOLICITADA'
+                        ? {
+                            historial: rotuloHistorial(antecedentes.get(tomada.usuarioId)),
+                            conFaltas: (antecedentes.get(tomada.usuarioId)?.faltas ?? 0) > 0,
+                          }
+                        : {}),
                     },
                   }
                 : {}),
@@ -539,4 +559,39 @@ export async function turnosLibresParaPartido(opciones: {
     .filter((s) => (vistos.has(s.canchaId) ? false : (vistos.add(s.canchaId), true)))
     .slice(0, opciones.limite ?? 5)
     .map(({ distancia: _distancia, mismaCiudad: _mismaCiudad, ...turno }) => turno);
+}
+
+/** Hasta cuántos días después del turno el complejo puede marcar que no fue. */
+export const DIAS_PARA_MARCAR_FALTA = 14;
+
+/**
+ * Historial de turnos de cada jugador en todas las canchas: los confirmados
+ * que ya pasaron y en cuántos el complejo marcó que no fue. Lo ve el
+ * complejo al decidir si confirma un pedido.
+ */
+export async function historialDeTurnos(usuarioIds: string[]) {
+  const historial = new Map<string, { jugados: number; faltas: number }>();
+  if (usuarioIds.length === 0) return historial;
+  const filas = await prisma.reserva.groupBy({
+    by: ['usuarioId', 'noVino'],
+    where: { usuarioId: { in: [...new Set(usuarioIds)] }, estado: 'CONFIRMADA', inicio: { lt: new Date() } },
+    _count: { _all: true },
+  });
+  for (const fila of filas) {
+    const actual = historial.get(fila.usuarioId) ?? { jugados: 0, faltas: 0 };
+    if (fila.noVino) actual.faltas += fila._count._all;
+    else actual.jugados += fila._count._all;
+    historial.set(fila.usuarioId, actual);
+  }
+  return historial;
+}
+
+/** "Primer turno en birteam" · "8 turnos jugados · sin faltas" · "1 falta en 9 turnos" */
+export function rotuloHistorial(datos: { jugados: number; faltas: number } | undefined) {
+  if (!datos || datos.jugados + datos.faltas === 0) return 'Primer turno en birteam';
+  if (datos.faltas === 0) {
+    return `${datos.jugados} ${datos.jugados === 1 ? 'turno jugado' : 'turnos jugados'} · sin faltas`;
+  }
+  const total = datos.jugados + datos.faltas;
+  return `${datos.faltas} ${datos.faltas === 1 ? 'falta' : 'faltas'} en ${total} ${total === 1 ? 'turno' : 'turnos'}`;
 }

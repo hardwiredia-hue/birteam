@@ -395,7 +395,7 @@ export const esquemaTurnoFijo = z.object({
 });
 
 export const esquemaAccionReserva = z.object({
-  accion: z.enum(['confirmar', 'rechazar', 'cancelar']),
+  accion: z.enum(['confirmar', 'rechazar', 'cancelar', 'no_vino', 'vino']),
   motivo: z.string().trim().max(200, 'El motivo es muy largo.').nullish(),
 });
 

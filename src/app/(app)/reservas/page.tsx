@@ -3,10 +3,20 @@ import { prisma } from '@/lib/db';
 import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
-import { ROTULOS_ESTADO, claveDia, liberarVencidas, rotuloDia } from '@/lib/reservas';
+import {
+  DIAS_PARA_MARCAR_FALTA,
+  ROTULOS_ESTADO,
+  claveDia,
+  historialDeTurnos,
+  liberarVencidas,
+  rotuloDia,
+  rotuloHistorial,
+} from '@/lib/reservas';
+import { equipoDelComplejo } from '@/lib/gestion';
 import { rotuloFijo } from '@/lib/turnos-fijos';
 import { AccionesReserva } from './acciones';
 import { DejarFijo } from './dejar-fijo';
+import { MarcarAsistencia } from './asistencia';
 
 export const metadata = { title: 'Reservas' };
 export const dynamic = 'force-dynamic';
@@ -94,6 +104,27 @@ export default async function Reservas() {
     }),
   ]);
 
+  // Turnos ya jugados en sus canchas: para marcar si alguien no fue.
+  const equipo = esDueno ? (await Promise.all(duenos.map(equipoDelComplejo))).flat() : [];
+  const jugados = esDueno
+    ? await prisma.reserva.findMany({
+        where: {
+          cancha: { duenoId: { in: duenos } },
+          estado: 'CONFIRMADA',
+          inicio: { lt: desde, gte: new Date(ahora.getTime() - DIAS_PARA_MARCAR_FALTA * 86400_000) },
+          usuarioId: { notIn: equipo },
+        },
+        include: {
+          cancha: { select: { nombre: true } },
+          usuario: { select: { nombre: true } },
+        },
+        orderBy: { inicio: 'desc' },
+        take: 20,
+      })
+    : [];
+  // Historial de quienes piden: lo que ayuda a decidir si confirmar.
+  const antecedentes = await historialDeTurnos(pendientes.map((reserva) => reserva.usuarioId));
+
   const nada = mias.length === 0 && historial.length === 0 && pendientes.length === 0 && agenda.length === 0;
 
   return (
@@ -133,6 +164,12 @@ export default async function Reservas() {
                           timeZone: 'America/Argentina/Buenos_Aires',
                         })} si no respondés`
                       : ''}
+                  </p>
+                  <p
+                    className="mt-1 text-xs"
+                    style={{ color: (antecedentes.get(reserva.usuarioId)?.faltas ?? 0) > 0 ? 'var(--naranja-txt)' : 'var(--tinta-3)' }}
+                  >
+                    {rotuloHistorial(antecedentes.get(reserva.usuarioId))}
                   </p>
                   {reserva.nota ? <p className="mt-1 text-xs text-tinta-2">“{reserva.nota}”</p> : null}
                 </div>
@@ -181,6 +218,28 @@ export default async function Reservas() {
               <DejarFijo canchaId={fijo.cancha.id} fijoId={fijo.id} rotulo={rotuloFijo(fijo).toLowerCase()} />
             </div>
           ))}
+        </section>
+      ) : null}
+
+      {jugados.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <p className="t-rotulo">Ya jugados · ¿faltó alguien?</p>
+          <div className="tarjeta flex flex-col">
+            {jugados.map((reserva) => (
+              <div key={reserva.id} className="flex items-center justify-between gap-3 border-b border-borde px-4 py-3 last:border-b-0">
+                <div className="min-w-0 text-sm">
+                  <p className="truncate font-semibold">
+                    {reserva.usuario.nombre}
+                    {reserva.noVino ? <span className="ml-2 text-xs font-semibold text-naranja-txt">no vino</span> : null}
+                  </p>
+                  <p className="truncate text-xs text-tinta-3">
+                    {rotuloDia(reserva.fecha)} · {reserva.hora} · {reserva.cancha.nombre}
+                  </p>
+                </div>
+                <MarcarAsistencia reservaId={reserva.id} noVino={reserva.noVino} jugador={reserva.usuario.nombre} />
+              </div>
+            ))}
+          </div>
         </section>
       ) : null}
 

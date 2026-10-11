@@ -207,6 +207,9 @@ model Reserva {
   // Semana de un turno fijo: se genera sola y, si se cancela, no vuelve a crearse.
   turnoFijoId     String?
   turnoFijo       TurnoFijo? @relation(fields: [turnoFijoId], references: [id], onDelete: SetNull)
+  // Después del turno, el complejo puede marcar que el jugador no fue
+  // (si no marca nada, se da por jugado).
+  noVino          Boolean   @default(false)
   creadoEn    DateTime  @default(now())
   actualizadoEn DateTime @updatedAt
 
