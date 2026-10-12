@@ -6,6 +6,8 @@ import { formatearPlata } from '@/lib/formato';
 import { formatearDistancia } from '@/lib/geo';
 import { infoDeporte, nombreDelFiltro, slugsDelFiltro } from '@/lib/deportes';
 import { ChipsDeportes } from '@/components/chips-deportes';
+import { FiltroCercania } from '@/components/filtro-cercania';
+import { radioDelParametro, ubicacionDe } from '@/lib/ubicacion';
 import { ZONA, buscarTurnosLibres, proximosDias, rotuloDia } from '@/lib/reservas';
 
 export const metadata = { title: 'Buscar turno' };
@@ -33,7 +35,7 @@ const FRANJAS: { clave: string; rotulo: string; desde: number; hasta: number; ce
 export default async function BuscarTurno({
   searchParams,
 }: {
-  searchParams: Promise<{ deporte?: string; dia?: string; hora?: string }>;
+  searchParams: Promise<{ deporte?: string; dia?: string; hora?: string; radio?: string }>;
 }) {
   const params = await searchParams;
   const usuario = (await usuarioActual())!;
@@ -58,6 +60,8 @@ export default async function BuscarTurno({
   const dia = params.dia && dias.includes(params.dia) ? params.dia : horaActual >= 22 ? dias[1] : dias[0];
   const franja = FRANJAS.find((f) => f.clave === params.hora) ?? null;
 
+  const ubicacion = await ubicacionDe(usuario);
+  const radio = ubicacion ? radioDelParametro(params.radio) : null;
   const resultados = await buscarTurnosLibres({
     deporteIds,
     fecha: dia,
@@ -65,16 +69,14 @@ export default async function BuscarTurno({
     hasta: franja?.hasta,
     cerca: franja?.cerca,
     ciudad: usuario.ciudad,
-    ubicacion:
-      usuario.latitud != null && usuario.longitud != null
-        ? { latitud: usuario.latitud, longitud: usuario.longitud }
-        : null,
+    ubicacion,
+    radioKm: radio,
   });
 
-  const actuales = { deporte, dia, hora: franja?.clave };
-  const enlace = (cambios: Partial<Record<'deporte' | 'dia' | 'hora', string | null>>) => {
+  const actuales = { deporte, dia, hora: franja?.clave, radio: radio ? String(radio) : undefined };
+  const enlace = (cambios: Partial<Record<'deporte' | 'dia' | 'hora' | 'radio', string | null>>) => {
     const parametros = new URLSearchParams();
-    for (const clave of ['deporte', 'dia', 'hora'] as const) {
+    for (const clave of ['deporte', 'dia', 'hora', 'radio'] as const) {
       const valor = clave in cambios ? cambios[clave] : actuales[clave];
       if (valor) parametros.set(clave, valor);
     }
@@ -134,6 +136,13 @@ export default async function BuscarTurno({
         </div>
       </div>
 
+      <FiltroCercania
+        ubicacion={ubicacion}
+        ciudad={usuario.ciudad}
+        radio={radio}
+        href={(km) => enlace({ radio: km ? String(km) : null })}
+      />
+
       <section className="flex flex-col gap-3">
         <p className="t-rotulo">
           {resultados.length === 0
@@ -144,7 +153,9 @@ export default async function BuscarTurno({
           <div className="tarjeta flex flex-col gap-3 p-5">
             <p className="text-sm text-tinta-2">
               No encontramos turnos libres{nombreDeporte ? ` de ${nombreDeporte}` : ''} {rotuloDelDia(dia).toLowerCase()}
-              {franja ? ` cerca de esa hora` : ''}. Probá otro día u horario, o fijate el Radar.
+              {franja ? ` cerca de esa hora` : ''}
+              {radio ? ` a menos de ${radio} km` : ''}. Probá otro día u horario
+              {radio ? ', más distancia' : ''}, o fijate el Radar.
             </p>
             <Link href="/radar" className="btn btn-secundario btn-sm self-start">
               Ver el Radar

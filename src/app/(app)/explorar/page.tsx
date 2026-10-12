@@ -7,7 +7,9 @@ import { slugsDelFiltro } from '@/lib/deportes';
 import { ChipsDeportes } from '@/components/chips-deportes';
 import { formatearPuntaje, puntajesDeCanchas } from '@/lib/resenas';
 import { usuarioActual } from '@/lib/auth';
-import { distanciaKm, formatearDistancia } from '@/lib/geo';
+import { formatearDistancia } from '@/lib/geo';
+import { dentroDelRadio, kmHasta, radioDelParametro, ubicacionDe, type Ubicacion } from '@/lib/ubicacion';
+import { FiltroCercania } from '@/components/filtro-cercania';
 import { formatearPlata } from '@/lib/formato';
 import { normalizar } from '@/lib/normalizar';
 import { idsBloqueados } from '@/lib/bloqueos';
@@ -30,10 +32,25 @@ export default async function Explorar({
     q?: string;
     ambito?: string;
     vista?: string;
+    radio?: string;
   }>;
 }) {
-  const { tab = 'partidos', deporte, q, ambito, vista } = await searchParams;
+  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo } = await searchParams;
   const usuario = (await usuarioActual())!;
+  const ubicacion = await ubicacionDe(usuario);
+  const radio = ubicacion ? radioDelParametro(radioCrudo) : null;
+  // El radio se mantiene al cambiar de solapa, deporte o vista.
+  const r = radio ? String(radio) : undefined;
+  const cercania = (
+    <FiltroCercania
+      ubicacion={ubicacion}
+      ciudad={usuario.ciudad}
+      radio={radio}
+      href={(km) =>
+        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined })
+      }
+    />
+  );
   const deportes = await prisma.deporte.findMany({
     orderBy: { orden: 'asc' },
     select: { id: true, nombre: true, slug: true },
@@ -49,6 +66,7 @@ export default async function Explorar({
         {tab !== 'partidos' ? <input type="hidden" name="tab" value={tab} /> : null}
         {deporte ? <input type="hidden" name="deporte" value={deporte} /> : null}
         {vista === 'mapa' ? <input type="hidden" name="vista" value="mapa" /> : null}
+        {r ? <input type="hidden" name="radio" value={r} /> : null}
         <input
           id="buscador"
           name="q"
@@ -60,10 +78,10 @@ export default async function Explorar({
       </Form>
 
       <div className="flex gap-1 border-b border-borde">
-        <Solapa activa={tab === 'partidos'} href="/explorar">Partidos</Solapa>
+        <Solapa activa={tab === 'partidos'} href={armarUrl({ radio: r })}>Partidos</Solapa>
         <Solapa activa={tab === 'jugadores'} href="/explorar?tab=jugadores">Jugadores</Solapa>
-        <Solapa activa={tab === 'grupos'} href="/explorar?tab=grupos">Grupos</Solapa>
-        <Solapa activa={tab === 'canchas'} href="/explorar?tab=canchas">Canchas</Solapa>
+        <Solapa activa={tab === 'grupos'} href={armarUrl({ tab: 'grupos', radio: r })}>Grupos</Solapa>
+        <Solapa activa={tab === 'canchas'} href={armarUrl({ tab: 'canchas', radio: r })}>Canchas</Solapa>
         <Solapa activa={tab === 'ranking'} href="/explorar?tab=ranking">Ranking</Solapa>
       </div>
 
@@ -113,11 +131,12 @@ export default async function Explorar({
             </span>
             <span className="text-naranja-txt">→</span>
           </Link>
-          <GruposAbiertos q={q} usuario={usuario} />
+          {cercania}
+          <GruposAbiertos q={q} usuario={usuario} ubicacion={ubicacion} radio={radio} />
         </>
       ) : tab === 'canchas' ? (
         <>
-          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} />
+          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} />
           <div className="flex gap-2">
             <Link href={deporte ? `/radar?deporte=${deporte}` : '/radar'} className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
               <span>
@@ -139,21 +158,23 @@ export default async function Explorar({
             activo={deporte}
             conTodos={false}
             envolver
-            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista })}
+            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r })}
           />
-          <Canchas deporteSlugs={slugsFiltro} q={q} usuario={usuario} vista={vista} />
+          {cercania}
+          <Canchas deporteSlugs={slugsFiltro} q={q} usuario={usuario} vista={vista} ubicacion={ubicacion} radio={radio} />
         </>
       ) : (
         <>
-          <AlternarVista deporte={deporte} q={q} vista={vista} />
+          <AlternarVista deporte={deporte} q={q} vista={vista} radio={r} />
           <ChipsDeportes
             deportes={deportes}
             activo={deporte}
             conTodos={false}
             envolver
-            href={(clave) => armarUrl({ deporte: clave ?? undefined, q, vista })}
+            href={(clave) => armarUrl({ deporte: clave ?? undefined, q, vista, radio: r })}
           />
-          <Partidos deporteSlugs={slugsFiltro} q={q} usuario={usuario} vista={vista} />
+          {cercania}
+          <Partidos deporteSlugs={slugsFiltro} q={q} vista={vista} ubicacion={ubicacion} radio={radio} />
         </>
       )}
     </div>
@@ -174,22 +195,24 @@ function AlternarVista({
   deporte,
   q,
   vista,
+  radio,
 }: {
   tab?: string;
   deporte?: string;
   q?: string;
   vista?: string;
+  radio?: string;
 }) {
   return (
     <div className="flex gap-2">
       <Link
-        href={armarUrl({ tab, deporte, q })}
+        href={armarUrl({ tab, deporte, q, radio })}
         className={vista !== 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Lista
       </Link>
       <Link
-        href={armarUrl({ tab, deporte, q, vista: 'mapa' })}
+        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio })}
         className={vista === 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Mapa
@@ -216,13 +239,15 @@ function Solapa({ activa, href, children }: { activa: boolean; href: string; chi
 async function Partidos({
   deporteSlugs,
   q,
-  usuario,
   vista,
+  ubicacion,
+  radio,
 }: {
   deporteSlugs?: string[] | null;
   q?: string;
-  usuario: { latitud: number | null; longitud: number | null };
   vista?: string;
+  ubicacion: Ubicacion | null;
+  radio: number | null;
 }) {
   const partidos = await prisma.partido.findMany({
     where: {
@@ -239,7 +264,7 @@ async function Partidos({
     take: 80,
   });
 
-  // Filtro de texto sin tildes, y distancia si el usuario tiene coordenadas.
+  // Filtro de texto sin tildes, y distancia si hay desde dónde medir.
   const buscado = q ? normalizar(q) : null;
   const lista = partidos
     .filter((p) =>
@@ -247,20 +272,16 @@ async function Partidos({
         ? true
         : normalizar(`${p.lugarNombre} ${p.ciudad ?? ''} ${p.provincia ?? ''}`).includes(buscado)
     )
-    .map((p) => ({
-      ...p,
-      km:
-        usuario.latitud != null && usuario.longitud != null && p.latitud != null && p.longitud != null
-          ? distanciaKm(usuario.latitud, usuario.longitud, p.latitud, p.longitud)
-          : null,
-    }))
+    .map((p) => ({ ...p, km: kmHasta(ubicacion, p) }))
+    .filter((p) => dentroDelRadio(p.km, radio))
     .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity) || a.fecha.getTime() - b.fecha.getTime());
 
   if (lista.length === 0) {
     return (
       <div className="tarjeta p-5">
         <p className="text-sm text-tinta-2">
-          No hay partidos abiertos {buscado ? 'con esa búsqueda' : 'por ahora'}. Armá el tuyo y
+          No hay partidos abiertos{' '}
+          {radio ? `a menos de ${radio} km` : buscado ? 'con esa búsqueda' : 'por ahora'}. Armá el tuyo y
           compartilo: aparece acá para los jugadores de tu zona.
         </p>
         <Link href="/crear" className="btn btn-primario mt-4">Creá el partido</Link>
@@ -285,14 +306,7 @@ async function Partidos({
       }));
     return (
       <>
-        <Mapa
-          puntos={puntos}
-          centro={
-            usuario.latitud != null && usuario.longitud != null
-              ? { latitud: usuario.latitud, longitud: usuario.longitud }
-              : null
-          }
-        />
+        <Mapa puntos={puntos} centro={ubicacion} yo={ubicacion?.origen === 'dispositivo'} />
         {puntos.length < lista.length ? (
           <p className="text-xs text-tinta-3">
             {lista.length - puntos.length}{' '}
@@ -359,11 +373,15 @@ async function Canchas({
   q,
   usuario,
   vista,
+  ubicacion,
+  radio,
 }: {
   deporteSlugs?: string[] | null;
   q?: string;
-  usuario: { tipoCuenta: string; latitud: number | null; longitud: number | null };
+  usuario: { tipoCuenta: string };
   vista?: string;
+  ubicacion: Ubicacion | null;
+  radio: number | null;
 }) {
   const canchas = await prisma.cancha.findMany({
     where: {
@@ -386,13 +404,8 @@ async function Canchas({
             buscado
           )
     )
-    .map((c) => ({
-      ...c,
-      km:
-        usuario.latitud != null && usuario.longitud != null && c.latitud != null && c.longitud != null
-          ? distanciaKm(usuario.latitud, usuario.longitud, c.latitud, c.longitud)
-          : null,
-    }))
+    .map((c) => ({ ...c, km: kmHasta(ubicacion, c) }))
+    .filter((c) => dentroDelRadio(c.km, radio))
     .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity))
     .slice(0, 30);
   const puntajes = await puntajesDeCanchas(lista.map((c) => c.id));
@@ -401,7 +414,9 @@ async function Canchas({
     return (
       <div className="tarjeta p-5">
         <p className="text-sm text-tinta-2">
-          Todavía no hay canchas publicadas {buscado ? 'con esa búsqueda' : 'por acá'}.
+          {radio
+            ? `No hay canchas publicadas a menos de ${radio} km. Probá con más distancia.`
+            : `Todavía no hay canchas publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}.`}
           {usuario.tipoCuenta === 'CANCHA' ? ' La tuya puede ser la primera.' : ''}
         </p>
         {usuario.tipoCuenta === 'CANCHA' ? (
@@ -427,14 +442,7 @@ async function Canchas({
       }));
     return (
       <>
-        <Mapa
-          puntos={puntos}
-          centro={
-            usuario.latitud != null && usuario.longitud != null
-              ? { latitud: usuario.latitud, longitud: usuario.longitud }
-              : null
-          }
-        />
+        <Mapa puntos={puntos} centro={ubicacion} yo={ubicacion?.origen === 'dispositivo'} />
         {puntos.length < lista.length ? (
           <p className="text-xs text-tinta-3">
             {lista.length - puntos.length}{' '}
@@ -576,9 +584,13 @@ async function Ranking({
 async function GruposAbiertos({
   q,
   usuario,
+  ubicacion,
+  radio,
 }: {
   q?: string;
   usuario: { id: string; ciudad: string | null };
+  ubicacion: Ubicacion | null;
+  radio: number | null;
 }) {
   const filtro = q ? normalizar(q) : null;
   const grupos = await prisma.grupo.findMany({
@@ -591,17 +603,19 @@ async function GruposAbiertos({
     take: 60,
   });
 
-  // Primero los de tu ciudad; filtro de texto sin tildes.
+  // Primero los más cerca (o los de tu ciudad); filtro de texto sin tildes.
   const lista = grupos
     .filter((grupo) =>
       !filtro
         ? true
         : normalizar(`${grupo.nombre} ${grupo.ciudad ?? ''} ${grupo.deporte.nombre}`).includes(filtro)
     )
+    .map((grupo) => ({ ...grupo, km: kmHasta(ubicacion, grupo) }))
+    .filter((grupo) => dentroDelRadio(grupo.km, radio))
     .sort((a, b) => {
       const aCerca = usuario.ciudad && a.ciudad === usuario.ciudad ? 0 : 1;
       const bCerca = usuario.ciudad && b.ciudad === usuario.ciudad ? 0 : 1;
-      return aCerca - bCerca;
+      return (a.km ?? Infinity) - (b.km ?? Infinity) || aCerca - bCerca;
     })
     .slice(0, 25);
 
@@ -609,7 +623,8 @@ async function GruposAbiertos({
     return (
       <div className="tarjeta p-5">
         <p className="text-sm text-tinta-2">
-          No hay grupos abiertos {filtro ? 'con esa búsqueda' : 'para sumarte por ahora'}. Armá el
+          No hay grupos abiertos{' '}
+          {radio ? `a menos de ${radio} km` : filtro ? 'con esa búsqueda' : 'para sumarte por ahora'}. Armá el
           tuyo e invitá gente: crece solo.
         </p>
         <Link href="/grupos/nuevo" className="btn btn-primario mt-4">Crear mi grupo</Link>
@@ -628,6 +643,7 @@ async function GruposAbiertos({
               {grupo.deporte.nombre} · {grupo._count.miembros}{' '}
               {grupo._count.miembros === 1 ? 'miembro' : 'miembros'}
               {grupo.ciudad ? ` · ${grupo.ciudad}` : ''}
+              {grupo.km != null ? ` · a ${formatearDistancia(grupo.km)}` : ''}
             </p>
             {grupo.descripcion ? (
               <p className="mt-1 truncate text-xs text-tinta-3">{grupo.descripcion}</p>

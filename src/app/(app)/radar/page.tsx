@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { formatearPlata } from '@/lib/formato';
-import { distanciaKm, formatearDistancia } from '@/lib/geo';
+import { formatearDistancia } from '@/lib/geo';
+import { dentroDelRadio, kmHasta, radioDelParametro, ubicacionDe } from '@/lib/ubicacion';
+import { FiltroCercania } from '@/components/filtro-cercania';
 import { slugsDelFiltro, nombreDelFiltro } from '@/lib/deportes';
 import { ChipsDeportes } from '@/components/chips-deportes';
 import { cuandoEmpieza, diaDeSemana, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
@@ -25,9 +27,11 @@ export default async function Radar({
     cuando?: string;
     descuento?: string;
     hasta?: string;
+    radio?: string;
   }>;
 }) {
-  const { deporte: slug, orden, cuando, descuento: descuentoCrudo, hasta: hastaCrudo } = await searchParams;
+  const { deporte: slug, orden, cuando, descuento: descuentoCrudo, hasta: hastaCrudo, radio: radioCrudo } =
+    await searchParams;
   const descuentoMinimo = Number(descuentoCrudo) || 0;
   const precioMaximo = Number(hastaCrudo) || 0;
   const [hoy, manana] = proximosDias(2);
@@ -43,7 +47,9 @@ export default async function Radar({
     deporteIds: slugsFiltro ? deportes.filter((d) => slugsFiltro.includes(d.slug)).map((d) => d.id) : null,
   });
 
-  const conUbicacion = usuario.latitud != null && usuario.longitud != null;
+  const ubicacion = await ubicacionDe(usuario);
+  const conUbicacion = ubicacion != null;
+  const radio = ubicacion ? radioDelParametro(radioCrudo) : null;
   const lista = ofertas
     .filter((oferta) => {
       if (cuando === 'hoy' && oferta.fecha !== hoy) return false;
@@ -55,21 +61,26 @@ export default async function Radar({
     })
     .map((oferta) => ({
       ...oferta,
-      distancia:
-        conUbicacion && oferta.cancha.latitud != null && oferta.cancha.longitud != null
-          ? distanciaKm(usuario.latitud!, usuario.longitud!, oferta.cancha.latitud, oferta.cancha.longitud)
-          : null,
-    }));
+      distancia: kmHasta(ubicacion, oferta.cancha),
+    }))
+    .filter((oferta) => dentroDelRadio(oferta.distancia, radio));
   if (orden === 'cerca' && conUbicacion) {
     lista.sort((a, b) => (a.distancia ?? Infinity) - (b.distancia ?? Infinity));
   }
   const propias = await prisma.cancha.count({ where: { duenoId: usuario.id } });
 
-  type Filtros = { deporte?: string; orden?: string; cuando?: string; descuento?: string; hasta?: string };
-  const actuales: Filtros = { deporte: slug, orden, cuando, descuento: descuentoCrudo, hasta: hastaCrudo };
+  type Filtros = { deporte?: string; orden?: string; cuando?: string; descuento?: string; hasta?: string; radio?: string };
+  const actuales: Filtros = {
+    deporte: slug,
+    orden,
+    cuando,
+    descuento: descuentoCrudo,
+    hasta: hastaCrudo,
+    radio: radio ? String(radio) : undefined,
+  };
   const enlace = (cambios: { [K in keyof Filtros]?: string | null }) => {
     const parametros = new URLSearchParams();
-    for (const clave of ['deporte', 'orden', 'cuando', 'descuento', 'hasta'] as const) {
+    for (const clave of ['deporte', 'orden', 'cuando', 'descuento', 'hasta', 'radio'] as const) {
       const valor = cambios[clave] === undefined ? actuales[clave] : cambios[clave];
       if (valor) parametros.set(clave, valor);
     }
@@ -118,7 +129,7 @@ export default async function Radar({
       </div>
 
       <form action="/radar" className="flex items-center gap-2">
-        {(['deporte', 'orden', 'cuando', 'descuento'] as const).map((clave) =>
+        {(['deporte', 'orden', 'cuando', 'descuento', 'radio'] as const).map((clave) =>
           actuales[clave] ? <input key={clave} type="hidden" name={clave} value={actuales[clave]} /> : null
         )}
         <input
@@ -141,6 +152,13 @@ export default async function Radar({
         ) : null}
       </form>
 
+      <FiltroCercania
+        ubicacion={ubicacion}
+        ciudad={usuario.ciudad}
+        radio={radio}
+        href={(km) => enlace({ radio: km ? String(km) : null })}
+      />
+
       {conUbicacion && lista.length > 1 ? (
         <div className="flex gap-3 text-xs font-semibold">
           <Link href={enlace({ orden: null })} className={orden !== 'cerca' ? 'text-verde-txt' : 'text-tinta-3'}>
@@ -156,7 +174,7 @@ export default async function Radar({
         <div className="tarjeta flex flex-col gap-3 p-5">
           <p className="text-sm text-tinta-2">
             Ahora no hay turnos en el Radar{nombreFiltro ? ` de ${nombreFiltro}` : ''}
-            {cuando || descuentoMinimo || precioMaximo ? ' con esos filtros' : ''}. Cuando un
+            {cuando || descuentoMinimo || precioMaximo || radio ? ' con esos filtros' : ''}. Cuando un
             complejo publique uno libre con descuento te avisamos, si jugás ese deporte en su
             ciudad.
           </p>

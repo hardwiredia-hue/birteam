@@ -512,6 +512,16 @@
 .mapa-pin-naranja {
   background: #f59e1e;
 }
+/* "Estás acá": punto blanco con halo, distinto de partidos y canchas. */
+.mapa-yo {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f4f6ea;
+  border: 4px solid #2f7dd6;
+  box-shadow: 0 0 0 6px rgba(47, 125, 214, 0.25);
+}
 /* En tema oscuro el mapa acompaña: tiles invertidos con los colores a salvo. */
 :root:not([data-theme='light']) .mapa-tiles {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.5);

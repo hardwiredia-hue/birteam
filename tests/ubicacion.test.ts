@@ -1,0 +1,30 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { dentroDelRadio, kmHasta, leerCoordenadas, radioDelParametro } from '../src/lib/ubicacion';
+
+test('ubicación: coordenadas de la cookie', () => {
+  assert.deepEqual(leerCoordenadas('-32.891,-60.701'), { latitud: -32.891, longitud: -60.701 });
+  assert.equal(leerCoordenadas(''), null);
+  assert.equal(leerCoordenadas('hola'), null);
+  assert.equal(leerCoordenadas('-95,10'), null);
+  assert.equal(leerCoordenadas('10,200'), null);
+});
+
+test('ubicación: solo los radios que se ofrecen', () => {
+  assert.equal(radioDelParametro('5'), 5);
+  assert.equal(radioDelParametro('7'), null);
+  assert.equal(radioDelParametro(undefined), null);
+});
+
+test('ubicación: distancia y radio', () => {
+  const rosario = { latitud: -32.9468, longitud: -60.6393 };
+  const km = kmHasta(rosario, { latitud: -32.89, longitud: -60.7 });
+  assert.ok(km != null && km > 8 && km < 9.5, `km=${km}`);
+  assert.equal(kmHasta(null, { latitud: 1, longitud: 1 }), null);
+  assert.equal(kmHasta(rosario, { latitud: null, longitud: null }), null);
+  assert.equal(dentroDelRadio(km, 10), true);
+  assert.equal(dentroDelRadio(km, 5), false);
+  // Sin radio entra todo; con radio, lo que no tiene ubicación queda afuera.
+  assert.equal(dentroDelRadio(null, null), true);
+  assert.equal(dentroDelRadio(null, 5), false);
+});

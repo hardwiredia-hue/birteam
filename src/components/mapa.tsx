@@ -30,13 +30,16 @@ function escapar(texto: string) {
 export function Mapa({
   puntos,
   centro,
+  yo = false,
 }: {
   puntos: PuntoMapa[];
   centro?: { latitud: number; longitud: number } | null;
+  /** El centro es donde está la persona: se marca con un punto propio. */
+  yo?: boolean;
 }) {
   const caja = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<MapaLeaflet | null>(null);
-  const firma = JSON.stringify(puntos.map((p) => p.id));
+  const firma = JSON.stringify([puntos.map((p) => p.id), yo && centro ? [centro.latitud, centro.longitud] : null]);
 
   useEffect(() => {
     let vivo = true;
@@ -71,8 +74,19 @@ export function Mapa({
         );
       }
 
+      if (yo && centro) {
+        L.marker([centro.latitud, centro.longitud], {
+          icon: L.divIcon({ className: '', html: '<span class="mapa-yo"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+          keyboard: false,
+          zIndexOffset: -100,
+        })
+          .bindPopup('<p class="mapa-popup-titulo">Estás acá</p>')
+          .addTo(mapa);
+      }
+
       if (puntos.length > 0) {
         const limites = L.latLngBounds(puntos.map((p) => [p.latitud, p.longitud]));
+        if (yo && centro) limites.extend([centro.latitud, centro.longitud]);
         mapa.fitBounds(limites, { padding: [40, 40], maxZoom: 14 });
       } else if (centro) {
         mapa.setView([centro.latitud, centro.longitud], 12);

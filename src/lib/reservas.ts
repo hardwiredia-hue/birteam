@@ -522,6 +522,8 @@ export async function buscarTurnosLibres(opciones: {
   cerca?: number;
   ciudad?: string | null;
   ubicacion?: { latitud: number; longitud: number } | null;
+  /** Solo canchas a esta distancia o menos de la ubicación. */
+  radioKm?: number | null;
   turnosPorCancha?: number;
   limite?: number;
 }): Promise<CanchaConTurnos[]> {
@@ -572,6 +574,11 @@ export async function buscarTurnosLibres(opciones: {
       });
     }
     if (libres.length === 0) continue;
+    const km =
+      opciones.ubicacion && cancha.latitud != null && cancha.longitud != null
+        ? distanciaKm(opciones.ubicacion.latitud, opciones.ubicacion.longitud, cancha.latitud, cancha.longitud)
+        : null;
+    if (opciones.radioKm != null && (km == null || km > opciones.radioKm)) continue;
     libres.sort((a, b) => a.distancia - b.distancia);
     const elegidos = libres.slice(0, opciones.turnosPorCancha ?? 4).sort((a, b) => a.hora.localeCompare(b.hora));
     resultado.push({
@@ -580,10 +587,7 @@ export async function buscarTurnosLibres(opciones: {
       direccion: cancha.direccion,
       ciudad: cancha.ciudad,
       deporte: cancha.deporte.nombre,
-      km:
-        opciones.ubicacion && cancha.latitud != null && cancha.longitud != null
-          ? distanciaKm(opciones.ubicacion.latitud, opciones.ubicacion.longitud, cancha.latitud, cancha.longitud)
-          : null,
+      km,
       turnos: elegidos.map(({ distancia: _distancia, ...turno }) => turno),
       mismaCiudad: Boolean(opciones.ciudad && cancha.ciudad === opciones.ciudad),
       mejor: libres[0].distancia,
