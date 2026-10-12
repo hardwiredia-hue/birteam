@@ -243,7 +243,7 @@ async function SeccionCanchas({
         </Link>
       </div>
 
-      <div className="tarjeta flex flex-col gap-2 p-4">
+      <div id="verificacion" className="tarjeta flex scroll-mt-6 flex-col gap-2 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold">Verificación de titularidad</p>

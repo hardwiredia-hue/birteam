@@ -8,6 +8,8 @@ import { cobroOnlineHabilitado, comisionPorcentaje, pagosSimulados } from '@/lib
 import { DesconectarMercadoPago } from './mercadopago';
 import { EquipoComplejo } from './equipo';
 import { MapaOcupacion } from './ocupacion';
+import { PuestaAPunto } from './puesta-a-punto';
+import { pasosDelComplejo } from '@/lib/puesta-a-punto';
 import { ocupacionPorFranja } from '@/lib/ocupacion';
 import { formatearPuntaje } from '@/lib/resenas';
 import {
@@ -149,6 +151,12 @@ export default async function MiComplejo({
   });
   const mpVigente = Boolean(cuentaMp && (cuentaMp.expiraEn > ahora || cuentaMp.refreshToken));
   const cobrando = canchas.filter((c) => c.cobroOnline !== 'NO').length;
+  const pasos = pasosDelComplejo({
+    canchas,
+    mercadoPagoDisponible: cobroDisponible,
+    mercadoPagoConectado: mpVigente,
+    verificacion: usuario.verificacion,
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -162,6 +170,8 @@ export default async function MiComplejo({
           {usuario.verificacion === 'VERIFICADA' ? ' · titularidad verificada ✓' : ''}
         </p>
       </header>
+
+      <PuestaAPunto pasos={pasos} />
 
       {mp && MENSAJES_MP[mp] ? (
         <p className={MENSAJES_MP[mp].error ? 'aviso-error' : 'aviso-ok'}>{MENSAJES_MP[mp].texto}</p>
