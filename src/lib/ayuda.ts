@@ -131,7 +131,8 @@ export const TEMAS: Tema[] = [
         titulo: 'Confirmar: Voy, Tal vez, No voy',
         texto: [
           'En el partido respondés Voy, Tal vez o No voy. Lleno el cupo, los siguientes entran a la lista de espera.',
-          'Si alguien se baja, al primero de la lista le llega el aviso y tiene 2 horas para confirmar el lugar; si no contesta, pasa al siguiente.',
+          'Si alguien se baja, al primero de la lista le llega el aviso y tiene 2 horas para confirmar el lugar; si no contesta, pasa al siguiente. En Inicio lo ves con la cuenta regresiva y lo confirmás con un toque.',
+          'Las invitaciones a partidos (de tus grupos o de quien te invitó) también se responden desde Inicio: Voy o No voy, sin entrar al partido.',
           '24 h antes avisamos a los "tal vez" y a los del grupo que no respondieron, y 2 h antes les pedimos que reconfirmen.',
         ],
       },
@@ -526,6 +527,14 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-12',
+    titulo: 'Respondé desde Inicio',
+    texto:
+      'Si se libera un lugar para vos, lo ves arriba de todo con la cuenta regresiva para confirmarlo. Y las invitaciones a partidos se contestan ahí mismo: Voy o No voy.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#confirmar', rotulo: 'Cómo funciona la lista de espera' },
+  },
   {
     fecha: '2026-10-12',
     titulo: 'Elegí la cancha buscándola',

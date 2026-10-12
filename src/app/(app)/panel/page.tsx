@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
+import { Pendientes } from './pendientes';
 import { AvisoNovedad } from '@/components/aviso-novedad';
 import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
@@ -133,6 +134,49 @@ export default async function Inicio() {
     }),
   ]);
 
+  // Lo que espera tu respuesta: un lugar liberado para vos (2 h para
+  // confirmar) y los partidos a los que te invitaron y no contestaste.
+  const hace30dias = new Date(hoy.getTime() - 30 * 86400_000);
+  const [liberados, gruposMios, invitacionesRecibidas] = await Promise.all([
+    prisma.participacion.findMany({
+      where: {
+        usuarioId: usuario.id,
+        estado: 'ESPERA',
+        invitacionExpiraEn: { gt: hoy },
+        partido: { fecha: { gt: hoy }, estado: { in: ['ARMANDOSE', 'CONFIRMADO'] } },
+      },
+      include: { partido: { include: { deporte: { select: { nombre: true } } } } },
+      orderBy: { invitacionExpiraEn: 'asc' },
+    }),
+    prisma.miembroGrupo.findMany({ where: { usuarioId: usuario.id }, select: { grupoId: true } }),
+    prisma.notificacion.findMany({
+      where: { usuarioId: usuario.id, tipo: 'INVITACION', creadoEn: { gte: hace30dias } },
+      select: { url: true },
+    }),
+  ]);
+  const idsInvitado = invitacionesRecibidas
+    .map((n) => n.url?.match(/^\/partidos\/([^/?#]+)/)?.[1])
+    .filter((id): id is string => Boolean(id));
+  const invitaciones = await prisma.partido.findMany({
+    where: {
+      fecha: { gt: hoy },
+      estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+      organizadorId: { not: usuario.id },
+      participaciones: { none: { usuarioId: usuario.id } },
+      OR: [{ grupoId: { in: gruposMios.map((g) => g.grupoId) } }, { id: { in: idsInvitado } }],
+    },
+    include: { deporte: { select: { nombre: true } }, organizador: { select: { nombre: true } } },
+    orderBy: { fecha: 'asc' },
+    take: 3,
+  });
+  const cuando = (fecha: Date) =>
+    `${DIAS[fecha.getDay()]} ${fecha.toLocaleTimeString('es-AR', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Argentina/Buenos_Aires',
+    })}`;
+
   const primerNombre = usuario.nombre.split(' ')[0];
   const deportePrincipal =
     usuario.deportes.find((relacion) => relacion.principal)?.deporte ??
@@ -170,6 +214,21 @@ export default async function Inicio() {
           ) : null}
         </Link>
       </header>
+
+      <Pendientes
+        liberados={liberados.map((p) => ({
+          partidoId: p.partidoId,
+          titulo: `${p.partido.deporte.nombre} · ${cuando(p.partido.fecha)}`,
+          lugar: p.partido.lugarNombre,
+          hasta: p.invitacionExpiraEn!.toISOString(),
+        }))}
+        invitaciones={invitaciones.map((partido) => ({
+          partidoId: partido.id,
+          titulo: `${partido.deporte.nombre} · ${cuando(partido.fecha)}`,
+          lugar: partido.lugarNombre,
+          quien: partido.organizador.nombre.split(' ')[0],
+        }))}
+      />
 
       <Avisos avisos={avisos} />
 

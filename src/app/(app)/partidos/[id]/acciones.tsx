@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Compartir } from '@/components/compartir';
+import { CuentaRegresiva } from '@/components/cuenta-regresiva';
 
 export function BotoneraRsvp({
   partidoId,
@@ -51,8 +52,9 @@ export function BotoneraRsvp({
       {error ? <p className="aviso-error">{error}</p> : null}
       {reservaVigente ? (
         <p className="aviso-ok">
-          Se liberó un lugar y es tuyo hasta las {horaLimite}. Tocá <b>Voy</b> y quedás adentro; si
-          no, pasa al siguiente.
+          Se liberó un lugar y es tuyo hasta las {horaLimite} (quedan{' '}
+          <CuentaRegresiva hasta={invitacionHasta!} alTerminar={() => router.refresh()} className="font-bold" />
+          ). Tocá <b>Voy</b> y quedás adentro; si no, pasa al siguiente.
         </p>
       ) : enEspera ? (
         <p className="aviso-ok border-azul-txt text-azul-txt">
