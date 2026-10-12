@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import { prisma } from '@/lib/db';
 import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
@@ -286,7 +287,8 @@ export default async function Inicio() {
           <div className="flex flex-col gap-2">
             {membresias.map(({ grupo }) => (
               <Link key={grupo.id} href={`/grupos/${grupo.id}`} className="tarjeta flex items-center justify-between gap-3 p-3.5">
-                <div className="min-w-0">
+                <LogoEquipo nombre={grupo.nombre} url={grupo.fotoUrl} tam={36} />
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{grupo.nombre}</p>
                   <p className="t-rotulo mt-0.5">
                     {grupo.deporte.nombre} · {grupo._count.miembros}{' '}

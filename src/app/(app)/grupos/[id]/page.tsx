@@ -7,6 +7,8 @@ import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { AccionesMiembro, CopiarInvitacion, EditarGrupo } from './acciones';
 import { Avatar } from '@/components/avatar';
+import { LogoEquipo } from '@/components/logo-equipo';
+import { SubirLogo } from '@/components/subir-logo';
 
 export const metadata = { title: 'Grupo' };
 export const dynamic = 'force-dynamic';
@@ -45,8 +47,13 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1.5">
-        <p className="t-rotulo text-verde-txt">{grupo.deporte.nombre}</p>
-        <h1 className="t-display text-[26px]">{grupo.nombre}</h1>
+        <div className="flex items-center gap-3">
+          <LogoEquipo nombre={grupo.nombre} url={grupo.fotoUrl} tam={56} />
+          <div className="min-w-0">
+            <p className="t-rotulo text-verde-txt">{grupo.deporte.nombre}</p>
+            <h1 className="t-display text-[26px]">{grupo.nombre}</h1>
+          </div>
+        </div>
         {grupo.descripcion ? <p className="text-sm text-tinta-2">{grupo.descripcion}</p> : null}
         <p className="text-xs text-tinta-3">
           {grupo.miembros.length} {grupo.miembros.length === 1 ? 'miembro' : 'miembros'}
@@ -62,6 +69,16 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
         <Link href={`/desafios/nuevo?grupo=${grupo.id}`} className="btn btn-secundario">
           Desafiar a otro grupo
         </Link>
+      ) : null}
+
+      {soyAdmin ? (
+        <section className="tarjeta flex flex-col gap-3 p-4">
+          <div>
+            <p className="text-sm font-semibold">Logo del grupo</p>
+            <p className="text-xs text-tinta-3">Se ve en el grupo, en los desafíos y en Explorar. Cuadrado queda mejor.</p>
+          </div>
+          <SubirLogo endpoint={`/api/grupos/${grupo.id}/logo`} nombre={grupo.nombre} url={grupo.fotoUrl} />
+        </section>
       ) : null}
 
       {soyAdmin ? (

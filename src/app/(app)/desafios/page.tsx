@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
@@ -12,8 +13,8 @@ export const dynamic = 'force-dynamic';
 
 const incluir = {
   deporte: { select: { nombre: true } },
-  retador: { select: { id: true, nombre: true, ciudad: true, _count: { select: { miembros: true } } } },
-  rival: { select: { id: true, nombre: true } },
+  retador: { select: { id: true, nombre: true, ciudad: true, fotoUrl: true, _count: { select: { miembros: true } } } },
+  rival: { select: { id: true, nombre: true, fotoUrl: true } },
 } as const;
 
 /**
@@ -188,8 +189,8 @@ function TarjetaDesafio({
     nivel: string | null;
     mensaje: string | null;
     deporte: { nombre: string };
-    retador: { nombre: string; _count: { miembros: number } };
-    rival: { nombre: string } | null;
+    retador: { nombre: string; fotoUrl: string | null; _count: { miembros: number } };
+    rival: { nombre: string; fotoUrl: string | null } | null;
   };
   children?: React.ReactNode;
   compatible?: boolean;
@@ -203,11 +204,15 @@ function TarjetaDesafio({
             {desafio.deporte.nombre} · {desafio.jugadoresPorLado} vs {desafio.jugadoresPorLado}
             {desafio.nivel ? ` · ${ROTULOS_NIVEL[desafio.nivel]}` : ''}
           </p>
-          <p className="t-display mt-1 text-[18px]">
-            {desafio.retador.nombre}
-            <span className="text-tinta-3"> vs </span>
-            {desafio.rival ? desafio.rival.nombre : '¿quién se anima?'}
-          </p>
+          <div className="mt-2 flex items-center gap-2.5">
+            <LogoEquipo nombre={desafio.retador.nombre} url={desafio.retador.fotoUrl} tam={36} />
+            <p className="t-display min-w-0 text-[18px]">
+              {desafio.retador.nombre}
+              <span className="text-tinta-3"> vs </span>
+              {desafio.rival ? desafio.rival.nombre : '¿quién se anima?'}
+            </p>
+            {desafio.rival ? <LogoEquipo nombre={desafio.rival.nombre} url={desafio.rival.fotoUrl} tam={36} /> : null}
+          </div>
         </div>
         {compatible ? (
           <span className="t-rotulo shrink-0 text-naranja-txt">Para vos</span>

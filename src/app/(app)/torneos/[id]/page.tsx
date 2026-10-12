@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
+import { SubirLogo } from '@/components/subir-logo';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -35,6 +37,10 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
   const organizo = torneo.organizadorId === usuario.id;
   const miEquipo = torneo.equipos.find((equipo) => equipo.capitanId === usuario.id);
   const nombrePorId = new Map(torneo.equipos.map((equipo) => [equipo.id, equipo.nombre]));
+  const logoPorId = new Map(torneo.equipos.map((equipo) => [equipo.id, equipo.logoUrl]));
+  const logo = (equipoId: string, tam: number) => (
+    <LogoEquipo nombre={nombrePorId.get(equipoId) ?? ''} url={logoPorId.get(equipoId)} tam={tam} />
+  );
   const tabla = calcularTabla(torneo.equipos, torneo.partidos);
   const pendientes = torneo.partidos.filter((partido) => partido.golesLocal === null).length;
   const campeon = torneo.estado === 'TERMINADO' ? tabla[0] : null;
@@ -84,8 +90,11 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
           ) : (
             <div>
               {torneo.equipos.map((equipo) => (
-                <div key={equipo.id} className="flex items-baseline justify-between gap-3 border-b border-borde py-2.5 last:border-b-0">
-                  <span className="text-sm font-semibold">{equipo.nombre}</span>
+                <div key={equipo.id} className="flex items-center justify-between gap-3 border-b border-borde py-2.5 last:border-b-0">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    {logo(equipo.id, 28)}
+                    <span className="truncate text-sm font-semibold">{equipo.nombre}</span>
+                  </span>
                   <span className="text-xs text-tinta-3">capitán @{equipo.capitan.usuario}</span>
                 </div>
               ))}
@@ -137,7 +146,12 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
                       <td className="px-2 py-1.5 t-rotulo" style={{ color: indice < 1 ? 'var(--verde-txt)' : undefined }}>
                         {indice + 1}
                       </td>
-                      <td className="px-2 py-1.5 font-semibold">{fila.nombre}</td>
+                      <td className="px-2 py-1.5 font-semibold">
+                        <span className="flex items-center gap-2">
+                          {logo(fila.equipoId, 20)}
+                          {fila.nombre}
+                        </span>
+                      </td>
                       <td className="px-2 py-1.5 text-center">{fila.pj}</td>
                       <td className="px-2 py-1.5 text-center">{fila.pg}</td>
                       <td className="px-2 py-1.5 text-center">{fila.pe}</td>
@@ -165,8 +179,9 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
                     .filter((partido) => partido.ronda === ronda)
                     .map((partido) => (
                       <div key={partido.id} className="tarjeta flex items-center gap-2 p-3">
-                        <span className="min-w-0 flex-1 truncate text-right text-sm font-semibold">
-                          {nombrePorId.get(partido.localId)}
+                        <span className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right text-sm font-semibold">
+                          <span className="truncate">{nombrePorId.get(partido.localId)}</span>
+                          {logo(partido.localId, 22)}
                         </span>
                         {partido.golesLocal !== null ? (
                           <span className="t-display flex-shrink-0 px-1 text-[16px] tabular">
@@ -177,8 +192,9 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
                         ) : (
                           <span className="t-rotulo flex-shrink-0 px-1">vs</span>
                         )}
-                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                          {nombrePorId.get(partido.visitanteId)}
+                        <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold">
+                          {logo(partido.visitanteId, 22)}
+                          <span className="truncate">{nombrePorId.get(partido.visitanteId)}</span>
                         </span>
                       </div>
                     ))}
@@ -192,6 +208,20 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
           ) : null}
         </>
       )}
+
+      {miEquipo && torneo.estado !== 'TERMINADO' ? (
+        <section className="tarjeta flex flex-col gap-3 p-4">
+          <div>
+            <p className="text-sm font-semibold">Logo de {miEquipo.nombre}</p>
+            <p className="text-xs text-tinta-3">Se ve en la tabla, el fixture y la página pública del torneo.</p>
+          </div>
+          <SubirLogo
+            endpoint={`/api/torneos/${torneo.id}/equipos/${miEquipo.id}/logo`}
+            nombre={miEquipo.nombre}
+            url={miEquipo.logoUrl}
+          />
+        </section>
+      ) : null}
 
       <Link href={`/birtsocial?compartir=torneo:${torneo.id}`} className="btn btn-fantasma">
         Compartir en BirtSocial

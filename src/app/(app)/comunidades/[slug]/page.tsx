@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -189,6 +190,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
           <div className="flex flex-col gap-2">
             {grupos.map((grupo) => (
               <div key={grupo.id} className="tarjeta flex items-center gap-3 p-4">
+                <LogoEquipo nombre={grupo.nombre} url={grupo.fotoUrl} tam={40} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{grupo.nombre}</p>
                   <p className="t-rotulo mt-0.5">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -78,6 +79,19 @@ export default async function TorneoPublico({ params }: { params: Promise<{ toke
                     : 'terminado'}
             </span>
           </div>
+          {torneo.equipos.length > 0 ? (
+            <div className="flex flex-col gap-2 border-t border-borde pt-3">
+              {torneo.equipos.slice(0, 12).map((equipo) => (
+                <div key={equipo.id} className="flex items-center gap-2.5">
+                  <LogoEquipo nombre={equipo.nombre} url={equipo.logoUrl} tam={28} />
+                  <span className="truncate text-sm font-semibold">{equipo.nombre}</span>
+                </div>
+              ))}
+              {torneo.equipos.length > 12 ? (
+                <p className="text-xs text-tinta-3">y {torneo.equipos.length - 12} más</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         {usuario ? (

@@ -505,6 +505,7 @@ model Grupo {
   nombre          String
   slug            String   @unique
   descripcion     String?
+  // Logo del grupo (lo suben sus administradores).
   fotoUrl         String?
   deporteId       String
   deporte         Deporte  @relation(fields: [deporteId], references: [id])
@@ -710,6 +711,8 @@ model EquipoTorneo {
   nombre    String
   capitanId String
   capitan   Usuario  @relation("equiposCapitan", fields: [capitanId], references: [id])
+  // Logo del equipo (lo sube el capitán o quien organiza el torneo).
+  logoUrl   String?
   creadoEn  DateTime @default(now())
 
   deLocal     PartidoTorneo[] @relation("local")

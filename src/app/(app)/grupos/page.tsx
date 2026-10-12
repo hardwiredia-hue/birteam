@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 
@@ -49,7 +50,10 @@ export default async function Grupos() {
                 <span className="t-rotulo text-verde-txt">{grupo.deporte.nombre}</span>
                 {rol === 'ADMIN' ? <span className="t-rotulo">admin</span> : null}
               </div>
-              <p className="t-display text-[19px]">{grupo.nombre}</p>
+              <div className="flex items-center gap-3">
+                <LogoEquipo nombre={grupo.nombre} url={grupo.fotoUrl} tam={40} />
+                <p className="t-display min-w-0 text-[19px]">{grupo.nombre}</p>
+              </div>
               <p className="text-xs text-tinta-3">
                 {grupo._count.miembros} {grupo._count.miembros === 1 ? 'miembro' : 'miembros'}
                 {grupo.ciudad ? ` · ${grupo.ciudad}` : ''}

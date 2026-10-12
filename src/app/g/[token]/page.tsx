@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -43,8 +44,13 @@ export default async function InvitacionGrupo({ params }: { params: Promise<{ to
         <p className="t-rotulo text-verde-txt">Te invitaron a un grupo</p>
 
         <div className="tarjeta flex flex-col gap-3 p-5">
-          <p className="t-rotulo text-verde-txt">{grupo.deporte.nombre}</p>
-          <p className="t-display text-[28px]">{grupo.nombre}</p>
+          <div className="flex items-center gap-3">
+            <LogoEquipo nombre={grupo.nombre} url={grupo.fotoUrl} tam={56} />
+            <div className="min-w-0">
+              <p className="t-rotulo text-verde-txt">{grupo.deporte.nombre}</p>
+              <p className="t-display text-[28px]">{grupo.nombre}</p>
+            </div>
+          </div>
           {grupo.descripcion ? <p className="text-sm text-tinta-2">{grupo.descripcion}</p> : null}
           <p className="text-xs text-tinta-3">
             {grupo._count.miembros} {grupo._count.miembros === 1 ? 'miembro' : 'miembros'}

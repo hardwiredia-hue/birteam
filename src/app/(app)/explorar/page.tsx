@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoEquipo } from '@/components/logo-equipo';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
@@ -620,6 +621,7 @@ async function GruposAbiertos({
     <div className="flex flex-col gap-2">
       {lista.map((grupo) => (
         <div key={grupo.id} className="tarjeta flex items-center gap-3 p-4">
+          <LogoEquipo nombre={grupo.nombre} url={grupo.fotoUrl} tam={40} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{grupo.nombre}</p>
             <p className="t-rotulo mt-0.5">

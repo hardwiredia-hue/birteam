@@ -383,6 +383,11 @@ export const esquemaReserva = z.object({
   nota: z.string().trim().max(200, 'La nota es muy larga.').nullish(),
 });
 
+/** Logo de un grupo o equipo: nombre de archivo ya subido a /api/archivos; null lo saca. */
+export const esquemaLogo = z.object({
+  logo: z.string().regex(/^[0-9a-f-]{36}\.(jpg|png|webp)$/, 'Imagen inválida.').nullable(),
+});
+
 export const esquemaTurnoFijo = z.object({
   diaSemana: z.coerce.number().int().min(0).max(6),
   hora: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora inválida.'),
