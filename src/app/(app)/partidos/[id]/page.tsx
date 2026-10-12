@@ -11,6 +11,7 @@ import { Moderacion } from '@/components/moderacion';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
+import { Equipos } from './equipos';
 import { AgregarCalendario } from '@/components/agregar-calendario';
 import { eventoDe } from '@/lib/calendario-eventos';
 import { enlaceGoogle } from '@/lib/calendario';
@@ -280,6 +281,16 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           }))} />
         ) : null}
       </section>
+
+      {!cerrado && voy.length >= 2 ? (
+        <Equipos
+          partidoId={partido.id}
+          organiza={organizo}
+          rutaPublica={`/p/${partido.tokenPublico}`}
+          cuando={`${DIAS[partido.fecha.getDay()]} ${hora}`}
+          jugadores={voy.map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre, equipo: p.equipo }))}
+        />
+      ) : null}
 
       {partido.organizadorId === usuario.id && !cerrado ? (
         <ElegirCoorganizador

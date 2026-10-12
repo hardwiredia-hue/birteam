@@ -607,6 +607,8 @@ model Participacion {
   pago               Boolean   @default(false)
   // Pasar lista post-partido: null = sin registrar.
   asistio            Boolean?
+  // Equipo armado por el organizador: 1 = con pechera, 2 = sin pechera.
+  equipo             Int?
   creadoEn           DateTime  @default(now())
   actualizadoEn      DateTime  @updatedAt
 
