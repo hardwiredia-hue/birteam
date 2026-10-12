@@ -1,3 +1,4 @@
+import { ComoLlegar } from '@/components/como-llegar';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -151,6 +152,7 @@ export default async function CanchaPublica({ params }: { params: Promise<{ id: 
           {cancha.ciudad ? ` · ${cancha.ciudad}` : ''}
           {cancha.provincia ? `, ${cancha.provincia}` : ''}
         </p>
+        <ComoLlegar lugar={cancha} className="mt-1.5" />
         {resumen._count._all > 0 ? (
           <p className="mt-1 text-sm">
             <span className="text-naranja-txt">★ {formatearPuntaje(promedio)}</span>

@@ -87,6 +87,7 @@ export const TEMAS: Tema[] = [
           'En Inicio, "Cerca tuyo" te muestra los partidos abiertos de tus deportes que quedan más cerca y a los que todavía no te sumaste.',
           'Se mide desde el centro de la ciudad de tu perfil. Para medir desde donde estás, tocá "Usar mi ubicación" y aceptá el permiso del navegador. Eligiendo 2, 5, 15, 30 o 50 km ves solo lo que queda dentro de esa distancia.',
           'Tu ubicación queda solo en tu navegador, redondeada a unos 100 m, durante 6 horas: no se guarda en tu cuenta ni se muestra a nadie. Con "Usar mi ciudad" la dejás de usar, y se borra al salir de tu cuenta.',
+          'En cada cancha y cada partido, "Cómo llegar" abre el mapa del celular con el destino cargado y te dice a cuántos km está.',
           'Los avisos de partidos que buscan jugadores y del Radar te llegan hasta la distancia que elijas en Perfil → Ajustes (5, 15, 30 o 50 km desde tu ciudad).',
           'Si dice que no diste permiso, activalo desde el candado de la barra de direcciones (o en los ajustes de ubicación del celular) y probá de nuevo.',
         ],

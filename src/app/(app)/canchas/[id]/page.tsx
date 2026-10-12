@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
+import { ComoLlegar } from '@/components/como-llegar';
+import { kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import { suscripcionActiva } from '@/lib/suscripcion';
 import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
@@ -142,6 +144,7 @@ export default async function DetalleCancha({
           {cancha.ciudad ? ` · ${cancha.ciudad}` : ''}
           {cancha.provincia ? `, ${cancha.provincia}` : ''}
         </p>
+        <ComoLlegar lugar={cancha} km={kmHasta(await ubicacionDe(usuario), cancha)} className="mt-1.5" />
         {resumen._count._all > 0 ? (
           <a href="#resenas" className="mt-1 flex items-center gap-2 text-sm">
             <Estrellas puntaje={resumen._avg.puntaje ?? 0} />

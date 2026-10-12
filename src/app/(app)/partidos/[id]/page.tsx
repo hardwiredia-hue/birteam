@@ -5,6 +5,8 @@ import { ROTULOS_NIVEL } from '@/lib/constantes';
 import { claveDia, turnosLibresParaPartido } from '@/lib/reservas';
 import { VincularTurno } from './vincular';
 import { usuarioActual } from '@/lib/auth';
+import { ComoLlegar } from '@/components/como-llegar';
+import { kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import { formatearPlata } from '@/lib/formato';
 import { Chat } from '@/components/chat';
 import { Moderacion } from '@/components/moderacion';
@@ -147,6 +149,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           )}
           {partido.direccion ? ` · ${partido.direccion}` : ''}
         </p>
+        <ComoLlegar lugar={{ ...partido, direccion: partido.direccion ?? partido.lugarNombre }} km={kmHasta(await ubicacionDe(usuario), partido)} />
         {partido.lugarTelefono ? (
           <a
             href={`tel:${partido.lugarTelefono.replace(/[^+0-9]/g, '')}`}
