@@ -230,8 +230,6 @@ export function Asistente({
   const [lugarTelefono, setLugarTelefono] = useState(canchaDelTurno?.telefono ?? '');
   // Cancha publicada elegida como sede: su gestión define qué días se puede jugar.
   const [canchaElegida, setCanchaElegida] = useState<CanchaElegible | null>(canchaDelTurno);
-  // Lugar de la comunidad elegido de la lista (si no, se crea con lo escrito).
-  const [lugarId, setLugarId] = useState<string | null>(null);
   const [invitados, setInvitados] = useState<{ id: string; nombre: string }[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [resultados, setResultados] = useState<{ id: string; nombre: string; usuario: string }[]>([]);
@@ -276,7 +274,6 @@ export function Asistente({
     if (ultimo.grupoId && listaGrupos.some((g) => g.id === ultimo.grupoId)) setGrupoId(ultimo.grupoId);
     const cancha = canchas.find((c) => c.id === ultimo.canchaId) ?? null;
     setCanchaElegida(cancha);
-    setLugarId(null);
     setLugarNombre(ultimo.lugarNombre);
     setDireccion(ultimo.direccion ?? '');
     setLugarTelefono(ultimo.lugarTelefono ?? '');
@@ -294,7 +291,6 @@ export function Asistente({
 
   function elegirCancha(cancha: CanchaElegible) {
     setCanchaElegida(cancha);
-    setLugarId(null);
     setLugarNombre(cancha.nombre);
     setDireccion(cancha.direccion ?? '');
     setLugarTelefono(cancha.telefono ?? '');
@@ -325,7 +321,6 @@ export function Asistente({
         direccion: direccion.trim() || null,
         lugarTelefono: lugarTelefono.trim() || null,
         canchaId: canchaElegida?.id ?? null,
-        lugarId: canchaElegida ? null : lugarId,
         reservaId:
           turnoInicial && canchaElegida?.id === turnoInicial.canchaId ? turnoInicial.reservaId : null,
         invitadoIds: invitados.map((i) => i.id),
@@ -508,10 +503,8 @@ export function Asistente({
           direccion={direccion}
           telefono={lugarTelefono}
           canchaElegida={canchaElegida}
-          lugarId={lugarId}
           alEscribir={(texto) => {
             setCanchaElegida(null);
-            setLugarId(null);
             setLugarNombre(texto);
             if (!texto) {
               setDireccion('');
@@ -521,7 +514,6 @@ export function Asistente({
           alElegirCancha={elegirCancha}
           alElegirLugar={(lugar) => {
             setCanchaElegida(null);
-            setLugarId(lugar.id);
             setLugarNombre(lugar.nombre);
             setDireccion(lugar.direccion ?? '');
             setLugarTelefono(lugar.telefono ?? '');

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { formatearDistancia } from '@/lib/geo';
-import type { CanchaParaElegir, LugarParaElegir } from '@/lib/lugares';
+import type { CanchaParaElegir } from '@/lib/lugares';
 
 export type CanchaElegible = Omit<CanchaParaElegir, 'km'> & { km?: number | null };
 
@@ -15,10 +15,10 @@ const normalizar = (texto: string) =>
     .trim();
 
 /**
- * "¿Dónde juegan?": buscás la cancha o el lugar entre lo que ya está en
- * birteam (canchas publicadas y lugares que cargó la comunidad, lo más cerca
- * primero). Si no está, se crea al crear el partido y queda para todos. Un
- * dueño puede publicar su cancha desde acá mismo.
+ * "¿Dónde juegan?": buscás entre las canchas publicadas en birteam (lo más
+ * cerca primero) y elegís una. Si no está, escribís dónde juegan y eso queda
+ * solo en el partido: no se guarda como cancha. Las canchas las cargan sus
+ * dueños; uno puede publicar la suya desde acá mismo.
  */
 export function PasoDonde({
   deporteId,
@@ -31,7 +31,6 @@ export function PasoDonde({
   direccion,
   telefono,
   canchaElegida,
-  lugarId,
   alEscribir,
   alElegirCancha,
   alElegirLugar,
@@ -49,19 +48,18 @@ export function PasoDonde({
   direccion: string;
   telefono: string;
   canchaElegida: CanchaElegible | null;
-  lugarId: string | null;
   alEscribir: (texto: string) => void;
   alElegirCancha: (cancha: CanchaElegible) => void;
-  alElegirLugar: (lugar: { id: string | null; nombre: string; direccion: string | null; telefono: string | null }) => void;
+  /** Uno de los lugares donde ya organizó (se completa el formulario). */
+  alElegirLugar: (lugar: { nombre: string; direccion: string | null; telefono: string | null }) => void;
   setDireccion: (texto: string) => void;
   setTelefono: (texto: string) => void;
 }) {
-  const [resultados, setResultados] = useState<{ canchas: CanchaParaElegir[]; lugares: LugarParaElegir[] } | null>(null);
-  const [buscando, setBuscando] = useState(false);
+  const [resultados, setResultados] = useState<{ canchas: CanchaParaElegir[] } | null>(null);
   const [publicando, setPublicando] = useState(false);
   const [aviso, setAviso] = useState<{ error: boolean; texto: string } | null>(null);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const elegido = canchaElegida != null || lugarId != null;
+  const elegido = canchaElegida != null;
   const texto = lugarNombre.trim();
 
   // Sin texto: lo que hay cerca. Con texto: lo que coincide (con una pausa
@@ -71,7 +69,6 @@ export function PasoDonde({
     if (temporizador.current) clearTimeout(temporizador.current);
     temporizador.current = setTimeout(
       async () => {
-        setBuscando(true);
         try {
           const parametros = new URLSearchParams();
           if (texto.length >= 2) parametros.set('q', texto);
@@ -80,8 +77,6 @@ export function PasoDonde({
           if (respuesta.ok) setResultados(await respuesta.json());
         } catch {
           // Sin conexión: se puede escribir igual.
-        } finally {
-          setBuscando(false);
         }
       },
       texto.length >= 2 ? 250 : 0
@@ -93,8 +88,7 @@ export function PasoDonde({
 
   const conTexto = texto.length >= 2;
   const canchas = resultados?.canchas ?? [];
-  const lugares = resultados?.lugares ?? [];
-  const yaEsta = [...canchas, ...lugares].some((r) => normalizar(r.nombre) === normalizar(texto));
+  const yaEsta = canchas.some((c) => normalizar(c.nombre) === normalizar(texto));
 
   async function publicarMiCancha() {
     if (direccion.trim().length < 2) {
@@ -147,17 +141,15 @@ export function PasoDonde({
       </h1>
 
       {elegido ? (
-        <div className="tarjeta flex items-start justify-between gap-3 p-4" style={{ borderColor: canchaElegida ? 'var(--naranja-txt)' : 'var(--verde)' }}>
+        <div className="tarjeta flex items-start justify-between gap-3 p-4" style={{ borderColor: 'var(--naranja-txt)' }}>
           <div className="min-w-0">
-            <p className={canchaElegida ? 't-rotulo text-naranja-txt' : 't-rotulo text-verde-txt'}>
-              {canchaElegida ? `Cancha en birteam · ${canchaElegida.deporte}` : 'Lugar'}
-            </p>
+            <p className="t-rotulo text-naranja-txt">Cancha en birteam · {canchaElegida.deporte}</p>
             <p className="mt-0.5 truncate text-[15px] font-semibold">{lugarNombre}</p>
-            {direccion || canchaElegida?.ciudad ? (
+            {direccion || canchaElegida.ciudad ? (
               <p className="truncate text-xs text-tinta-3">
                 {direccion}
-                {direccion && canchaElegida?.ciudad ? ' · ' : ''}
-                {canchaElegida?.ciudad ?? ''}
+                {direccion && canchaElegida.ciudad ? ' · ' : ''}
+                {canchaElegida.ciudad ?? ''}
               </p>
             ) : null}
           </div>
@@ -173,7 +165,7 @@ export function PasoDonde({
           <input
             id="lugar"
             className="campo"
-            placeholder="Buscá o escribí: El Potrero, Club Atlético…"
+            placeholder="Buscá la cancha o escribí dónde juegan"
             autoComplete="off"
             value={lugarNombre}
             onChange={(evento) => alEscribir(evento.target.value)}
@@ -195,7 +187,7 @@ export function PasoDonde({
               <button
                 key={propio.id}
                 type="button"
-                onClick={() => alElegirLugar({ id: null, nombre: propio.nombre, direccion: propio.direccion, telefono: propio.telefono })}
+                onClick={() => alElegirLugar(propio)}
                 className="chip-sel"
               >
                 {propio.nombre}
@@ -205,9 +197,9 @@ export function PasoDonde({
         </div>
       ) : null}
 
-      {!elegido && (canchas.length > 0 || lugares.length > 0) ? (
+      {!elegido && canchas.length > 0 ? (
         <div className="flex flex-col gap-2" aria-live="polite">
-          <span className="rotulo-campo">{conTexto ? 'En birteam' : 'Cerca tuyo'}</span>
+          <span className="rotulo-campo">{conTexto ? 'Canchas en birteam' : 'Canchas cerca tuyo'}</span>
           {canchas.map((cancha) => (
             <button key={cancha.id} type="button" onClick={() => alElegirCancha(cancha)} className="tarjeta p-3.5 text-left hover:border-borde-2">
               <span className="flex items-baseline justify-between gap-3">
@@ -222,53 +214,44 @@ export function PasoDonde({
               </span>
             </button>
           ))}
-          {lugares.map((lugar) => (
-            <button key={lugar.id} type="button" onClick={() => alElegirLugar(lugar)} className="tarjeta p-3.5 text-left hover:border-borde-2">
-              <span className="flex items-baseline justify-between gap-3">
-                <span className="t-rotulo text-verde-txt">
-                  Lugar{lugar.usos > 1 ? ` · ${lugar.usos} partidos` : ''}
-                </span>
-                {lugar.km != null ? <span className="t-rotulo tabular">a {formatearDistancia(lugar.km)}</span> : null}
-              </span>
-              <span className="mt-0.5 block text-sm font-semibold">{lugar.nombre}</span>
-              {lugar.direccion || lugar.ciudad ? (
-                <span className="mt-0.5 block truncate text-xs text-tinta-3">
-                  {lugar.direccion ?? ''}
-                  {lugar.direccion && lugar.ciudad ? ' · ' : ''}
-                  {lugar.ciudad ?? ''}
-                </span>
-              ) : null}
-            </button>
-          ))}
         </div>
       ) : null}
 
-      {!elegido && conTexto && !buscando && !yaEsta ? (
+      {!elegido && conTexto && !yaEsta ? (
         <div className="tarjeta flex flex-col gap-3 p-4">
           <div>
-            <p className="text-[15px] font-semibold">Nuevo: &ldquo;{texto}&rdquo;</p>
+            <p className="text-[15px] font-semibold">Juegan en &ldquo;{texto}&rdquo;</p>
             <p className="text-xs text-tinta-3">
-              Queda guardado en birteam{ciudad ? ` (${ciudad})` : ''}: la próxima vez vos y cualquiera lo encuentran
-              buscándolo.
+              {canchas.length > 0 ? 'No es ninguna de las de arriba: ' : 'No está publicada en birteam: '}
+              se usa solo para este partido, no queda guardada como cancha.
             </p>
           </div>
           <Datos direccion={direccion} telefono={telefono} setDireccion={setDireccion} setTelefono={setTelefono} />
           {esDueno ? (
-            <div className="flex flex-col gap-1.5 border-t border-borde pt-3">
+            <div className="flex flex-col gap-2 border-t border-borde pt-3">
+              <div>
+                <p className="text-sm font-semibold">¿Es tu cancha?</p>
+                <p className="text-xs text-tinta-3">
+                  Como sos dueño, la podés cargar acá: queda publicada en tu complejo, con turnos para reservar. Precio,
+                  horarios y fotos los completás después.
+                </p>
+              </div>
               <button type="button" onClick={publicarMiCancha} disabled={publicando} className="btn btn-secundario btn-sm self-start">
-                {publicando ? 'Publicando…' : 'Es mi cancha: publicarla en birteam'}
+                {publicando ? 'Publicando…' : 'Sí, cargarla en birteam'}
               </button>
-              <p className="text-xs text-tinta-3">
-                Queda como cancha de tu complejo, con turnos para reservar. El resto lo completás después.
-              </p>
             </div>
-          ) : null}
+          ) : (
+            <p className="border-t border-borde pt-3 text-xs text-tinta-3">
+              ¿Sos el dueño de esta cancha? Las canchas las publican sus dueños con una{' '}
+              <a href="/ayuda/complejos#cuenta-complejo" className="font-semibold text-tinta-2 underline">
+                cuenta de complejo
+              </a>
+              .
+            </p>
+          )}
         </div>
       ) : null}
 
-      {elegido && !canchaElegida ? (
-        <Datos direccion={direccion} telefono={telefono} setDireccion={setDireccion} setTelefono={setTelefono} />
-      ) : null}
     </section>
   );
 }

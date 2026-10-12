@@ -109,9 +109,9 @@ model LugarGuardado {
   @@unique([usuarioId, nombre])
 }
 
-// Lugares donde se juega que carga la comunidad al crear un partido (clubes,
-// plazas, canchas que no están publicadas en birteam). Los ve y elige todo
-// el mundo; las canchas publicadas por sus dueños van aparte (Cancha).
+// SIN USO: lugares compartidos que cargaba la comunidad. Se decidió que solo
+// los dueños cargan canchas (Cancha) y lo que escribe un jugador queda solo en
+// su partido. Se deja la tabla para no borrar datos sin consentimiento.
 model Lugar {
   id         String    @id @default(cuid())
   nombre     String

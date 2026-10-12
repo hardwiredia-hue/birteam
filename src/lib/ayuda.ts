@@ -115,14 +115,14 @@ export const TEMAS: Tema[] = [
         titulo: 'Crear un partido',
         pasos: [
           'Tocá el "+" y elegí el deporte (y el tipo: Fútbol 5, 7 u 11…).',
-          'Elegí dónde: buscá la cancha o el lugar (te mostramos los que están cerca). Si no está, escribilo y se crea.',
+          'Elegí dónde: buscá la cancha entre las publicadas (te mostramos las que están cerca). Si no está, escribí dónde juegan.',
           'Elegí día y hora; podés hacer que se repita todas las semanas.',
           'Cupo y mínimo: te sugerimos según el deporte (Fútbol 7 → 14).',
           'Costo por jugador (opcional) y si es abierto o solo para tu grupo.',
         ],
         texto: [
           'Con "Repetir el último" se carga todo lo de tu partido anterior y te propone la próxima fecha.',
-          'Los lugares que escribe la gente (clubes, plazas, canchas que no están en birteam) quedan guardados para todos: la próxima vez, vos o cualquiera lo encuentra buscándolo, con su dirección y contacto. Si escribís uno que ya existe en tu ciudad, se usa ese, no se repite.',
+          'Lo que escribís a mano (un club, una plaza, una cancha que no está en birteam) se usa solo para ese partido: no queda guardado como cancha. Las canchas las publican sus dueños con una cuenta de complejo.',
         ],
         enlace: { href: '/crear', rotulo: 'Crear partido' },
       },
@@ -335,7 +335,7 @@ export const TEMAS: Tema[] = [
           '¿Varias iguales? Con "Canchas iguales" publicás hasta 10 de una (Cancha 1, 2, 3…).',
         ],
         texto: [
-          'También podés publicarla al crear un partido: en "¿Dónde juegan?" escribí el nombre y la dirección y tocá "Es mi cancha: publicarla en birteam". Queda con horario de 9 a 23 todos los días; precio, horarios y fotos los completás después desde Mi complejo.',
+          'También podés publicarla al crear un partido: en "¿Dónde juegan?" escribí el nombre y la dirección y, en "¿Es tu cancha?", tocá "Sí, cargarla en birteam". Queda con horario de 9 a 23 todos los días; precio, horarios y fotos los completás después desde Mi complejo.',
         ],
         enlace: { href: '/canchas/nueva', rotulo: 'Publicar cancha' },
       },

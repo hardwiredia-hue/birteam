@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { coordenadasDelLugar } from '@/lib/coordenadas';
-import { lugarParaPartido } from '@/lib/lugares';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaPartido, erroresDeZod } from '@/lib/validacion';
@@ -65,25 +64,9 @@ export async function POST(request: Request) {
     miembrosDelGrupo = miembros;
   }
 
-  // Fuera de una cancha publicada, el lugar queda en birteam para todos
-  // (el elegido de la lista, uno igual que ya estaba o uno nuevo).
-  const lugar = canchaId
-    ? null
-    : await lugarParaPartido({
-        lugarId: d.lugarId,
-        nombre: d.lugarNombre,
-        direccion: d.direccion,
-        telefono: d.lugarTelefono,
-        ciudad: d.ciudad ?? usuario.ciudad,
-        provincia: d.provincia ?? usuario.provincia,
-        creadorId: usuario.id,
-      });
-  const ciudad = lugar?.ciudad ?? d.ciudad ?? usuario.ciudad;
-  const provincia = lugar?.provincia ?? d.provincia ?? usuario.provincia;
-  const coordenadas =
-    lugar?.latitud != null && lugar.longitud != null
-      ? { latitud: lugar.latitud, longitud: lugar.longitud }
-      : await coordenadasDelLugar({ canchaId, ciudad, provincia });
+  const ciudad = d.ciudad ?? usuario.ciudad;
+  const provincia = d.provincia ?? usuario.provincia;
+  const coordenadas = await coordenadasDelLugar({ canchaId, ciudad, provincia });
 
   const partido = await prisma.partido.create({
     data: {
@@ -96,7 +79,6 @@ export async function POST(request: Request) {
       direccion: d.direccion ?? null,
       lugarTelefono: d.lugarTelefono ?? null,
       canchaId,
-      lugarId: lugar?.id ?? null,
       ciudad,
       provincia,
       latitud: coordenadas?.latitud ?? null,
