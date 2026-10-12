@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { AgregarCalendario } from '@/components/agregar-calendario';
+import { eventoDe } from '@/lib/calendario-eventos';
+import { enlaceGoogle } from '@/lib/calendario';
 import { prisma } from '@/lib/db';
 import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
@@ -125,6 +128,17 @@ export default async function Reservas() {
   // Historial de quienes piden: lo que ayuda a decidir si confirmar.
   const antecedentes = await historialDeTurnos(pendientes.map((reserva) => reserva.usuarioId));
 
+  // Links de calendario de lo confirmado (turnos y fijos).
+  const calendario = new Map<string, string>();
+  for (const reserva of mias.filter((r) => r.estado === 'CONFIRMADA')) {
+    const evento = await eventoDe('reserva', reserva.id, usuario.id);
+    if (evento) calendario.set(reserva.id, enlaceGoogle(evento));
+  }
+  for (const fijo of misFijos) {
+    const evento = await eventoDe('fijo', fijo.id, usuario.id);
+    if (evento) calendario.set(fijo.id, enlaceGoogle(evento));
+  }
+
   const nada = mias.length === 0 && historial.length === 0 && pendientes.length === 0 && agenda.length === 0;
 
   return (
@@ -219,6 +233,11 @@ export default async function Reservas() {
                 <p className="mt-0.5 text-xs text-tinta-3">
                   Todas las semanas · {fijo.cancha.direccion}. Si una semana no van, cancelala abajo.
                 </p>
+                {calendario.has(fijo.id) ? (
+                  <div className="mt-2">
+                    <AgregarCalendario ics={`/api/calendario/fijo/${fijo.id}`} google={calendario.get(fijo.id)!} />
+                  </div>
+                ) : null}
               </div>
               <DejarFijo canchaId={fijo.cancha.id} fijoId={fijo.id} rotulo={rotuloFijo(fijo).toLowerCase()} />
             </div>
@@ -294,6 +313,11 @@ export default async function Reservas() {
                   {reserva.cancha.direccion}
                   {reserva.cancha.telefono ? ` · ${reserva.cancha.telefono}` : ''}
                 </p>
+                {calendario.has(reserva.id) && !reserva.turnoFijoId ? (
+                  <div className="mt-2">
+                    <AgregarCalendario ics={`/api/calendario/reserva/${reserva.id}`} google={calendario.get(reserva.id)!} />
+                  </div>
+                ) : null}
                 {reserva.partidoId ? (
                   <Link href={`/partidos/${reserva.partidoId}`} className="mt-1 inline-block text-xs font-semibold text-verde-txt">
                     Ver el partido armado →

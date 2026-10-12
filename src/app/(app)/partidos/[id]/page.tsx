@@ -11,6 +11,9 @@ import { Moderacion } from '@/components/moderacion';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
+import { AgregarCalendario } from '@/components/agregar-calendario';
+import { eventoDe } from '@/lib/calendario-eventos';
+import { enlaceGoogle } from '@/lib/calendario';
 import {
   BotoneraRsvp,
   CancelarPartido,
@@ -50,6 +53,11 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   const organizo = partido.organizadorId === usuario.id || partido.coOrganizadorId === usuario.id;
   const yaPaso = partido.fecha < new Date();
   const cerrado = partido.estado === 'JUGADO' || partido.estado === 'CANCELADO';
+  // Para agendarlo: quien va o lo organiza, si todavía no se jugó.
+  const evento =
+    !yaPaso && !cerrado && (organizo || mia?.estado === 'VOY' || mia?.estado === 'TALVEZ')
+      ? await eventoDe('partido', partido.id, usuario.id)
+      : null;
   // Partido que salió de un desafío entre grupos.
   const desafio = await prisma.desafio.findFirst({
     where: { partidoId: partido.id },
@@ -145,6 +153,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
             </>
           ) : null}
         </p>
+        {evento ? <AgregarCalendario ics={`/api/calendario/partido/${partido.id}`} google={enlaceGoogle(evento)} /> : null}
       </header>
 
       {partido.nivel ? (
