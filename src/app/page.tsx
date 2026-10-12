@@ -80,7 +80,8 @@ export default async function Portada({
         </Link>
       </p>
       <p className="mt-4 text-center text-xs text-tinta-3">
-        <Link href="/terminos">Términos</Link> · <Link href="/privacidad">Privacidad</Link>
+        <Link href="/ayuda">Ayuda</Link> · <Link href="/terminos">Términos</Link> ·{' '}
+        <Link href="/privacidad">Privacidad</Link>
       </p>
     </main>
   );

@@ -364,6 +364,21 @@
     color: var(--tinta-3);
   }
 
+  /* ---------- ayuda ---------- */
+  .pregunta > summary {
+    list-style: none;
+  }
+  .pregunta > summary::-webkit-details-marker {
+    display: none;
+  }
+  .ancla-ayuda {
+    scroll-margin-top: 16px;
+  }
+  /* El artículo al que se llegó por un link queda marcado un instante. */
+  .ancla-ayuda:target h2 {
+    color: var(--verde-txt);
+  }
+
   /* ---------- filas de chips ---------- */
   /* En el celular se desliza con el dedo (sin barra, con un fundido que
      avisa que hay más); en pantallas anchas se acomodan en varias líneas. */

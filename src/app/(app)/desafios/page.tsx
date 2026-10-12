@@ -1,3 +1,4 @@
+import { EnlaceAyuda } from '@/components/ayuda';
 import Link from 'next/link';
 import { LogoEquipo } from '@/components/logo-equipo';
 import { prisma } from '@/lib/db';
@@ -89,6 +90,7 @@ export default async function Desafios({
             Tu grupo contra otro: proponés día y lugar, el rival acepta y el partido se arma solo
             con los dos grupos invitados.
           </p>
+          <EnlaceAyuda tema="grupos" articulo="desafios" className="mt-2" />
         </div>
       </header>
 

@@ -1,3 +1,4 @@
+import { EnlaceAyuda } from '@/components/ayuda';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
@@ -169,6 +170,7 @@ export default async function MiComplejo({
             : 'Suscripción vencida: tus canchas no se ven. Escribinos a hola@birteam.com.'}
           {usuario.verificacion === 'VERIFICADA' ? ' · titularidad verificada ✓' : ''}
         </p>
+        <EnlaceAyuda tema="complejos" rotulo="Guía para complejos" className="mt-2" />
       </header>
 
       <PuestaAPunto pasos={pasos} />

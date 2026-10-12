@@ -1,3 +1,4 @@
+import { EnlaceAyuda } from '@/components/ayuda';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -91,6 +92,7 @@ export default async function BuscarTurno({
         <p className="mt-1 text-sm text-tinta-2">
           Elegí deporte, día y hora: te mostramos las canchas que lo tienen libre ahora.
         </p>
+        <EnlaceAyuda tema="canchas-y-turnos" articulo="buscar-turno" className="mt-2" />
       </header>
 
       <ChipsDeportes

@@ -189,6 +189,16 @@ export default async function Perfil() {
         </a>
       ) : null}
 
+      <Link href="/ayuda" className="tarjeta flex items-center justify-between gap-3 p-4">
+        <span>
+          <span className="block text-[15px] font-semibold">Ayuda y preguntas frecuentes</span>
+          <span className="block text-[13px] text-tinta-2">Cómo funciona cada parte de birteam.</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-tinta-3" aria-hidden>
+          <path d="m6 3 5 5-5 5" />
+        </svg>
+      </Link>
+
       <AccionesPerfil
         temaActual={usuario.tema}
         avisos={{

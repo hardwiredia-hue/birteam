@@ -99,6 +99,17 @@ export function BarraLateral({ esDueno = false }: { esDueno?: boolean }) {
             );
           })}
         </nav>
+        <Link
+          href="/ayuda"
+          className="flex items-center gap-3 border-t border-borde px-3 pt-5 text-[13px] font-semibold text-tinta-3 hover:text-tinta"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M9.4 9.4a2.7 2.7 0 1 1 3.7 2.5c-.7.3-1.1.9-1.1 1.6v.5" />
+            <circle cx="12" cy="16.9" r="0.5" fill="currentColor" />
+          </svg>
+          Ayuda
+        </Link>
       </div>
     </aside>
   );

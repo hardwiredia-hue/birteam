@@ -1,3 +1,4 @@
+import { EnlaceAyuda } from '@/components/ayuda';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -85,6 +86,7 @@ export default async function Radar({
           Los complejos publican acá los turnos que les quedaron libres, más baratos. Lo pedís
           y el complejo lo confirma.
         </p>
+        <EnlaceAyuda tema="canchas-y-turnos" articulo="radar" className="mt-2" />
       </header>
 
       <ChipsDeportes deportes={deportes} activo={slug} href={(valor) => enlace({ deporte: valor })} />

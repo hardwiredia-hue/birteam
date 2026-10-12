@@ -20,7 +20,8 @@ export function PieDePagina() {
             <Link href="/torneos" className="text-tinta-2 hover:text-tinta">Torneos</Link>
           </div>
           <div className="flex flex-col gap-2">
-            <p className="t-rotulo">Legales y contacto</p>
+            <p className="t-rotulo">Ayuda y legales</p>
+            <Link href="/ayuda" className="text-tinta-2 hover:text-tinta">Centro de ayuda</Link>
             <Link href="/terminos" className="text-tinta-2 hover:text-tinta">Términos de uso</Link>
             <Link href="/privacidad" className="text-tinta-2 hover:text-tinta">Privacidad</Link>
             <a href="mailto:hola@birteam.com" className="text-tinta-2 hover:text-tinta">
