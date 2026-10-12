@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { ofrecerLugarLibre } from '@/lib/espera';
 import { enviarPush } from '@/lib/push';
 import { posiblesVecinos, vecinosDe } from '@/lib/cercania';
+import { completarCoordenadasDePartidos } from '@/lib/coordenadas';
 import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 
 /**
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
     pedidosVencidos: 0,
     recordatoriosTurno: 0,
     avisosFaltanJugadores: 0,
+    partidosUbicados: 0,
   };
 
   // ---- 1. Invitaciones vencidas ----
@@ -164,6 +166,10 @@ export async function POST(request: Request) {
     );
     resumen.recordatoriosTurno++;
   }
+
+  // Partidos viejos sin coordenadas: se ubican (cancha o ciudad) antes de
+  // avisar, así el aviso por distancia les llega a los que están cerca.
+  resumen.partidosUbicados = await completarCoordenadasDePartidos();
 
   // ---- 5. Partidos abiertos a los que les faltan jugadores ----
   // Una sola vez por partido, a quienes juegan ese deporte cerca (dentro del

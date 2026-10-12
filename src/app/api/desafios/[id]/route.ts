@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { coordenadasDelLugar } from '@/lib/coordenadas';
 import { prisma } from '@/lib/db';
 import { quienesQuieren } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
@@ -98,6 +99,7 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
   if (count === 0) return NextResponse.json({ error: 'Otro grupo lo aceptó primero.' }, { status: 409 });
 
   const cupo = desafio.jugadoresPorLado * 2;
+  const coordenadas = await coordenadasDelLugar({ canchaId: desafio.canchaId, ciudad: desafio.ciudad });
   const partido = await prisma.partido.create({
     data: {
       deporteId: desafio.deporteId,
@@ -108,6 +110,8 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       direccion: desafio.direccion,
       canchaId: desafio.canchaId,
       ciudad: desafio.ciudad,
+      latitud: coordenadas?.latitud ?? null,
+      longitud: coordenadas?.longitud ?? null,
       cupo,
       minimo: cupo,
       nivel: desafio.nivel,

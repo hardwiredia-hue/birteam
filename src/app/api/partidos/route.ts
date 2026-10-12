@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { coordenadasDelLugar } from '@/lib/coordenadas';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaPartido, erroresDeZod } from '@/lib/validacion';
@@ -63,6 +64,10 @@ export async function POST(request: Request) {
     miembrosDelGrupo = miembros;
   }
 
+  const ciudad = d.ciudad ?? usuario.ciudad;
+  const provincia = d.provincia ?? usuario.provincia;
+  const coordenadas = await coordenadasDelLugar({ canchaId, ciudad, provincia });
+
   const partido = await prisma.partido.create({
     data: {
       deporteId: deporte.id,
@@ -74,8 +79,10 @@ export async function POST(request: Request) {
       direccion: d.direccion ?? null,
       lugarTelefono: d.lugarTelefono ?? null,
       canchaId,
-      ciudad: d.ciudad ?? usuario.ciudad,
-      provincia: d.provincia ?? usuario.provincia,
+      ciudad,
+      provincia,
+      latitud: coordenadas?.latitud ?? null,
+      longitud: coordenadas?.longitud ?? null,
       cupo: d.cupo,
       minimo: d.minimo,
       costoPorJugador: d.costoPorJugador ?? null,

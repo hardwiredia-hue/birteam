@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { coordenadasDelLugar } from '@/lib/coordenadas';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { enviarPush } from '@/lib/push';
@@ -42,6 +43,11 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
     return NextResponse.json({ error: 'Ese turno no se puede vincular a este partido.' }, { status: 400 });
   }
 
+  // Ahora se juega en esa cancha: la distancia se mide desde ahí.
+  const coordenadas = await coordenadasDelLugar({
+    canchaId: reserva.canchaId,
+    ciudad: reserva.cancha.ciudad ?? partido.ciudad,
+  });
   await prisma.$transaction([
     prisma.partido.update({
       where: { id: partido.id },
@@ -51,6 +57,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
         direccion: reserva.cancha.direccion,
         lugarTelefono: reserva.cancha.telefono,
         ciudad: reserva.cancha.ciudad ?? partido.ciudad,
+        ...(coordenadas ? { latitud: coordenadas.latitud, longitud: coordenadas.longitud } : {}),
         fecha: reserva.inicio,
       },
     }),
