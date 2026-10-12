@@ -167,6 +167,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Co-organizador, editar y cancelar',
         texto: [
           'El organizador puede nombrar un co-organizador entre los confirmados: puede editar, pasar lista y armar equipos.',
+          'Con "Cerrar la lista" no se anota nadie más aunque sobre cupo: el partido deja de aparecer en Explorar y en los avisos. Los anotados pueden bajarse, y si alguien de la lista de espera tiene un lugar reservado, lo puede tomar. Se reabre con el mismo interruptor.',
           'Editar o cancelar el partido está en el partido mismo; si se cancela, avisamos a todos.',
           'Al editar podés cambiar de cancha o pasar a un lugar escrito a mano; si cambia el día, la hora o el lugar, les avisamos a los anotados. Si el partido tiene un turno reservado en la cancha, primero cancelalo desde Reservas.',
         ],
@@ -537,6 +538,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-12',
+    titulo: 'Cerrar la lista',
+    texto: 'Quien organiza puede cerrar la lista cuando ya tiene a su gente: no se anota nadie más y el partido deja de aparecer en Explorar.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#organizar', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-12',
     titulo: 'Voy, siempre a mano',

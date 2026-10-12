@@ -12,7 +12,12 @@ export default async function Comunidades() {
     prisma.usuarioDeporte.groupBy({ by: ['deporteId'], _count: { _all: true } }),
     prisma.partido.groupBy({
       by: ['deporteId'],
-      where: { visibilidad: 'ABIERTO', estado: { in: ['ARMANDOSE', 'CONFIRMADO'] }, fecha: { gte: new Date() } },
+      where: {
+        visibilidad: 'ABIERTO',
+        estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+        listaCerrada: false,
+        fecha: { gte: new Date() },
+      },
       _count: { _all: true },
     }),
   ]);

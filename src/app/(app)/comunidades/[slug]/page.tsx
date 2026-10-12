@@ -36,6 +36,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
         deporteId: deporte.id,
         visibilidad: 'ABIERTO',
         estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+        listaCerrada: false,
         fecha: { gte: new Date() },
       },
       include: { participaciones: { where: { estado: 'VOY' }, select: { id: true } } },

@@ -93,6 +93,7 @@ export default async function Inicio() {
           where: {
             visibilidad: 'ABIERTO',
             estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+            listaCerrada: false,
             fecha: { gte: hoy },
             organizadorId: { not: usuario.id },
             participaciones: { none: { usuarioId: usuario.id } },
@@ -162,6 +163,7 @@ export default async function Inicio() {
       fecha: { gt: hoy },
       estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
       organizadorId: { not: usuario.id },
+      listaCerrada: false,
       participaciones: { none: { usuarioId: usuario.id } },
       OR: [{ grupoId: { in: gruposMios.map((g) => g.grupoId) } }, { id: { in: idsInvitado } }],
     },

@@ -53,6 +53,14 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
         (p) => p.estado === 'ESPERA' && p.invitacionExpiraEn && p.invitacionExpiraEn > ahora
       ).length;
 
+    // Lista cerrada: nadie nuevo entra. El que ya está en VOY puede bajarse,
+    // y el que tiene un lugar liberado reservado lo puede tomar.
+    const lugarReservado =
+      mia?.estado === 'ESPERA' && mia.invitacionExpiraEn != null && mia.invitacionExpiraEn > ahora;
+    if (partido.listaCerrada && pedido !== 'NOVOY' && mia?.estado !== 'VOY' && !(pedido === 'VOY' && lugarReservado)) {
+      return { error: 'La lista está cerrada: el organizador no está sumando gente.', status: 409 as const };
+    }
+
     let estadoFinal: string = pedido;
     let ordenEspera: number | null = null;
 

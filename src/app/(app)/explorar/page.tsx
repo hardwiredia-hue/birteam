@@ -253,6 +253,7 @@ async function Partidos({
     where: {
       visibilidad: 'ABIERTO',
       estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+      listaCerrada: false,
       fecha: { gte: new Date() },
       ...(deporteSlugs ? { deporte: { slug: { in: deporteSlugs } } } : {}),
     },

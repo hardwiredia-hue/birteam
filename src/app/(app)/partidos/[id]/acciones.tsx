@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Compartir } from '@/components/compartir';
 import { CuentaRegresiva } from '@/components/cuenta-regresiva';
+import { Interruptor } from '@/components/interruptor';
 
 export function BotoneraRsvp({
   partidoId,
@@ -363,5 +364,47 @@ export function BarraVoy({ partidoId, faltan }: { partidoId: string; faltan: num
         </div>
       </div>
     </>
+  );
+}
+
+/** Cerrar la lista: no se anota nadie más (los anotados pueden bajarse). */
+export function CerrarLista({ partidoId, cerrada: inicial }: { partidoId: string; cerrada: boolean }) {
+  const router = useRouter();
+  const [cerrada, setCerrada] = useState(inicial);
+  const [error, setError] = useState<string | null>(null);
+
+  async function cambiar() {
+    const nueva = !cerrada;
+    setCerrada(nueva);
+    setError(null);
+    const respuesta = await fetch(`/api/partidos/${partidoId}/lista`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cerrada: nueva }),
+    });
+    if (!respuesta.ok) {
+      const datos = await respuesta.json().catch(() => ({}));
+      setError(datos.error ?? 'No pudimos guardarlo.');
+      setCerrada(!nueva);
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <div className="tarjeta flex flex-col gap-2 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold">Cerrar la lista</p>
+          <p className="text-xs text-tinta-3">
+            {cerrada
+              ? 'No se anota nadie más. Los anotados pueden bajarse y la espera sigue.'
+              : 'Cuando ya tengas a tu gente: deja de aparecer en Explorar y nadie nuevo se anota.'}
+          </p>
+        </div>
+        <Interruptor prendido={cerrada} alCambiar={cambiar} rotulo="Cerrar la lista" />
+      </div>
+      {error ? <p className="aviso-error">{error}</p> : null}
+    </div>
   );
 }

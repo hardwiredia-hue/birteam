@@ -21,7 +21,7 @@ import { AgregarCalendario } from '@/components/agregar-calendario';
 import { eventoDe } from '@/lib/calendario-eventos';
 import { enlaceGoogle } from '@/lib/calendario';
 import {
-  BotoneraRsvp, BarraVoy,
+  BotoneraRsvp, BarraVoy, CerrarLista,
   CancelarPartido,
   CompartirPartido,
   ElegirCoorganizador,
@@ -58,6 +58,12 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   const pagaron = voy.filter((p) => p.pago).length;
   const organizo = partido.organizadorId === usuario.id || partido.coOrganizadorId === usuario.id;
   const yaPaso = partido.fecha < new Date();
+  // Lista cerrada: el que no está adentro (ni tiene un lugar reservado) ya no se anota.
+  const listaCerradaParaMi =
+    partido.listaCerrada &&
+    !organizo &&
+    mia?.estado !== 'VOY' &&
+    !(mia?.estado === 'ESPERA' && mia.invitacionExpiraEn && mia.invitacionExpiraEn > new Date());
   const cerrado = partido.estado === 'JUGADO' || partido.estado === 'CANCELADO';
   // Figura del partido: la votación abre al empezar y dura 72 h.
   const votacion = estadoVotacion(partido);
@@ -195,6 +201,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         <div className="flex items-baseline justify-between">
           <span className="t-rotulo tabular">
             {voy.length}/{partido.cupo} confirmados
+            {partido.listaCerrada ? <span className="ml-2 text-naranja-txt">· lista cerrada</span> : null}
           </span>
           <span className="t-rotulo tabular">
             mínimo {partido.minimo} {voy.length >= partido.minimo ? '✓' : ''}
@@ -417,21 +424,30 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           <>
             <CompartirPartido rutaPublica={`/p/${partido.tokenPublico}`} />
             {organizo ? (
-              <Link href={`/partidos/${partido.id}/editar`} className="btn btn-secundario">
-                Editar el partido
-              </Link>
+              <>
+                <CerrarLista partidoId={partido.id} cerrada={partido.listaCerrada} />
+                <Link href={`/partidos/${partido.id}/editar`} className="btn btn-secundario">
+                  Editar el partido
+                </Link>
+              </>
             ) : null}
-            <BotoneraRsvp
-              partidoId={partido.id}
-              estadoActual={mia?.estado ?? null}
-              invitacionHasta={mia?.invitacionExpiraEn?.toISOString() ?? null}
-            />
+            {listaCerradaParaMi ? (
+              <p className="aviso-ok border-borde-2 text-tinta-2">
+                La lista está cerrada: el organizador ya no está sumando gente.
+              </p>
+            ) : (
+              <BotoneraRsvp
+                partidoId={partido.id}
+                estadoActual={mia?.estado ?? null}
+                invitacionHasta={mia?.invitacionExpiraEn?.toISOString() ?? null}
+              />
+            )}
             {organizo ? <CancelarPartido partidoId={partido.id} /> : null}
           </>
         ) : null}
       </div>
 
-      {!cerrado && !yaPaso && (!mia || mia.estado === 'TALVEZ') ? (
+      {!cerrado && !yaPaso && !partido.listaCerrada && (!mia || mia.estado === 'TALVEZ') ? (
         <BarraVoy partidoId={partido.id} faltan={Math.max(0, partido.cupo - voy.length)} />
       ) : null}
     </div>

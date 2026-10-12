@@ -181,6 +181,7 @@ export async function POST(request: Request) {
     where: {
       visibilidad: 'ABIERTO',
       estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+      listaCerrada: false,
       avisoFaltanEn: null,
       fecha: { gt: en2h, lte: en48h },
     },

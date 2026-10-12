@@ -610,6 +610,9 @@ model Partido {
   nivel             String?
   // Cuándo se avisó a jugadores cercanos que faltan jugadores (una sola vez).
   avisoFaltanEn     DateTime?
+  // El organizador cerró la lista: no se anota nadie nuevo (los anotados
+  // pueden bajarse y la lista de espera sigue funcionando).
+  listaCerrada      Boolean   @default(false)
   ciudad            String?
   provincia         String?
   pais              String    @default("AR")

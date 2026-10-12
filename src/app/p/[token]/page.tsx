@@ -71,8 +71,15 @@ export default async function PartidoPublico({ params }: { params: Promise<{ tok
           </div>
           <div className="flex items-baseline justify-between">
             <span className="t-rotulo tabular">{voy}/{partido.cupo} confirmados</span>
-            <span className="t-rotulo tabular" style={lugares > 0 ? { color: 'var(--verde-txt)' } : undefined}>
-              {lugares > 0 ? `quedan ${lugares} lugares` : 'cupo lleno · hay lista de espera'}
+            <span
+              className="t-rotulo tabular"
+              style={lugares > 0 && !partido.listaCerrada ? { color: 'var(--verde-txt)' } : undefined}
+            >
+              {partido.listaCerrada
+                ? 'lista cerrada'
+                : lugares > 0
+                  ? `quedan ${lugares} lugares`
+                  : 'cupo lleno · hay lista de espera'}
             </span>
           </div>
           <div className="barra-progreso">
