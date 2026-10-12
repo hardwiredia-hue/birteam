@@ -13,6 +13,7 @@ test('ubicación: coordenadas de la cookie', () => {
 test('ubicación: solo los radios que se ofrecen', () => {
   assert.equal(radioDelParametro('5'), 5);
   assert.equal(radioDelParametro('7'), null);
+  assert.equal(radioDelParametro('15'), 15);
   assert.equal(radioDelParametro(undefined), null);
 });
 

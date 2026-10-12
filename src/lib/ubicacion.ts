@@ -12,7 +12,7 @@ import { COOKIE_UBICACION } from './ubicacion-comun';
 export { COOKIE_UBICACION, DURACION_UBICACION_SEG } from './ubicacion-comun';
 
 /** Radios para "hasta X km" (y sin límite). */
-export const RADIOS_KM = [2, 5, 10, 25, 50] as const;
+export const RADIOS_KM = [2, 5, 15, 30, 50] as const;
 
 export interface Punto {
   latitud: number;

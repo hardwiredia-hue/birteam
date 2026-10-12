@@ -7,6 +7,8 @@ import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
 import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
 import { formatearPlata } from '@/lib/formato';
+import { formatearDistancia } from '@/lib/geo';
+import { RADIOS_KM, kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import iso from '../../../../public/birteam-iso.png';
 
 export const metadata = { title: 'Inicio' };
@@ -72,9 +74,42 @@ export default async function Inicio() {
   // Radar: turnos libres con descuento, de tu deporte si tenés uno.
   const deporteDelRadar =
     usuario.deportes.find((relacion) => relacion.principal)?.deporteId ?? usuario.deportes[0]?.deporteId;
-  const radar = (await ofertasVigentes({ deporteId: deporteDelRadar })).filter(
-    (oferta) => oferta.cancha.duenoId !== usuario.id
-  );
+  const ubicacion = await ubicacionDe(usuario);
+  // Con ubicación, la oferta que se destaca es la más cercana.
+  const radar = (await ofertasVigentes({ deporteId: deporteDelRadar }))
+    .filter((oferta) => oferta.cancha.duenoId !== usuario.id)
+    .map((oferta) => ({ ...oferta, km: kmHasta(ubicacion, oferta.cancha) }))
+    .sort((a, b) => (ubicacion ? (a.km ?? Infinity) - (b.km ?? Infinity) : 0));
+
+  // Cerca tuyo: partidos abiertos de tus deportes dentro de tu radio, a los
+  // que todavía no te sumaste. Lo más cerca primero.
+  const radioCerca = RADIOS_KM.find((km) => km >= usuario.radioKm) ?? RADIOS_KM[RADIOS_KM.length - 1];
+  const cerca = ubicacion
+    ? (
+        await prisma.partido.findMany({
+          where: {
+            visibilidad: 'ABIERTO',
+            estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+            fecha: { gte: hoy },
+            organizadorId: { not: usuario.id },
+            participaciones: { none: { usuarioId: usuario.id } },
+            ...(usuario.deportes.length > 0
+              ? { deporteId: { in: usuario.deportes.map((relacion) => relacion.deporteId) } }
+              : {}),
+          },
+          include: {
+            deporte: { select: { nombre: true } },
+            participaciones: { where: { estado: 'VOY' }, select: { id: true } },
+          },
+          orderBy: { fecha: 'asc' },
+          take: 60,
+        })
+      )
+        .map((partido) => ({ ...partido, km: kmHasta(ubicacion, partido) }))
+        .filter((partido) => partido.km != null && partido.km <= radioCerca)
+        .sort((a, b) => a.km! - b.km! || a.fecha.getTime() - b.fecha.getTime())
+        .slice(0, 3)
+    : [];
 
   // Desafíos: los que esperan tu respuesta y los abiertos de tus deportes.
   const [desafiosRecibidos, desafiosAbiertos] = await Promise.all([
@@ -205,6 +240,7 @@ export default async function Inicio() {
               {radar[0].descuento ? `−${radar[0].descuento}% · ` : ''}
               {radar[0].cancha.nombre}, {cuandoEmpieza(radar[0].inicio, radar[0].fecha, radar[0].hora)} a{' '}
               {formatearPlata(radar[0].precioOferta)}
+              {radar[0].km != null ? ` · a ${formatearDistancia(radar[0].km)}` : ''}
             </p>
           </div>
           <span className="t-display text-[16px] text-naranja-txt">→</span>
@@ -223,6 +259,55 @@ export default async function Inicio() {
           </div>
           <span className="t-display text-[16px] text-naranja-txt">→</span>
         </Link>
+      ) : null}
+
+      {cerca.length > 0 ? (
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <p className="t-rotulo">
+              Cerca tuyo · {ubicacion?.origen === 'dispositivo' ? 'desde donde estás' : `hasta ${radioCerca} km`}
+            </p>
+            <Link href={`/explorar?radio=${radioCerca}`} className="text-xs font-semibold text-verde-txt">
+              Ver todos
+            </Link>
+          </div>
+          <div className="tarjeta flex flex-col">
+            {cerca.map((partido) => {
+              const faltan = partido.cupo - partido.participaciones.length;
+              return (
+                <Link
+                  key={partido.id}
+                  href={`/partidos/${partido.id}`}
+                  className="flex items-center gap-3 border-b border-borde px-4 py-3.5 last:border-b-0 hover:bg-fondo/40"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">
+                      {partido.deporte.nombre} · {DIAS[partido.fecha.getDay()]}{' '}
+                      {partido.fecha.toLocaleTimeString('es-AR', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZone: 'America/Argentina/Buenos_Aires',
+                      })}
+                    </span>
+                    <span className="block truncate text-xs text-tinta-3">{partido.lugarNombre}</span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block text-xs font-semibold tabular text-tinta-2">
+                      {formatearDistancia(partido.km!)}
+                    </span>
+                    <span
+                      className="block text-[11px] font-semibold"
+                      style={{ color: faltan > 0 ? 'var(--verde-txt)' : 'var(--azul-txt)' }}
+                    >
+                      {faltan > 0 ? `Faltan ${faltan}` : 'En espera'}
+                    </span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       ) : null}
 
       {/* Atajos: una sola lista, no tres tarjetas iguales. */}
