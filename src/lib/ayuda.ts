@@ -154,6 +154,15 @@ export const TEMAS: Tema[] = [
         ],
       },
       {
+        id: 'pagos',
+        titulo: 'Llevar la cuenta de quién pagó',
+        texto: [
+          'Si el partido tiene costo por jugador, quien organiza ve la lista de confirmados y toca a cada uno para marcar "Pagó" o "Debe". Arriba ve lo cobrado y lo que falta.',
+          'Con "Recordarles por WhatsApp" se arma el mensaje con los nombres de los que faltan. Cada jugador ve en el partido si ya figura como pagado.',
+          'La plata se arregla entre ustedes: birteam solo lleva la cuenta.',
+        ],
+      },
+      {
         id: 'organizar',
         titulo: 'Co-organizador, editar y cancelar',
         texto: [
@@ -528,6 +537,14 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-12',
+    titulo: 'Quién pagó, a la vista',
+    texto:
+      'Quien organiza marca quién pagó su parte, ve lo cobrado y lo que falta, y les manda un recordatorio por WhatsApp a los que deben.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#pagos', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-12',
     titulo: 'Respondé desde Inicio',

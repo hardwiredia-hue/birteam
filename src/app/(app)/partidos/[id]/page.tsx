@@ -14,6 +14,7 @@ import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
 import { Equipos } from './equipos';
+import { Pagos } from './pagos';
 import { FiguraDelPartido } from './figura';
 import { HORAS_VOTACION, contarVotos, estadoVotacion, jugaron } from '@/lib/figura';
 import { AgregarCalendario } from '@/components/agregar-calendario';
@@ -246,8 +247,20 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         </section>
       ) : null}
 
-      {partido.costoPorJugador ? (
-        <section className="tarjeta flex items-center justify-between p-4">
+      {partido.costoPorJugador && organizo && partido.estado !== 'CANCELADO' && voy.length > 0 ? (
+        <Pagos
+          partidoId={partido.id}
+          costo={partido.costoPorJugador}
+          titulo={`${partido.deporte.nombre} del ${DIAS[partido.fecha.getDay()]}`}
+          jugadores={voy.map((p) => ({
+            usuarioId: p.usuarioId,
+            nombre: p.usuario.nombre,
+            avatarUrl: p.usuario.avatarUrl,
+            pago: p.pago,
+          }))}
+        />
+      ) : partido.costoPorJugador ? (
+        <section className="tarjeta flex items-center justify-between gap-3 p-4">
           <div>
             <p className="text-sm font-semibold tabular">
               {formatearPlata(partido.costoPorJugador)} por jugador
@@ -256,6 +269,18 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
               Pagaron {pagaron} de {voy.length} · se arregla con @{partido.organizador.usuario}
             </p>
           </div>
+          {mia?.estado === 'VOY' ? (
+            <span
+              className="shrink-0 rounded-[6px] border px-2.5 py-1 text-xs font-semibold"
+              style={
+                mia.pago
+                  ? { borderColor: 'var(--verde-txt)', color: 'var(--verde-txt)' }
+                  : { borderColor: 'var(--borde-2)', color: 'var(--tinta-3)' }
+              }
+            >
+              {mia.pago ? 'Ya pagaste' : 'Te falta pagar'}
+            </span>
+          ) : null}
         </section>
       ) : null}
 
