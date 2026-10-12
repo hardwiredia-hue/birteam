@@ -157,6 +157,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'El organizador puede nombrar un co-organizador entre los confirmados: puede editar, pasar lista y armar equipos.',
           'Editar o cancelar el partido está en el partido mismo; si se cancela, avisamos a todos.',
+          'Al editar podés cambiar de cancha o pasar a un lugar escrito a mano; si cambia el día, la hora o el lugar, les avisamos a los anotados. Si el partido tiene un turno reservado en la cancha, primero cancelalo desde Reservas.',
         ],
       },
       {

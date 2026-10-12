@@ -12,7 +12,11 @@ export default async function EditarPartido({ params }: { params: Promise<{ id: 
 
   const partido = await prisma.partido.findUnique({
     where: { id },
-    include: { deporte: true, participaciones: { where: { estado: 'VOY' }, select: { id: true } } },
+    include: {
+      deporte: true,
+      participaciones: { where: { estado: 'VOY' }, select: { id: true } },
+      cancha: { include: { deporte: { select: { nombre: true } } } },
+    },
   });
   if (!partido) notFound();
   const organizo = partido.organizadorId === usuario.id || partido.coOrganizadorId === usuario.id;
@@ -36,6 +40,30 @@ export default async function EditarPartido({ params }: { params: Promise<{ id: 
       <FormularioEditarPartido
         partidoId={partido.id}
         confirmados={partido.participaciones.length}
+        deporte={{ id: partido.deporteId, nombre: partido.deporte.nombre }}
+        canchaInicial={
+          partido.cancha
+            ? {
+                id: partido.cancha.id,
+                nombre: partido.cancha.nombre,
+                direccion: partido.cancha.direccion,
+                telefono: partido.cancha.telefono,
+                ciudad: partido.cancha.ciudad,
+                deporteId: partido.cancha.deporteId,
+                deporte: partido.cancha.deporte.nombre,
+                diasDisponibles: (() => {
+                  try {
+                    return JSON.parse(partido.cancha.diasDisponibles) as number[];
+                  } catch {
+                    return [0, 1, 2, 3, 4, 5, 6];
+                  }
+                })(),
+              }
+            : null
+        }
+        esDueno={usuario.tipoCuenta === 'CANCHA'}
+        ciudad={usuario.ciudad}
+        provincia={usuario.provincia}
         inicial={{
           fecha: valorFecha,
           lugarNombre: partido.lugarNombre,

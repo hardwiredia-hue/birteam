@@ -290,6 +290,8 @@ export const esquemaEditarPartido = z.object({
     .max(120, 'El lugar es muy largo.'),
   direccion: z.string().trim().max(160).nullish(),
   lugarTelefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
+  // Cancha publicada (null: lugar escrito a mano; sin el campo: no cambia).
+  canchaId: z.string().nullish(),
   cupo: z.number({ error: 'Definí el cupo.' }).int().min(2).max(200),
   minimo: z.number().int().min(2).max(200),
   costoPorJugador: z.number().min(0).max(10_000_000).nullish(),

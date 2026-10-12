@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaEditarPartido, erroresDeZod } from '@/lib/validacion';
 import { enviarPush } from '@/lib/push';
+import { coordenadasDelLugar } from '@/lib/coordenadas';
+import { deportesCompatibles } from '@/lib/lugares';
+import { ESTADOS_ACTIVOS } from '@/lib/reservas';
 
 /** Editar el partido. Solo organiza/co-organiza, mientras no esté cerrado. */
 export async function PATCH(request: Request, contexto: { params: Promise<{ id: string }> }) {
@@ -46,14 +49,49 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
     );
   }
 
+  // Cambio de cancha: la nueva tiene que estar publicada y ser del deporte; si
+  // hay un turno reservado en la actual, primero hay que cancelarlo.
+  const canchaNueva = d.canchaId === undefined ? partido.canchaId : d.canchaId;
+  const cambiaCancha = canchaNueva !== partido.canchaId;
+  let ubicacion: { latitud: number; longitud: number } | null = null;
+  if (cambiaCancha) {
+    if (canchaNueva) {
+      const cancha = await prisma.cancha.findUnique({ where: { id: canchaNueva } });
+      if (!cancha || !cancha.activa) {
+        return NextResponse.json({ error: 'Esa cancha ya no está publicada.' }, { status: 400 });
+      }
+      if (!(await deportesCompatibles(partido.deporteId)).includes(cancha.deporteId)) {
+        return NextResponse.json({ error: `Esa cancha no es para ${partido.deporte.nombre}. Elegí otra.` }, { status: 400 });
+      }
+    }
+    const turno = partido.canchaId
+      ? await prisma.reserva.findFirst({
+          where: { partidoId: partido.id, estado: { in: ESTADOS_ACTIVOS }, inicio: { gt: new Date() } },
+          include: { cancha: { select: { nombre: true } } },
+        })
+      : null;
+    if (turno) {
+      return NextResponse.json(
+        {
+          error: `Este partido tiene un turno reservado en ${turno.cancha.nombre}. Cancelalo desde Reservas antes de cambiar de cancha.`,
+        },
+        { status: 409 }
+      );
+    }
+    ubicacion = await coordenadasDelLugar({ canchaId: canchaNueva, ciudad: partido.ciudad, provincia: partido.provincia });
+  }
+
   const cambioClave =
-    partido.fecha.getTime() !== d.fecha.getTime() || partido.lugarNombre !== d.lugarNombre;
+    partido.fecha.getTime() !== d.fecha.getTime() || partido.lugarNombre !== d.lugarNombre || cambiaCancha;
 
   await prisma.partido.update({
     where: { id },
     data: {
       fecha: d.fecha,
       lugarNombre: d.lugarNombre,
+      ...(cambiaCancha
+        ? { canchaId: canchaNueva, latitud: ubicacion?.latitud ?? null, longitud: ubicacion?.longitud ?? null }
+        : {}),
       direccion: d.direccion ?? null,
       lugarTelefono: d.lugarTelefono ?? null,
       cupo: d.cupo,
