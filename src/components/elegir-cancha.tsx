@@ -96,6 +96,25 @@ export function PasoDonde({
   const canchas = resultados?.canchas ?? [];
   const yaEsta = canchas.some((c) => normalizar(c.nombre) === normalizar(texto));
 
+  /**
+   * Un lugar donde ya organizó: si es una cancha publicada (mismo nombre,
+   * del deporte), se elige la cancha, así el partido queda vinculado a ella.
+   */
+  async function elegirPropio(propio: { nombre: string; direccion: string | null; telefono: string | null }) {
+    alElegirLugar(propio);
+    try {
+      const parametros = new URLSearchParams({ q: propio.nombre });
+      if (deporteId) parametros.set('deporteId', deporteId);
+      const respuesta = await fetch(`/api/lugares?${parametros.toString()}`);
+      if (!respuesta.ok) return;
+      const { canchas: encontradas } = (await respuesta.json()) as { canchas: CanchaParaElegir[] };
+      const igual = encontradas.find((c) => normalizar(c.nombre) === normalizar(propio.nombre));
+      if (igual) alElegirCancha(igual);
+    } catch {
+      // Sin conexión: queda como lugar escrito.
+    }
+  }
+
   async function publicarMiCancha() {
     if (direccion.trim().length < 2) {
       setAviso({ error: true, texto: 'Poné la dirección de tu cancha para publicarla.' });
@@ -195,7 +214,7 @@ export function PasoDonde({
               <button
                 key={propio.id}
                 type="button"
-                onClick={() => alElegirLugar(propio)}
+                onClick={() => elegirPropio(propio)}
                 className="chip-sel"
               >
                 {propio.nombre}
