@@ -1,11 +1,13 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
-import { canchasVisibles, sitioPublico } from '@/lib/publico';
+import { ambiente, canchasVisibles, sitioPublico } from '@/lib/publico';
 
 export const dynamic = 'force-dynamic';
 
 /** Mapa del sitio para buscadores: portada, legales y las canchas publicadas. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Staging y desarrollo: mapa vacío (además del robots y el "noindex").
+  if (ambiente() !== 'produccion') return [];
   const base = sitioPublico();
   const canchas = await prisma.cancha.findMany({
     where: canchasVisibles(),

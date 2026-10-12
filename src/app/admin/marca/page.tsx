@@ -1,6 +1,8 @@
 import { obtenerMarca } from '@/lib/marca';
 import { sitioEnConstruccion } from '@/lib/sitio';
 import { ImagenDeMarca, InterruptorConstruccion } from './acciones';
+import { PinStaging } from './pin-staging';
+import { esStaging, hashPinStaging } from '@/lib/pin-staging';
 
 export const metadata = { title: 'Marca' };
 export const dynamic = 'force-dynamic';
@@ -8,9 +10,11 @@ export const dynamic = 'force-dynamic';
 export default async function Marca() {
   const marca = await obtenerMarca();
   const enConstruccion = await sitioEnConstruccion();
+  const pinActivo = esStaging() ? Boolean(await hashPinStaging()) : null;
 
   return (
     <div className="flex flex-col gap-4">
+      {pinActivo !== null ? <PinStaging activo={pinActivo} /> : null}
       <InterruptorConstruccion activo={enConstruccion} />
       <p className="text-sm text-tinta-2">
         Logo, ícono y favicon del sitio. Lo que subas acá reemplaza a los archivos de fábrica en

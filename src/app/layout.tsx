@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { obtenerMarca } from '@/lib/marca';
+import { ambiente } from '@/lib/publico';
 import './globals.css';
 
 // El favicon y el ícono pueden cambiarse desde el backoffice (Marca).
@@ -16,6 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: { icon: marca.favicon, apple: marca.icono192 },
     manifest: '/manifest.webmanifest',
     appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'birteam' },
+    // Staging y desarrollo no van a ningún buscador.
+    ...(ambiente() !== 'produccion' ? { robots: { index: false, follow: false, nocache: true } } : {}),
   };
 }
 
