@@ -7,7 +7,7 @@ import { slugsDelFiltro } from '@/lib/deportes';
 import { ChipsDeportes } from '@/components/chips-deportes';
 import { formatearPuntaje, puntajesDeCanchas } from '@/lib/resenas';
 import { usuarioActual } from '@/lib/auth';
-import { formatearDistancia } from '@/lib/geo';
+import { formatearDistancia, rotuloDistancia } from '@/lib/geo';
 import { dentroDelRadio, kmHasta, radioDelParametro, ubicacionDe, type Ubicacion } from '@/lib/ubicacion';
 import { FiltroCercania } from '@/components/filtro-cercania';
 import { formatearPlata } from '@/lib/formato';
@@ -335,7 +335,7 @@ async function Partidos({
             <div className="flex items-baseline justify-between gap-3">
               <span className="t-rotulo text-verde-txt">{p.deporte.nombre}</span>
               {p.km != null ? (
-                <span className="t-rotulo tabular">a {formatearDistancia(p.km)}</span>
+                <span className="t-rotulo tabular">{rotuloDistancia(p.km, !p.canchaId)}</span>
               ) : null}
             </div>
             <p className="t-display text-[19px]">
@@ -643,7 +643,7 @@ async function GruposAbiertos({
               {grupo.deporte.nombre} · {grupo._count.miembros}{' '}
               {grupo._count.miembros === 1 ? 'miembro' : 'miembros'}
               {grupo.ciudad ? ` · ${grupo.ciudad}` : ''}
-              {grupo.km != null ? ` · a ${formatearDistancia(grupo.km)}` : ''}
+              {grupo.km != null ? ` · ${rotuloDistancia(grupo.km, true)}` : ''}
             </p>
             {grupo.descripcion ? (
               <p className="mt-1 truncate text-xs text-tinta-3">{grupo.descripcion}</p>

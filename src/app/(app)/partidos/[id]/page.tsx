@@ -149,7 +149,18 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           )}
           {partido.direccion ? ` · ${partido.direccion}` : ''}
         </p>
-        <ComoLlegar lugar={{ ...partido, direccion: partido.direccion ?? partido.lugarNombre }} km={kmHasta(await ubicacionDe(usuario), partido)} />
+        {/* Sin cancha publicada, la ubicación es el centro de la ciudad: para
+            llegar manda la dirección escrita y la distancia va aproximada. */}
+        <ComoLlegar
+          lugar={{
+            ...partido,
+            direccion: partido.direccion ?? partido.lugarNombre,
+            latitud: partido.canchaId ? partido.latitud : null,
+            longitud: partido.canchaId ? partido.longitud : null,
+          }}
+          km={kmHasta(await ubicacionDe(usuario), partido)}
+          aproximada={!partido.canchaId}
+        />
         {partido.lugarTelefono ? (
           <a
             href={`tel:${partido.lugarTelefono.replace(/[^+0-9]/g, '')}`}

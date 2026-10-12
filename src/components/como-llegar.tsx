@@ -1,4 +1,4 @@
-import { formatearDistancia } from '@/lib/geo';
+import { rotuloDistancia } from '@/lib/geo';
 
 /** Link de indicaciones: con coordenadas si hay, si no con la dirección. */
 export function enlaceComoLlegar(lugar: {
@@ -22,10 +22,13 @@ export function enlaceComoLlegar(lugar: {
 export function ComoLlegar({
   lugar,
   km,
+  aproximada = false,
   className = '',
 }: {
   lugar: Parameters<typeof enlaceComoLlegar>[0];
   km?: number | null;
+  /** La ubicación es el centro de la ciudad: distancia sin falsa precisión. */
+  aproximada?: boolean;
   className?: string;
 }) {
   const enlace = enlaceComoLlegar(lugar);
@@ -41,7 +44,7 @@ export function ComoLlegar({
         <path d="M3 11 21 3l-8 18-2-8z" />
       </svg>
       Cómo llegar
-      {km != null ? <span className="font-normal text-tinta-3">· a {formatearDistancia(km)}</span> : null}
+      {km != null ? <span className="font-normal text-tinta-3">· {rotuloDistancia(km, aproximada)}</span> : null}
     </a>
   );
 }

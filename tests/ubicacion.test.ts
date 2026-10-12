@@ -29,3 +29,12 @@ test('ubicación: distancia y radio', () => {
   assert.equal(dentroDelRadio(null, null), true);
   assert.equal(dentroDelRadio(null, 5), false);
 });
+
+test('ubicación: distancia aproximada sin falsa precisión', async () => {
+  const { rotuloDistancia } = await import('../src/lib/geo');
+  assert.equal(rotuloDistancia(0.003, false), 'a 3 m');
+  assert.equal(rotuloDistancia(0.003, true), 'en tu zona');
+  assert.equal(rotuloDistancia(2.9, true), 'en tu zona');
+  assert.equal(rotuloDistancia(12.4, true), 'a ~12 km');
+  assert.equal(rotuloDistancia(4.5, true), 'a ~4,5 km');
+});

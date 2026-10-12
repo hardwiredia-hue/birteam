@@ -10,7 +10,7 @@ import { AvisoNovedad } from '@/components/aviso-novedad';
 import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
 import { formatearPlata } from '@/lib/formato';
-import { formatearDistancia } from '@/lib/geo';
+import { formatearDistancia, rotuloDistancia } from '@/lib/geo';
 import { RADIOS_KM, kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import iso from '../../../../public/birteam-iso.png';
 
@@ -365,7 +365,7 @@ export default async function Inicio() {
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="block text-xs font-semibold tabular text-tinta-2">
-                      {formatearDistancia(partido.km!)}
+                      {rotuloDistancia(partido.km!, !partido.canchaId).replace(/^a /, '')}
                     </span>
                     <span
                       className="block text-[11px] font-semibold"

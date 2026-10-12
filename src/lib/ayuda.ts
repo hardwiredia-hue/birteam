@@ -88,6 +88,7 @@ export const TEMAS: Tema[] = [
           'Se mide desde el centro de la ciudad de tu perfil. Para medir desde donde estás, tocá "Usar mi ubicación" y aceptá el permiso del navegador. Eligiendo 2, 5, 15, 30 o 50 km ves solo lo que queda dentro de esa distancia.',
           'Tu ubicación queda solo en tu navegador, redondeada a unos 100 m, durante 6 horas: no se guarda en tu cuenta ni se muestra a nadie. Con "Usar mi ciudad" la dejás de usar, y se borra al salir de tu cuenta.',
           'En cada cancha y cada partido, "Cómo llegar" abre el mapa del celular con el destino cargado y te dice a cuántos km está.',
+          'Un partido que no es en una cancha publicada se ubica en el centro de su ciudad: por eso su distancia es aproximada ("en tu zona", "a ~12 km") y "Cómo llegar" usa la dirección que escribió el organizador.',
           'Los avisos de partidos que buscan jugadores y del Radar te llegan hasta la distancia que elijas en Perfil → Ajustes (5, 15, 30 o 50 km desde tu ciudad).',
           'Si dice que no diste permiso, activalo desde el candado de la barra de direcciones (o en los ajustes de ubicación del celular) y probá de nuevo.',
         ],

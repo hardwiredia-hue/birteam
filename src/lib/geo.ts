@@ -16,3 +16,20 @@ export function formatearDistancia(km: number) {
   if (km < 10) return `${km.toFixed(1).replace('.', ',')} km`;
   return `${Math.round(km)} km`;
 }
+
+/**
+ * Distancia a un lugar cuya ubicación es aproximada (un partido sin cancha
+ * publicada se ubica en el centro de su ciudad): sin falsa precisión.
+ * "en tu zona" si queda cerca, "~12 km" si no.
+ */
+export function distanciaAproximada(km: number) {
+  if (km < 3) return 'en tu zona';
+  return `~${formatearDistancia(km)}`;
+}
+
+/** "a 1,2 km" o, si la ubicación es aproximada, "en tu zona" / "a ~12 km". */
+export function rotuloDistancia(km: number, aproximada: boolean) {
+  if (!aproximada) return `a ${formatearDistancia(km)}`;
+  const texto = distanciaAproximada(km);
+  return texto.startsWith('~') ? `a ${texto}` : texto;
+}

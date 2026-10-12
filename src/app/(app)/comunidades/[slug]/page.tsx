@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { calcularRanking } from '@/lib/estadisticas';
-import { distanciaKm, formatearDistancia } from '@/lib/geo';
+import { distanciaKm, rotuloDistancia } from '@/lib/geo';
 import { formatearPlata } from '@/lib/formato';
 import { agruparDeportes, infoDeporte } from '@/lib/deportes';
 import { IconoDeporte } from '@/components/icono-deporte';
@@ -139,7 +139,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
                     </p>
                     <p className="mt-0.5 truncate text-xs text-tinta-3">
                       {partido.lugarNombre}
-                      {partido.km != null ? ` · a ${formatearDistancia(partido.km)}` : ''}
+                      {partido.km != null ? ` · ${rotuloDistancia(partido.km, !partido.canchaId)}` : ''}
                       {partido.costoPorJugador ? ` · ${formatearPlata(partido.costoPorJugador)}` : ''}
                     </p>
                   </div>
