@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { PasoDonde, type CanchaElegible } from './donde';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
 import { SelectorDeporte } from '@/components/selector-deporte';
 import { Interruptor } from '@/components/interruptor';
@@ -125,16 +126,6 @@ function Almanaque({
   );
 }
 
-interface CanchaElegible {
-  id: string;
-  nombre: string;
-  direccion: string | null;
-  telefono: string | null;
-  ciudad: string | null;
-  deporte: string;
-  deporteId: string;
-  diasDisponibles: number[];
-}
 
 /** El último partido que organizó, para repetirlo con un toque. */
 export interface PartidoParaRepetir {
@@ -195,6 +186,9 @@ export function Asistente({
   deportePrincipal,
   turnoInicial,
   ultimo,
+  esDueno = false,
+  ciudad = null,
+  provincia = null,
 }: {
   deportes: Deporte[];
   grupos: { id: string; nombre: string; deporteId: string }[];
@@ -207,6 +201,10 @@ export function Asistente({
   deportePrincipal?: string | null;
   turnoInicial?: TurnoInicial | null;
   ultimo?: PartidoParaRepetir | null;
+  /** Dueño de cancha: puede publicar la suya desde "¿Dónde juegan?". */
+  esDueno?: boolean;
+  ciudad?: string | null;
+  provincia?: string | null;
 }) {
   const router = useRouter();
 
@@ -232,6 +230,8 @@ export function Asistente({
   const [lugarTelefono, setLugarTelefono] = useState(canchaDelTurno?.telefono ?? '');
   // Cancha publicada elegida como sede: su gestión define qué días se puede jugar.
   const [canchaElegida, setCanchaElegida] = useState<CanchaElegible | null>(canchaDelTurno);
+  // Lugar de la comunidad elegido de la lista (si no, se crea con lo escrito).
+  const [lugarId, setLugarId] = useState<string | null>(null);
   const [invitados, setInvitados] = useState<{ id: string; nombre: string }[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [resultados, setResultados] = useState<{ id: string; nombre: string; usuario: string }[]>([]);
@@ -276,6 +276,7 @@ export function Asistente({
     if (ultimo.grupoId && listaGrupos.some((g) => g.id === ultimo.grupoId)) setGrupoId(ultimo.grupoId);
     const cancha = canchas.find((c) => c.id === ultimo.canchaId) ?? null;
     setCanchaElegida(cancha);
+    setLugarId(null);
     setLugarNombre(ultimo.lugarNombre);
     setDireccion(ultimo.direccion ?? '');
     setLugarTelefono(ultimo.lugarTelefono ?? '');
@@ -293,6 +294,7 @@ export function Asistente({
 
   function elegirCancha(cancha: CanchaElegible) {
     setCanchaElegida(cancha);
+    setLugarId(null);
     setLugarNombre(cancha.nombre);
     setDireccion(cancha.direccion ?? '');
     setLugarTelefono(cancha.telefono ?? '');
@@ -323,6 +325,7 @@ export function Asistente({
         direccion: direccion.trim() || null,
         lugarTelefono: lugarTelefono.trim() || null,
         canchaId: canchaElegida?.id ?? null,
+        lugarId: canchaElegida ? null : lugarId,
         reservaId:
           turnoInicial && canchaElegida?.id === turnoInicial.canchaId ? turnoInicial.reservaId : null,
         invitadoIds: invitados.map((i) => i.id),
@@ -494,106 +497,38 @@ export function Asistente({
           </div>
         </section>
       ) : paso === 2 ? (
-        <section className="flex flex-col gap-4">
-          <h1 className="t-display text-[32px]">¿Dónde<br />juegan?</h1>
-          {canchas.length > 0 ? (
-            <div>
-              <span className="rotulo-campo">Canchas publicadas en birteam</span>
-              <div className="flex flex-col gap-2">
-                {canchas.map((cancha) => {
-                  const elegida = canchaElegida?.id === cancha.id;
-                  return (
-                    <button
-                      key={cancha.id}
-                      type="button"
-                      onClick={() => elegirCancha(cancha)}
-                      className="tarjeta p-3.5 text-left"
-                      style={elegida ? { borderColor: 'var(--naranja-txt)' } : undefined}
-                    >
-                      <span className="t-rotulo text-naranja-txt">{cancha.deporte}</span>
-                      <span className="mt-0.5 block text-sm font-semibold">{cancha.nombre}</span>
-                      <span className="mt-0.5 block text-xs text-tinta-3">
-                        {cancha.direccion ?? ''}
-                        {cancha.direccion && cancha.ciudad ? ' · ' : ''}
-                        {cancha.ciudad ?? ''}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-          {lugares.length > 0 ? (
-            <div>
-              <span className="rotulo-campo">Tus lugares · un toque y listo</span>
-              <div className="flex flex-col gap-2">
-                {lugares.map((lugar) => {
-                  const elegido = lugarNombre === lugar.nombre;
-                  return (
-                    <button
-                      key={lugar.id}
-                      type="button"
-                      onClick={() => {
-                        setCanchaElegida(null);
-                        setLugarNombre(lugar.nombre);
-                        setDireccion(lugar.direccion ?? '');
-                        setLugarTelefono(lugar.telefono ?? '');
-                      }}
-                      className="tarjeta p-3.5 text-left"
-                      style={elegido ? { borderColor: 'var(--verde)' } : undefined}
-                    >
-                      <span className="block text-sm font-semibold">{lugar.nombre}</span>
-                      {lugar.direccion || lugar.telefono ? (
-                        <span className="mt-0.5 block text-xs text-tinta-3">
-                          {lugar.direccion ?? ''}
-                          {lugar.direccion && lugar.telefono ? ' · ' : ''}
-                          {lugar.telefono ? `tel. ${lugar.telefono}` : ''}
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-xs text-tinta-3">O cargá uno nuevo acá abajo: queda guardado para la próxima.</p>
-            </div>
-          ) : null}
-          <div>
-            <label className="rotulo-campo" htmlFor="lugar">Cancha o lugar</label>
-            <input
-              id="lugar"
-              className="campo"
-              placeholder="Cancha El Potrero, Palermo"
-              value={lugarNombre}
-              onChange={(evento) => {
-                setCanchaElegida(null);
-                setLugarNombre(evento.target.value);
-              }}
-            />
-          </div>
-          <div>
-            <label className="rotulo-campo" htmlFor="direccion">Dirección · opcional</label>
-            <input
-              id="direccion"
-              className="campo"
-              placeholder="Av. del Libertador 4200"
-              value={direccion}
-              onChange={(evento) => setDireccion(evento.target.value)}
-            />
-          </div>
-          <div>
-            <label className="rotulo-campo" htmlFor="lugar-telefono">Teléfono o contacto de la cancha · opcional</label>
-            <input
-              id="lugar-telefono"
-              className="campo"
-              placeholder="+54 9 11 5555-1234"
-              value={lugarTelefono}
-              onChange={(evento) => setLugarTelefono(evento.target.value)}
-            />
-            <p className="mt-1 text-xs text-tinta-3">
-              Se muestra en el partido, para reservar o avisar cualquier cosa.
-            </p>
-          </div>
-        </section>
+        <PasoDonde
+          deporteId={deporteId}
+          deporteNombre={deportes.find((d) => d.id === deporteId)?.nombre ?? null}
+          esDueno={esDueno}
+          ciudad={ciudad}
+          provincia={provincia}
+          propios={lugares}
+          lugarNombre={lugarNombre}
+          direccion={direccion}
+          telefono={lugarTelefono}
+          canchaElegida={canchaElegida}
+          lugarId={lugarId}
+          alEscribir={(texto) => {
+            setCanchaElegida(null);
+            setLugarId(null);
+            setLugarNombre(texto);
+            if (!texto) {
+              setDireccion('');
+              setLugarTelefono('');
+            }
+          }}
+          alElegirCancha={elegirCancha}
+          alElegirLugar={(lugar) => {
+            setCanchaElegida(null);
+            setLugarId(lugar.id);
+            setLugarNombre(lugar.nombre);
+            setDireccion(lugar.direccion ?? '');
+            setLugarTelefono(lugar.telefono ?? '');
+          }}
+          setDireccion={setDireccion}
+          setTelefono={setLugarTelefono}
+        />
       ) : paso === 4 ? (
         <section className="flex flex-col gap-4">
           <h1 className="t-display text-[32px]">¿Cuántos<br />son?</h1>

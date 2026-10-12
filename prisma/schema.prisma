@@ -79,6 +79,7 @@ model Usuario {
   suscripcionesPush SuscripcionPush[]
   canchas          Cancha[]
   lugares          LugarGuardado[]
+  lugaresCreados   Lugar[]
   reservas         Reserva[]
   resenasCancha    ResenaCancha[]
   turnosFijos      TurnoFijo[]
@@ -106,6 +107,30 @@ model LugarGuardado {
   ultimaVez DateTime @default(now())
 
   @@unique([usuarioId, nombre])
+}
+
+// Lugares donde se juega que carga la comunidad al crear un partido (clubes,
+// plazas, canchas que no están publicadas en birteam). Los ve y elige todo
+// el mundo; las canchas publicadas por sus dueños van aparte (Cancha).
+model Lugar {
+  id         String    @id @default(cuid())
+  nombre     String
+  // Minúsculas y sin tildes, para encontrarlo escriba como escriba.
+  nombreNorm String
+  direccion  String?
+  telefono   String?
+  ciudad     String?
+  provincia  String?
+  latitud    Float?
+  longitud   Float?
+  creadorId  String?
+  creador    Usuario?  @relation(fields: [creadorId], references: [id], onDelete: SetNull)
+  // En cuántos partidos se usó: los más usados salen primero.
+  usos       Int       @default(0)
+  creadoEn   DateTime  @default(now())
+  partidos   Partido[]
+
+  @@index([nombreNorm])
 }
 
 
@@ -578,6 +603,9 @@ model Partido {
   // Cancha publicada elegida como sede (si la hay).
   canchaId          String?
   cancha            Cancha?   @relation(fields: [canchaId], references: [id], onDelete: SetNull)
+  // Lugar de la comunidad (si no es una cancha publicada).
+  lugarId           String?
+  lugar             Lugar?    @relation(fields: [lugarId], references: [id], onDelete: SetNull)
   // Nivel sugerido para sumarse (null = cualquier nivel).
   nivel             String?
   // Cuándo se avisó a jugadores cercanos que faltan jugadores (una sola vez).

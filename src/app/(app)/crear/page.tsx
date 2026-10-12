@@ -14,7 +14,7 @@ export default async function Crear({
   const { grupo, deporte, reserva: reservaId } = await searchParams;
   const usuario = (await usuarioActual())!;
 
-  const [deportes, membresias, lugares, seguimientos, canchasPublicadas] = await Promise.all([
+  const [deportes, membresias, lugares, seguimientos] = await Promise.all([
     prisma.deporte.findMany({
       orderBy: { orden: 'asc' },
       select: { id: true, nombre: true, slug: true },
@@ -35,22 +35,20 @@ export default async function Crear({
       orderBy: { creadoEn: 'desc' },
       take: 50,
     }),
-    prisma.cancha.findMany({
-      where: { activa: true, dueno: { suscripcionHasta: { gt: new Date() } } },
-      select: {
-        id: true,
-        nombre: true,
-        direccion: true,
-        telefono: true,
-        ciudad: true,
-        diasDisponibles: true,
-        deporteId: true,
-        deporte: { select: { nombre: true } },
-      },
-      orderBy: { creadoEn: 'desc' },
-      take: 20,
-    }),
   ]);
+
+  // Canchas que el asistente necesita conocer de entrada (la del turno y la del
+  // último partido); el resto se busca en "¿Dónde juegan?".
+  const canchasPublicadas: {
+    id: string;
+    nombre: string;
+    direccion: string;
+    telefono: string | null;
+    ciudad: string | null;
+    diasDisponibles: string;
+    deporteId: string;
+    deporte: { nombre: string };
+  }[] = [];
 
   // Viene de un turno confirmado: la cancha, el día y la hora ya están definidos.
   const reserva = reservaId
@@ -160,6 +158,9 @@ export default async function Crear({
       deporteInicial={deporteInicial}
       deportePrincipal={principal?.deporteId ?? null}
       ultimo={ultimo}
+      esDueno={usuario.tipoCuenta === 'CANCHA'}
+      ciudad={usuario.ciudad}
+      provincia={usuario.provincia}
       turnoInicial={
         reserva
           ? {

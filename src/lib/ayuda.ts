@@ -115,12 +115,15 @@ export const TEMAS: Tema[] = [
         titulo: 'Crear un partido',
         pasos: [
           'Tocá el "+" y elegí el deporte (y el tipo: Fútbol 5, 7 u 11…).',
-          'Elegí dónde: una cancha publicada, un lugar guardado o escribilo.',
+          'Elegí dónde: buscá la cancha o el lugar (te mostramos los que están cerca). Si no está, escribilo y se crea.',
           'Elegí día y hora; podés hacer que se repita todas las semanas.',
           'Cupo y mínimo: te sugerimos según el deporte (Fútbol 7 → 14).',
           'Costo por jugador (opcional) y si es abierto o solo para tu grupo.',
         ],
-        texto: ['Con "Repetir el último" se carga todo lo de tu partido anterior y te propone la próxima fecha.'],
+        texto: [
+          'Con "Repetir el último" se carga todo lo de tu partido anterior y te propone la próxima fecha.',
+          'Los lugares que escribe la gente (clubes, plazas, canchas que no están en birteam) quedan guardados para todos: la próxima vez, vos o cualquiera lo encuentra buscándolo, con su dirección y contacto. Si escribís uno que ya existe en tu ciudad, se usa ese, no se repite.',
+        ],
         enlace: { href: '/crear', rotulo: 'Crear partido' },
       },
       {
@@ -331,7 +334,9 @@ export const TEMAS: Tema[] = [
           'Horario, duración del turno (1 h, 1 h 30 o 2 h), precio y, si querés, precio pico (desde una hora o los fines de semana).',
           '¿Varias iguales? Con "Canchas iguales" publicás hasta 10 de una (Cancha 1, 2, 3…).',
         ],
-        texto: [],
+        texto: [
+          'También podés publicarla al crear un partido: en "¿Dónde juegan?" escribí el nombre y la dirección y tocá "Es mi cancha: publicarla en birteam". Queda con horario de 9 a 23 todos los días; precio, horarios y fotos los completás después desde Mi complejo.',
+        ],
         enlace: { href: '/canchas/nueva', rotulo: 'Publicar cancha' },
       },
       {

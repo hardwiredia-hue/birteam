@@ -136,6 +136,8 @@ export const esquemaPartido = z.object({
   lugarTelefono: z.string().trim().max(30, 'El teléfono es muy largo.').nullish(),
   // Cancha publicada elegida como sede (opcional): valida sus días disponibles.
   canchaId: z.string().nullish(),
+  // Lugar de la comunidad elegido de la lista (si no, se busca o se crea por nombre).
+  lugarId: z.string().nullish(),
   // Turno confirmado del que sale el partido (opcional): quedan vinculados.
   reservaId: z.string().nullish(),
   // Nivel sugerido para sumarse (null = cualquiera).

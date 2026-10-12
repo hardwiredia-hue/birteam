@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { coordenadasDelLugar } from '@/lib/coordenadas';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { suscripcionActiva } from '@/lib/suscripcion';
@@ -42,6 +43,12 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  // Sin punto en el mapa (por ejemplo, publicada desde "crear partido"): el
+  // centro de su ciudad, para que aparezca en "cerca tuyo".
+  const punto =
+    d.latitud != null && d.longitud != null
+      ? { latitud: d.latitud, longitud: d.longitud }
+      : await coordenadasDelLugar({ ciudad: d.ciudad, provincia: d.provincia });
   // Una o varias iguales: todas o ninguna.
   const creadas = await prisma.$transaction(
     nombres.map((nombre) =>
@@ -55,8 +62,8 @@ export async function POST(request: Request) {
           ciudad: d.ciudad ?? null,
           provincia: d.provincia ?? null,
           pais: d.pais,
-          latitud: d.latitud ?? null,
-          longitud: d.longitud ?? null,
+          latitud: punto?.latitud ?? null,
+          longitud: punto?.longitud ?? null,
           precioPorHora: d.precioPorHora ?? null,
           telefono: d.telefono ?? null,
           fotos: JSON.stringify(d.fotos.map((nombre) => `/api/archivos/${nombre}`)),
