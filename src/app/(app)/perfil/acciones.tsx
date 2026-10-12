@@ -6,6 +6,7 @@ import { ActivarPush } from '@/components/activar-push';
 import { Interruptor } from '@/components/interruptor';
 import { CampoClave } from '@/components/campo-clave';
 import { prepararImagen } from '@/lib/preparar-imagen';
+import { borrarGuardadoOffline } from '@/lib/guardado-offline';
 
 const AVISOS = [
   { clave: 'avisosSociales', titulo: 'Avisos sociales', detalle: 'Me gusta, comentarios y seguidores nuevos.' },
@@ -60,6 +61,7 @@ export function AccionesPerfil({
   async function salir() {
     setSaliendo(true);
     await fetch('/api/auth/salir', { method: 'POST' });
+    await borrarGuardadoOffline();
     router.push('/');
     router.refresh();
   }
@@ -132,6 +134,7 @@ function EliminarCuenta({ usuario, conClave }: { usuario: string; conClave: bool
       setError(datos.error ?? 'No pudimos cerrar la cuenta.');
       return;
     }
+    await borrarGuardadoOffline();
     router.push('/?cuenta=eliminada');
     router.refresh();
   }

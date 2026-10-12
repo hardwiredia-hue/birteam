@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
 import { CampoClave } from '@/components/campo-clave';
 import { prepararImagen } from '@/lib/preparar-imagen';
+import { borrarGuardadoOffline } from '@/lib/guardado-offline';
 
 interface Deporte {
   id: string;
@@ -138,6 +139,7 @@ export function FormularioRegistro({
           : puerta === 'jugar'
             ? '/explorar'
             : '/panel');
+    await borrarGuardadoOffline();
     router.push(destino);
     router.refresh();
   }

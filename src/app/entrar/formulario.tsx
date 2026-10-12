@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CampoClave } from '@/components/campo-clave';
+import { borrarGuardadoOffline } from '@/lib/guardado-offline';
 
 export function FormularioEntrar({ volver }: { volver?: string | null }) {
   const router = useRouter();
@@ -31,6 +32,7 @@ export function FormularioEntrar({ volver }: { volver?: string | null }) {
       return;
     }
 
+    await borrarGuardadoOffline();
     router.push(volver ?? '/panel');
     router.refresh();
   }
