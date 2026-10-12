@@ -1,4 +1,5 @@
 import { prisma } from './db';
+import { distanciaKm } from './geo';
 import { enviarPush } from './push';
 import { equipoDelComplejo } from './gestion';
 import { materializarFijos } from './turnos-fijos';
@@ -494,6 +495,112 @@ export interface TurnoSugerido {
   precio: number | null;
 }
 
+export interface CanchaConTurnos {
+  canchaId: string;
+  canchaNombre: string;
+  direccion: string;
+  ciudad: string | null;
+  deporte: string;
+  /** Km desde el jugador, si los dos tienen ubicación. */
+  km: number | null;
+  turnos: { hora: string; precio: number | null; descuento: number | null }[];
+}
+
+/**
+ * Buscador de turnos: canchas (de uno o varios deportes) con turnos libres
+ * de verdad un día, en un rango de horas. Lo libre sale de la base, igual
+ * que en la grilla: nada de disponibilidad inventada. Si el turno está en
+ * el Radar, va con el precio de la oferta.
+ */
+export async function buscarTurnosLibres(opciones: {
+  deporteIds: string[] | null;
+  fecha: string;
+  /** Minutos del día desde/hasta (inicio del turno). Sin rango: todo el día. */
+  desde?: number;
+  hasta?: number;
+  /** Hora pedida en minutos: ordena los turnos por cercanía a esa hora. */
+  cerca?: number;
+  ciudad?: string | null;
+  ubicacion?: { latitud: number; longitud: number } | null;
+  turnosPorCancha?: number;
+  limite?: number;
+}): Promise<CanchaConTurnos[]> {
+  const desde = opciones.desde ?? 0;
+  const hasta = opciones.hasta ?? 24 * 60;
+  const limiteAnticipacion = Date.now() + MINUTOS_ANTICIPACION * 60_000;
+
+  await liberarVencidas();
+  const canchas = await prisma.cancha.findMany({
+    where: {
+      ...(opciones.deporteIds ? { deporteId: { in: opciones.deporteIds } } : {}),
+      activa: true,
+      reservasOnline: true,
+      dueno: { suscripcionHasta: { gt: new Date() }, eliminadoEn: null },
+    },
+    include: { deporte: { select: { nombre: true } } },
+    take: 200,
+  });
+  const abiertas = canchas.filter((c) => diasDeLaCancha(c.diasDisponibles).includes(diaDeSemana(opciones.fecha)));
+  if (abiertas.length === 0) return [];
+  const ids = abiertas.map((c) => c.id);
+  const [tomadas, ofertas] = await Promise.all([
+    prisma.reserva.findMany({
+      where: { canchaId: { in: ids }, fecha: opciones.fecha, estado: { in: ESTADOS_ACTIVOS } },
+      select: { canchaId: true, inicio: true, duracion: true },
+    }),
+    prisma.ofertaTurno.findMany({ where: { canchaId: { in: ids }, fecha: opciones.fecha } }),
+  ]);
+
+  const resultado: (CanchaConTurnos & { mismaCiudad: boolean; mejor: number })[] = [];
+  for (const cancha of abiertas) {
+    const libres: { hora: string; precio: number | null; descuento: number | null; distancia: number }[] = [];
+    for (const hora of horariosDelDia(cancha)) {
+      const minutos = Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3, 5));
+      if (minutos < desde || minutos >= hasta) continue;
+      const inicio = inicioDelTurno(opciones.fecha, hora).getTime();
+      if (inicio < limiteAnticipacion) continue;
+      const ocupado = tomadas.some(
+        (r) => r.canchaId === cancha.id && seSuperponen(inicio, cancha.duracionTurno, r.inicio.getTime(), r.duracion)
+      );
+      if (ocupado) continue;
+      const oferta = ofertas.find((o) => o.canchaId === cancha.id && o.hora === hora);
+      libres.push({
+        hora,
+        precio: oferta ? oferta.precioOferta : precioDelTurnoEn(cancha, opciones.fecha, hora),
+        descuento: oferta ? porcentajeDescuento(oferta.precioOriginal, oferta.precioOferta) : null,
+        distancia: opciones.cerca != null ? Math.abs(minutos - opciones.cerca) : minutos,
+      });
+    }
+    if (libres.length === 0) continue;
+    libres.sort((a, b) => a.distancia - b.distancia);
+    const elegidos = libres.slice(0, opciones.turnosPorCancha ?? 4).sort((a, b) => a.hora.localeCompare(b.hora));
+    resultado.push({
+      canchaId: cancha.id,
+      canchaNombre: cancha.nombre,
+      direccion: cancha.direccion,
+      ciudad: cancha.ciudad,
+      deporte: cancha.deporte.nombre,
+      km:
+        opciones.ubicacion && cancha.latitud != null && cancha.longitud != null
+          ? distanciaKm(opciones.ubicacion.latitud, opciones.ubicacion.longitud, cancha.latitud, cancha.longitud)
+          : null,
+      turnos: elegidos.map(({ distancia: _distancia, ...turno }) => turno),
+      mismaCiudad: Boolean(opciones.ciudad && cancha.ciudad === opciones.ciudad),
+      mejor: libres[0].distancia,
+    });
+  }
+  // Primero lo más cerca (km o misma ciudad), después lo más pegado a la hora pedida.
+  resultado.sort(
+    (a, b) =>
+      (a.km ?? Infinity) - (b.km ?? Infinity) ||
+      Number(b.mismaCiudad) - Number(a.mismaCiudad) ||
+      a.mejor - b.mejor
+  );
+  return resultado
+    .slice(0, opciones.limite ?? 30)
+    .map(({ mismaCiudad: _mismaCiudad, mejor: _mejor, ...cancha }) => cancha);
+}
+
 /**
  * Turnos libres de verdad, en canchas del deporte, cerca del horario pedido
  * (hasta una hora antes o después). Sirve para el partido que todavía no
@@ -507,58 +614,26 @@ export async function turnosLibresParaPartido(opciones: {
 }): Promise<TurnoSugerido[]> {
   const fecha = claveDia(opciones.instante);
   const horaPedida = opciones.instante.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ZONA });
-  const minutosPedidos = Number(horaPedida.slice(0, 2)) * 60 + Number(horaPedida.slice(3, 5));
-  const limiteAnticipacion = Date.now() + MINUTOS_ANTICIPACION * 60_000;
-
-  await liberarVencidas();
-  const canchas = await prisma.cancha.findMany({
-    where: {
-      deporteId: opciones.deporteId,
-      activa: true,
-      reservasOnline: true,
-      dueno: { suscripcionHasta: { gt: new Date() }, eliminadoEn: null },
-    },
-    take: 60,
+  const minutos = Number(horaPedida.slice(0, 2)) * 60 + Number(horaPedida.slice(3, 5));
+  const canchas = await buscarTurnosLibres({
+    deporteIds: [opciones.deporteId],
+    fecha,
+    desde: minutos - 60,
+    hasta: minutos + 61,
+    cerca: minutos,
+    ciudad: opciones.ciudad,
+    turnosPorCancha: 1,
+    limite: opciones.limite ?? 5,
   });
-  if (canchas.length === 0) return [];
-  const tomadas = await prisma.reserva.findMany({
-    where: { canchaId: { in: canchas.map((c) => c.id) }, fecha, estado: { in: ESTADOS_ACTIVOS } },
-    select: { canchaId: true, inicio: true, duracion: true },
-  });
-
-  const sugeridos: (TurnoSugerido & { distancia: number; mismaCiudad: boolean })[] = [];
-  for (const cancha of canchas) {
-    if (!diasDeLaCancha(cancha.diasDisponibles).includes(diaDeSemana(fecha))) continue;
-    for (const hora of horariosDelDia(cancha)) {
-      const minutos = Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3, 5));
-      const distancia = Math.abs(minutos - minutosPedidos);
-      if (distancia > 60) continue;
-      const inicio = inicioDelTurno(fecha, hora).getTime();
-      if (inicio < limiteAnticipacion) continue;
-      const ocupado = tomadas.some(
-        (r) => r.canchaId === cancha.id && seSuperponen(inicio, cancha.duracionTurno, r.inicio.getTime(), r.duracion)
-      );
-      if (ocupado) continue;
-      sugeridos.push({
-        canchaId: cancha.id,
-        canchaNombre: cancha.nombre,
-        direccion: cancha.direccion,
-        ciudad: cancha.ciudad,
-        fecha,
-        hora,
-        precio: precioDelTurnoEn(cancha, fecha, hora),
-        distancia,
-        mismaCiudad: Boolean(opciones.ciudad && cancha.ciudad === opciones.ciudad),
-      });
-    }
-  }
-  // Primero la misma ciudad, después lo más pegado al horario; un turno por cancha.
-  sugeridos.sort((a, b) => Number(b.mismaCiudad) - Number(a.mismaCiudad) || a.distancia - b.distancia);
-  const vistos = new Set<string>();
-  return sugeridos
-    .filter((s) => (vistos.has(s.canchaId) ? false : (vistos.add(s.canchaId), true)))
-    .slice(0, opciones.limite ?? 5)
-    .map(({ distancia: _distancia, mismaCiudad: _mismaCiudad, ...turno }) => turno);
+  return canchas.map((cancha) => ({
+    canchaId: cancha.canchaId,
+    canchaNombre: cancha.canchaNombre,
+    direccion: cancha.direccion,
+    ciudad: cancha.ciudad,
+    fecha,
+    hora: cancha.turnos[0].hora,
+    precio: cancha.turnos[0].precio,
+  }));
 }
 
 /** Hasta cuántos días después del turno el complejo puede marcar que no fue. */

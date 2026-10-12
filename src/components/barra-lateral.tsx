@@ -18,6 +18,17 @@ function IconoReservas() {
   );
 }
 
+function IconoBuscarTurno() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="5" width="13" height="12" rx="2" />
+      <path d="M3.5 9.5h13M7.5 3v4M12.5 3v4" />
+      <circle cx="17" cy="17" r="3.2" />
+      <path d="m19.4 19.4 2.1 2.1" />
+    </svg>
+  );
+}
+
 function IconoRadar() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -52,6 +63,7 @@ const ITEMS = [
   { href: '/panel', rotulo: 'Inicio', Icono: IconoInicio },
   { href: '/explorar', rotulo: 'Explorar', Icono: IconoExplorar },
   { href: '/birtsocial', rotulo: 'BirtSocial', Icono: IconoJugadas },
+  { href: '/turnos', rotulo: 'Buscar turno', Icono: IconoBuscarTurno },
   { href: '/radar', rotulo: 'Radar', Icono: IconoRadar },
   { href: '/reservas', rotulo: 'Reservas', Icono: IconoReservas },
   { href: '/desafios', rotulo: 'Desafíos', Icono: IconoDesafios },

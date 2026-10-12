@@ -125,10 +125,10 @@ export default async function Explorar({
               </span>
               <span className="text-naranja-txt">→</span>
             </Link>
-            <Link href="/reservas" className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
+            <Link href={deporte ? `/turnos?deporte=${deporte}` : '/turnos'} className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
               <span>
-                <span className="t-rotulo block text-verde-txt">Reservas</span>
-                <span className="block text-xs font-semibold">Tus turnos pedidos</span>
+                <span className="t-rotulo block text-verde-txt">Buscar turno</span>
+                <span className="block text-xs font-semibold">Libres por día y hora</span>
               </span>
               <span className="text-verde-txt">→</span>
             </Link>

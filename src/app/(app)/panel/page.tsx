@@ -227,14 +227,14 @@ export default async function Inicio() {
       {/* Atajos: una sola lista, no tres tarjetas iguales. */}
       <nav className="tarjeta flex flex-col" aria-label="Atajos">
         <Atajo
-          href="/reservas"
-          titulo="Turnos de cancha"
+          href={proximoTurno ? '/reservas' : '/turnos'}
+          titulo={proximoTurno ? 'Tu próximo turno' : 'Buscar turno'}
           detalle={
             proximoTurno
               ? `${rotuloDia(proximoTurno.fecha)} ${proximoTurno.hora} en ${proximoTurno.cancha.nombre}${
                   proximoTurno.estado === 'SOLICITADA' ? ', esperando confirmación' : ''
                 }`
-              : 'Reservá y el complejo te confirma'
+              : 'Canchas con turno libre hoy, a la hora que quieras'
           }
           icono={
             <>

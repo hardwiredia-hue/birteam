@@ -130,7 +130,12 @@ export default async function Reservas() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="t-pantalla">Reservas</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="t-pantalla">Reservas</h1>
+          <Link href="/turnos" className="text-sm font-semibold text-verde-txt">
+            Buscar turno
+          </Link>
+        </div>
         <p className="mt-1 text-sm text-tinta-2">
           Pedís el turno desde la cancha, el complejo lo confirma y se paga allá.
         </p>
@@ -250,8 +255,8 @@ export default async function Reservas() {
             <p className="text-sm text-tinta-2">
               No tenés turnos pedidos. Buscá una cancha y elegí el horario que te quede bien.
             </p>
-            <Link href="/explorar" className="btn btn-secundario btn-sm self-start">
-              Buscar canchas
+            <Link href="/turnos" className="btn btn-primario btn-sm self-start">
+              Buscar turno
             </Link>
           </div>
         ) : (
