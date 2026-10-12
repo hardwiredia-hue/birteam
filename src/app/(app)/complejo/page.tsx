@@ -7,6 +7,8 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { cobroOnlineHabilitado, comisionPorcentaje, pagosSimulados } from '@/lib/mercadopago';
 import { DesconectarMercadoPago } from './mercadopago';
 import { EquipoComplejo } from './equipo';
+import { MapaOcupacion } from './ocupacion';
+import { ocupacionPorFranja } from '@/lib/ocupacion';
 import { formatearPuntaje } from '@/lib/resenas';
 import {
   ESTADOS_ACTIVOS,
@@ -114,6 +116,15 @@ export default async function MiComplejo({
       puntaje: resena ? { promedio: resena._avg.puntaje ?? 0, cantidad: resena._count._all } : null,
     };
   });
+
+  // Ocupación por franja de las últimas 4 semanas (sin contar hoy).
+  const SEMANAS = 4;
+  const fechasPasadas = proximosDias(SEMANAS * 7, new Date(ahora.getTime() - SEMANAS * 7 * 86400_000));
+  const tomadasPasadas = await prisma.reserva.findMany({
+    where: { canchaId: { in: ids }, fecha: { in: fechasPasadas }, estado: { in: ['CONFIRMADA', 'BLOQUEO'] } },
+    select: { canchaId: true, fecha: true, hora: true },
+  });
+  const ocupacion = ocupacionPorFranja(canchas, fechasPasadas, tomadasPasadas);
 
   const totalTurnos = porCancha.reduce((suma, c) => suma + c.total, 0);
   const totalOcupados = porCancha.reduce((suma, c) => suma + c.ocupados, 0);
@@ -242,6 +253,8 @@ export default async function MiComplejo({
               {canceladas > 0 ? ` Cancelaciones en el período: ${canceladas}.` : ''}
             </p>
           </section>
+
+          <MapaOcupacion semanas={SEMANAS} {...ocupacion} />
 
           <EquipoComplejo
             equipo={equipo.map((e) => ({ id: e.id, nombre: e.usuario.nombre, usuario: e.usuario.usuario }))}

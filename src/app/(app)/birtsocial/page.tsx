@@ -74,7 +74,10 @@ export default async function BirtSocial({
           Birt<span className="text-verde-txt">Social</span>
         </h1>
         <div className="flex items-center gap-2">
-          <AccesosRapidos avisos={avisosSinLeer} mensajes={mensajesSinLeer} />
+          {/* En escritorio ya están en la cabecera de arriba. */}
+          <div className="lg:hidden">
+            <AccesosRapidos avisos={avisosSinLeer} mensajes={mensajesSinLeer} />
+          </div>
           <Link href="/clips" className="btn btn-secundario btn-sm">
             ▶ Clips
           </Link>

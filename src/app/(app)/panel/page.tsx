@@ -116,7 +116,8 @@ export default async function Inicio() {
         <Link
           href="/mensajes"
           aria-label="Mensajes"
-          className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-borde-2 text-tinta-2"
+          // En escritorio ya está en la cabecera de arriba.
+          className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-borde-2 text-tinta-2 lg:hidden"
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12a8 8 0 0 1-8 8H4l1.5-3.2A8 8 0 1 1 21 12z" />
