@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { JugadaParaMostrar } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
+import { Compartir } from '@/components/compartir';
 
 /**
  * Feed vertical de clips: un video por pantalla, scroll con imán, autoplay
@@ -203,22 +204,18 @@ function Clip({
           </span>
         </button>
         {clip.publica ? (
-          <button
-            type="button"
-            onClick={async () => {
-              const url = `${window.location.origin}/j/${clip.id}`;
-              try {
-                if (navigator.share) await navigator.share({ title: 'Mirá esta jugada en birteam', url });
-                else await navigator.clipboard.writeText(url);
-              } catch {
-                // Canceló el share: nada que hacer.
-              }
-            }}
-            className="flex h-11 w-11 items-center justify-center rounded-[6px] border border-white/25 bg-black/45 text-lg text-white"
-            aria-label="Compartir"
+          <Compartir
+            ruta={`/j/${clip.id}`}
+            texto="Mirá esta jugada en birteam"
+            titulo="Compartir la jugada"
+            className="flex h-11 w-11 items-center justify-center rounded-[6px] border border-white/25 bg-black/45 text-white"
+            ariaLabel="Compartir"
           >
-            ↗
-          </button>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 15V3M7.5 7.5 12 3l4.5 4.5" />
+              <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+            </svg>
+          </Compartir>
         ) : null}
       </div>
 

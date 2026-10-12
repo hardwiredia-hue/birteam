@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { JugadaParaMostrar } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
+import { Compartir } from '@/components/compartir';
 
 /** Publicar una jugada: hasta 5 fotos + texto. */
 export function PublicarJugada({
@@ -497,26 +498,13 @@ export function TarjetaJugada({ jugada }: { jugada: JugadaParaMostrar }) {
 
 /** Compartir la jugada afuera (WhatsApp y demás) con su link público. */
 function CompartirJugada({ jugadaId }: { jugadaId: string }) {
-  const [copiado, setCopiado] = useState(false);
-
-  async function compartir() {
-    const url = `${window.location.origin}/j/${jugadaId}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'Mirá esta jugada en birteam', url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      // Canceló el share: nada que hacer.
-    }
-  }
-
   return (
-    <button type="button" onClick={compartir} className="text-xs font-semibold text-tinta-3">
-      {copiado ? 'Link copiado ✓' : 'Compartir'}
-    </button>
+    <Compartir
+      ruta={`/j/${jugadaId}`}
+      texto="Mirá esta jugada en birteam"
+      titulo="Compartir la jugada"
+      className="text-xs font-semibold text-tinta-3"
+      etiqueta="Compartir"
+    />
   );
 }

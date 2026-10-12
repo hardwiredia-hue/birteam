@@ -2,29 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Compartir } from '@/components/compartir';
 
 export function CompartirTorneo({ rutaPublica }: { rutaPublica: string }) {
-  const [copiado, setCopiado] = useState(false);
-
-  async function compartir() {
-    const url = `${window.location.origin}${rutaPublica}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'Torneo en birteam', url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      // Canceló el share.
-    }
-  }
-
   return (
-    <button type="button" className="btn btn-secundario" onClick={compartir}>
-      {copiado ? 'Link copiado ✓' : 'Convocar equipos (compartir)'}
-    </button>
+    <Compartir
+      ruta={rutaPublica}
+      texto="Anotá tu equipo en este torneo de birteam"
+      titulo="Convocar equipos"
+      className="btn btn-secundario"
+      etiqueta="Convocar equipos (compartir)"
+    />
   );
 }
 

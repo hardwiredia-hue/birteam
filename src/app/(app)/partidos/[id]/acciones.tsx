@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Compartir } from '@/components/compartir';
 
 export function BotoneraRsvp({
   partidoId,
@@ -212,28 +213,15 @@ export function CancelarPartido({ partidoId }: { partidoId: string }) {
 }
 
 export function CompartirPartido({ rutaPublica }: { rutaPublica: string }) {
-  const [copiado, setCopiado] = useState(false);
-
-  async function compartir() {
-    // El link público: se abre sin cuenta y invita a sumarse en 30 segundos.
-    const url = `${window.location.origin}${rutaPublica}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'Partido en birteam', url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      // El usuario canceló el share; nada que hacer.
-    }
-  }
-
+  // El link público: se abre sin cuenta y invita a sumarse en 30 segundos.
   return (
-    <button type="button" className="btn btn-secundario" onClick={compartir}>
-      {copiado ? 'Link copiado ✓' : 'Compartir el partido'}
-    </button>
+    <Compartir
+      ruta={rutaPublica}
+      texto="Sumate a mi partido en birteam"
+      titulo="Compartir el partido"
+      className="btn btn-secundario"
+      etiqueta="Compartir el partido"
+    />
   );
 }
 
