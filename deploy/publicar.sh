@@ -56,6 +56,14 @@ npx prisma db push --skip-generate --accept-data-loss
 # Catalogos (deportes, geografia): siembra idempotente, nunca pisa datos.
 npx tsx prisma/seed.ts
 
+# Un solo build a la vez EN EL SERVIDOR (staging y producción juntos lo
+# dejan sin recursos: "spawn EAGAIN"). Si el otro está compilando, se espera.
+exec 8>/tmp/birteam-compilar.lock
+if ! flock -w 1500 8; then
+  anotar "No se pudo compilar $SHA: el otro ambiente sigue compilando hace 25 min."
+  exit 1
+fi
+
 # Compilar A UN COSTADO: el .next vivo sigue sirviendo hasta tener el nuevo.
 rm -rf .next.nuevo
 if ! DIST_DIR=.next.nuevo npm run build; then
@@ -63,6 +71,7 @@ if ! DIST_DIR=.next.nuevo npm run build; then
   rm -rf .next.nuevo
   exit 1
 fi
+flock -u 8
 
 # Intercambio instantaneo + reinicio. Lo anterior queda para volver atras.
 rm -rf .next.anterior
