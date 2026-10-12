@@ -364,6 +364,24 @@
     color: var(--tinta-3);
   }
 
+  /* ---------- carga ---------- */
+  /* Bloque gris que late mientras llega el contenido (quieto si se pidió menos movimiento). */
+  .esqueleto {
+    border-radius: 4px;
+    background: var(--borde);
+    animation: latido 1.4s ease-in-out infinite;
+  }
+  @keyframes latido {
+    50% {
+      opacity: 0.45;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .esqueleto {
+      animation: none;
+    }
+  }
+
   /* ---------- superficies ---------- */
   .tarjeta {
     background: var(--panel);
