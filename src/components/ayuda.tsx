@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Articulo, Tema } from '@/lib/ayuda';
+import type { Articulo, Novedad, Tema } from '@/lib/ayuda';
 import { Logotipo } from '@/components/marca';
 
 const TRAZOS: Record<Tema['icono'], React.ReactNode> = {
@@ -160,5 +160,40 @@ export function CuerpoArticulo({ articulo }: { articulo: Articulo }) {
         </Link>
       ) : null}
     </div>
+  );
+}
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** "12 oct" a partir de "2026-10-12" (sin zona horaria de por medio). */
+export function fechaCorta(fecha: string) {
+  const [, mes, dia] = fecha.split('-').map(Number);
+  return `${dia} ${MESES_CORTOS[mes - 1]}`;
+}
+
+/** Lista de novedades: fecha a la izquierda, qué cambió y el link para leer más. */
+export function ListaNovedades({ novedades }: { novedades: Novedad[] }) {
+  return (
+    <ol className="flex flex-col divide-y divide-borde border-y border-borde">
+      {novedades.map((novedad) => (
+        <li key={`${novedad.fecha}-${novedad.titulo}`} className="flex gap-4 py-4">
+          <span className="t-rotulo w-14 shrink-0 pt-0.5 tabular">{fechaCorta(novedad.fecha)}</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-semibold">
+              {novedad.titulo}
+              {novedad.para === 'complejos' ? (
+                <span className="t-rotulo ml-2 align-middle text-naranja-txt">Complejos</span>
+              ) : null}
+            </p>
+            <p className="mt-0.5 text-[13.5px] leading-relaxed text-tinta-2">{novedad.texto}</p>
+            {novedad.enlace ? (
+              <Link href={novedad.enlace.href} className="mt-1.5 inline-block text-[13px] font-semibold text-verde-txt">
+                {novedad.enlace.rotulo}
+              </Link>
+            ) : null}
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }

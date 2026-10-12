@@ -511,3 +511,105 @@ export function buscarArticulo(slug: string, id: string) {
   const articulo = tema?.articulos.find((a) => a.id === id);
   return tema && articulo ? { tema, articulo } : null;
 }
+
+/**
+ * Novedades: lo nuevo que el usuario nota, lo más reciente primero. Cada
+ * función nueva suma su línea acá (ver CLAUDE.md).
+ */
+export interface Novedad {
+  fecha: string;
+  titulo: string;
+  texto: string;
+  para: 'todos' | 'jugadores' | 'complejos';
+  /** Para leer más: el artículo de ayuda o la pantalla. */
+  enlace?: { href: string; rotulo: string };
+}
+
+export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-12',
+    titulo: 'Elegí la cancha buscándola',
+    texto:
+      'Al crear un partido, un desafío o al editarlo, buscás la cancha entre las publicadas de tu deporte (las cercanas primero). Si no está, escribís dónde juegan. Si sos dueño, cargás tu cancha ahí mismo.',
+    para: 'todos',
+    enlace: { href: '/ayuda/partidos#crear-partido', rotulo: 'Cómo crear un partido' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Cerca tuyo',
+    texto:
+      'Usá la ubicación del celular para ver partidos, canchas, grupos y turnos ordenados por distancia, con filtro de 2 a 50 km. En Inicio, los partidos abiertos más cercanos.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/primeros-pasos#cerca', rotulo: 'Ver lo que está cerca' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Avisos según la distancia',
+    texto:
+      'Los avisos de partidos que buscan jugadores y del Radar te llegan hasta la distancia que elijas en Perfil → Ajustes, aunque sea en otra ciudad.',
+    para: 'jugadores',
+    enlace: { href: '/perfil', rotulo: 'Ir a Ajustes' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Cómo llegar',
+    texto: 'Cada cancha y cada partido tienen "Cómo llegar": abre el mapa con el destino y te dice a cuántos km está.',
+    para: 'todos',
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Centro de ayuda',
+    texto: 'Cómo funciona cada parte de birteam, con buscador y preguntas frecuentes.',
+    para: 'todos',
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Funciona sin señal',
+    texto: 'Las pantallas que ya abriste se ven igual sin conexión, con un aviso arriba. Y las fotos se achican antes de subir: suben rápido con datos.',
+    para: 'todos',
+    enlace: { href: '/ayuda/primeros-pasos#sin-senal', rotulo: 'Más sobre esto' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Torneos en formato copa',
+    texto: 'Además de liga, eliminación directa con cuadro sorteado y penales.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/torneos#crear-torneo', rotulo: 'Crear un torneo' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Figura del partido y equipos parejos',
+    texto: 'Después de jugar, los que jugaron votan la figura. Antes, el organizador arma los equipos parejos por nivel o mezclados.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#equipos', rotulo: 'Armar equipos' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Logos de equipos',
+    texto: 'Los grupos y los equipos de torneo pueden subir su escudo.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/torneos#logo-equipo', rotulo: 'Subir el logo' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Buscar turno en todas las canchas',
+    texto: 'Elegís deporte, día y hora y ves las canchas con ese turno libre, todas a la vez. Y podés agregar partidos y turnos a tu calendario.',
+    para: 'jugadores',
+    enlace: { href: '/turnos', rotulo: 'Buscar turno' },
+  },
+  {
+    fecha: '2026-10-12',
+    titulo: 'Puesta a punto y mapa de ocupación',
+    texto: 'El panel del complejo te dice qué falta para recibir reservas y muestra la ocupación por día y hora.',
+    para: 'complejos',
+    enlace: { href: '/ayuda/complejos#puesta-a-punto', rotulo: 'Puesta a punto' },
+  },
+  {
+    fecha: '2026-10-11',
+    titulo: 'Turnos fijos, "Avisame si se libera" y "No vino"',
+    texto:
+      'Los complejos anotan turnos fijos semanales y marcan quién no vino. Los jugadores piden que les avisemos si se libera un turno tomado.',
+    para: 'todos',
+    enlace: { href: '/ayuda/complejos#turnos-fijos', rotulo: 'Turnos fijos' },
+  },
+];

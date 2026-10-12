@@ -11,6 +11,8 @@ commit.**
 - Los números que se citan (horas, minutos, topes) tienen que ser los del
   código. Si cambia el código, cambia el texto.
 - Si la pregunta es de las que más se hacen, sumarla a `FRECUENTES`.
+- Lo que el usuario nota suma su línea en `NOVEDADES` (arriba de todo, con la
+  fecha del día): se ve en /ayuda y en /ayuda/novedades.
 - Una pantalla nueva con algo para explicar lleva su atajo
   `<EnlaceAyuda tema="…" articulo="…" />` (`src/components/ayuda.tsx`).
 

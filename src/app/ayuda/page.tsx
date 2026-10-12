@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { usuarioActual } from '@/lib/auth';
-import { FRECUENTES, TEMAS, buscarArticulo } from '@/lib/ayuda';
+import { FRECUENTES, NOVEDADES, TEMAS, buscarArticulo } from '@/lib/ayuda';
 import { BuscadorAyuda, type EntradaAyuda } from '@/components/buscador-ayuda';
-import { CabeceraAyuda, ContactoAyuda, CuerpoArticulo, IconoTema } from '@/components/ayuda';
+import { CabeceraAyuda, ContactoAyuda, CuerpoArticulo, IconoTema, ListaNovedades } from '@/components/ayuda';
 
 export const metadata = {
   title: 'Ayuda',
@@ -64,6 +64,16 @@ export default async function Ayuda() {
             </div>
           </section>
         ))}
+
+        <section className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between">
+            <h2 className="t-rotulo">Novedades</h2>
+            <Link href="/ayuda/novedades" className="text-xs font-semibold text-verde-txt">
+              Ver todas
+            </Link>
+          </div>
+          <ListaNovedades novedades={NOVEDADES.slice(0, 4)} />
+        </section>
 
         <section className="flex flex-col gap-3">
           <h2 className="t-rotulo">Preguntas frecuentes</h2>

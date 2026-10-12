@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { FRECUENTES, TEMAS, buscarArticulo } from '../src/lib/ayuda';
+import { FRECUENTES, NOVEDADES, TEMAS, buscarArticulo } from '../src/lib/ayuda';
 
 test('ayuda: temas y artículos con identificador único', () => {
   const slugs = TEMAS.map((t) => t.slug);
@@ -30,6 +30,27 @@ test('ayuda: los atajos llevan a pantallas que existen', () => {
       if (!articulo.enlace) continue;
       const ruta = articulo.enlace.href.split(/[?#]/)[0];
       assert.ok(ruta === '/' || existe(ruta), `${tema.slug}#${articulo.id} → ${articulo.enlace.href}`);
+    }
+  }
+});
+
+test('ayuda: novedades ordenadas y con links que existen', () => {
+  const fechas = NOVEDADES.map((n) => n.fecha);
+  assert.deepEqual(fechas, [...fechas].sort().reverse(), 'lo más reciente primero');
+  const app = path.join(__dirname, '..', 'src', 'app');
+  for (const novedad of NOVEDADES) {
+    assert.match(novedad.fecha, /^\d{4}-\d{2}-\d{2}$/);
+    if (!novedad.enlace) continue;
+    const [ruta, ancla] = novedad.enlace.href.split('#');
+    const ayuda = ruta.match(/^\/ayuda\/([^/]+)$/);
+    if (ayuda && ancla) {
+      assert.ok(buscarArticulo(ayuda[1], ancla), `${novedad.titulo} → ${novedad.enlace.href}`);
+    } else {
+      const partes = ruta.split('/').filter(Boolean);
+      assert.ok(
+        ['', '(app)'].some((grupo) => existsSync(path.join(app, grupo, ...partes, 'page.tsx'))),
+        `${novedad.titulo} → ${novedad.enlace.href}`
+      );
     }
   }
 });
