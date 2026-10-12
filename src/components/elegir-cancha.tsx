@@ -26,7 +26,7 @@ export function PasoDonde({
   esDueno,
   ciudad,
   provincia,
-  propios,
+  propios = [],
   lugarNombre,
   direccion,
   telefono,
@@ -36,14 +36,20 @@ export function PasoDonde({
   alElegirLugar,
   setDireccion,
   setTelefono,
+  conTitulo = true,
+  conTelefono = true,
 }: {
+  /** Sin el título grande, para usarlo dentro de otro formulario (desafíos). */
+  conTitulo?: boolean;
+  /** Pedir el teléfono del lugar (los desafíos no lo guardan). */
+  conTelefono?: boolean;
   deporteId: string | null;
   deporteNombre: string | null;
   esDueno: boolean;
   ciudad: string | null;
   provincia: string | null;
   /** Lugares donde ya organizó (los suyos). */
-  propios: { id: string; nombre: string; direccion: string | null; telefono: string | null }[];
+  propios?: { id: string; nombre: string; direccion: string | null; telefono: string | null }[];
   lugarNombre: string;
   direccion: string;
   telefono: string;
@@ -134,11 +140,13 @@ export function PasoDonde({
 
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="t-display text-[32px]">
-        ¿Dónde
-        <br />
-        juegan?
-      </h1>
+      {conTitulo ? (
+        <h1 className="t-display text-[32px]">
+          ¿Dónde
+          <br />
+          juegan?
+        </h1>
+      ) : null}
 
       {elegido ? (
         <div className="tarjeta flex items-start justify-between gap-3 p-4" style={{ borderColor: 'var(--naranja-txt)' }}>
@@ -226,7 +234,12 @@ export function PasoDonde({
               se usa solo para este partido, no queda guardada como cancha.
             </p>
           </div>
-          <Datos direccion={direccion} telefono={telefono} setDireccion={setDireccion} setTelefono={setTelefono} />
+          <Datos
+            direccion={direccion}
+            telefono={conTelefono ? telefono : null}
+            setDireccion={setDireccion}
+            setTelefono={setTelefono}
+          />
           {esDueno ? (
             <div className="flex flex-col gap-2 border-t border-borde pt-3">
               <div>
@@ -263,7 +276,8 @@ function Datos({
   setTelefono,
 }: {
   direccion: string;
-  telefono: string;
+  /** null: no se pide. */
+  telefono: string | null;
   setDireccion: (texto: string) => void;
   setTelefono: (texto: string) => void;
 }) {
@@ -281,19 +295,21 @@ function Datos({
           onChange={(evento) => setDireccion(evento.target.value)}
         />
       </div>
-      <div>
-        <label className="rotulo-campo" htmlFor="lugar-telefono">
-          Teléfono o contacto · opcional
-        </label>
-        <input
-          id="lugar-telefono"
-          className="campo"
-          placeholder="+54 9 11 5555-1234"
-          value={telefono}
-          onChange={(evento) => setTelefono(evento.target.value)}
-        />
-        <p className="mt-1 text-xs text-tinta-3">Se muestra en el partido, para reservar o avisar cualquier cosa.</p>
-      </div>
+      {telefono != null ? (
+        <div>
+          <label className="rotulo-campo" htmlFor="lugar-telefono">
+            Teléfono o contacto · opcional
+          </label>
+          <input
+            id="lugar-telefono"
+            className="campo"
+            placeholder="+54 9 11 5555-1234"
+            value={telefono}
+            onChange={(evento) => setTelefono(evento.target.value)}
+          />
+          <p className="mt-1 text-xs text-tinta-3">Se muestra en el partido, para reservar o avisar cualquier cosa.</p>
+        </div>
+      ) : null}
     </>
   );
 }

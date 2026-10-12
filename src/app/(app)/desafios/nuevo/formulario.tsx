@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
 import { jugadoresPorLado } from '@/lib/deportes';
+import { PasoDonde, type CanchaElegible } from '@/components/elegir-cancha';
 
 interface MiGrupo {
   id: string;
@@ -23,15 +24,19 @@ interface Candidato {
 export function FormularioDesafio({
   misGrupos,
   candidatos,
-  canchas,
   grupoInicial,
   rivalInicial,
+  esDueno,
+  ciudad,
+  provincia,
 }: {
   misGrupos: MiGrupo[];
   candidatos: Candidato[];
-  canchas: { id: string; nombre: string; direccion: string; deporteId: string }[];
   grupoInicial: string | null;
   rivalInicial: string | null;
+  esDueno: boolean;
+  ciudad: string | null;
+  provincia: string | null;
 }) {
   const router = useRouter();
   const inicialRival = candidatos.find((c) => c.id === rivalInicial);
@@ -47,7 +52,9 @@ export function FormularioDesafio({
   const [hora, setHora] = useState('21:00');
   const [lugarNombre, setLugarNombre] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [canchaId, setCanchaId] = useState<string | null>(null);
+  // Solo para publicar la cancha propia (dueños); el desafío no lo guarda.
+  const [telefono, setTelefono] = useState('');
+  const [cancha, setCancha] = useState<CanchaElegible | null>(null);
   const [porLado, setPorLado] = useState(jugadoresPorLado(retador.deporte) ?? 5);
   const [nivel, setNivel] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState('');
@@ -65,7 +72,6 @@ export function FormularioDesafio({
       .slice(0, 8);
   }, [candidatos, busqueda, retador]);
   const rival = candidatos.find((c) => c.id === rivalId) ?? null;
-  const canchasDelDeporte = canchas.filter((c) => c.deporteId === retador.deporteId);
   const hoy = new Date().toLocaleDateString('en-CA');
 
   function cambiarGrupo(id: string) {
@@ -73,7 +79,11 @@ export function FormularioDesafio({
     const grupo = misGrupos.find((g) => g.id === id)!;
     setPorLado(jugadoresPorLado(grupo.deporte) ?? 5);
     if (rival && rival.deporteId !== grupo.deporteId) setRivalId(null);
-    setCanchaId(null);
+    if (cancha && cancha.deporteId !== grupo.deporteId) {
+      setCancha(null);
+      setLugarNombre('');
+      setDireccion('');
+    }
   }
 
   async function enviar() {
@@ -94,7 +104,7 @@ export function FormularioDesafio({
         fecha: fecha.toISOString(),
         lugarNombre: lugarNombre.trim(),
         direccion: direccion.trim() || null,
-        canchaId,
+        canchaId: cancha?.id ?? null,
         jugadoresPorLado: porLado,
         nivel,
         mensaje: mensaje.trim() || null,
@@ -198,40 +208,36 @@ export function FormularioDesafio({
 
       <div>
         <span className="rotulo-campo">Dónde</span>
-        {canchasDelDeporte.length > 0 ? (
-          <div className="mt-1 flex flex-wrap gap-2">
-            {canchasDelDeporte.slice(0, 6).map((cancha) => (
-              <button
-                key={cancha.id}
-                type="button"
-                onClick={() => {
-                  setCanchaId(cancha.id);
-                  setLugarNombre(cancha.nombre);
-                  setDireccion(cancha.direccion);
-                }}
-                className={canchaId === cancha.id ? 'chip-sel chip-sel-activo' : 'chip-sel'}
-              >
-                {cancha.nombre}
-              </button>
-            ))}
-          </div>
-        ) : null}
-        <input
-          className="campo mt-2"
-          value={lugarNombre}
-          onChange={(e) => {
-            setLugarNombre(e.target.value);
-            setCanchaId(null);
+        <PasoDonde
+          conTitulo={false}
+          conTelefono={false}
+          deporteId={retador.deporteId}
+          deporteNombre={retador.deporte}
+          esDueno={esDueno}
+          ciudad={ciudad}
+          provincia={provincia}
+          lugarNombre={lugarNombre}
+          direccion={direccion}
+          telefono={telefono}
+          canchaElegida={cancha}
+          alEscribir={(texto) => {
+            setCancha(null);
+            setLugarNombre(texto);
+            if (!texto) setDireccion('');
           }}
-          placeholder="Nombre de la cancha o lugar"
+          alElegirCancha={(elegida) => {
+            setCancha(elegida);
+            setLugarNombre(elegida.nombre);
+            setDireccion(elegida.direccion ?? '');
+          }}
+          alElegirLugar={(lugar) => {
+            setLugarNombre(lugar.nombre);
+            setDireccion(lugar.direccion ?? '');
+          }}
+          setDireccion={setDireccion}
+          setTelefono={setTelefono}
         />
         {errores.lugarNombre ? <p className="mt-1 text-xs text-rojo">{errores.lugarNombre[0]}</p> : null}
-        <input
-          className="campo mt-2"
-          value={direccion}
-          onChange={(e) => setDireccion(e.target.value)}
-          placeholder="Dirección (opcional)"
-        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

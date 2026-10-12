@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { coordenadasDelLugar } from '@/lib/coordenadas';
+import { deportesCompatibles } from '@/lib/lugares';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaPartido, erroresDeZod } from '@/lib/validacion';
@@ -29,6 +30,9 @@ export async function POST(request: Request) {
     const cancha = await prisma.cancha.findUnique({ where: { id: d.canchaId } });
     if (!cancha || !cancha.activa) {
       return NextResponse.json({ error: 'Esa cancha ya no está publicada.' }, { status: 400 });
+    }
+    if (!(await deportesCompatibles(deporte.id)).includes(cancha.deporteId)) {
+      return NextResponse.json({ error: `Esa cancha no es para ${deporte.nombre}. Elegí otra.` }, { status: 400 });
     }
     let dias: number[] = [0, 1, 2, 3, 4, 5, 6];
     try {

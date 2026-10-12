@@ -115,7 +115,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Crear un partido',
         pasos: [
           'Tocá el "+" y elegí el deporte (y el tipo: Fútbol 5, 7 u 11…).',
-          'Elegí dónde: buscá la cancha entre las publicadas (te mostramos las que están cerca). Si no está, escribí dónde juegan.',
+          'Elegí dónde: buscá la cancha entre las publicadas para ese deporte (te mostramos las que están cerca). Si no está, escribí dónde juegan.',
           'Elegí día y hora; podés hacer que se repita todas las semanas.',
           'Cupo y mínimo: te sugerimos según el deporte (Fútbol 7 → 14).',
           'Costo por jugador (opcional) y si es abierto o solo para tu grupo.',
@@ -218,6 +218,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Desafiar a otro grupo',
         texto: [
           'Desde tu grupo, "Desafiar a otro grupo": elegís rival (o lo dejás abierto para el primero que se anime), día, lugar, jugadores por lado y nivel.',
+          'El lugar se elige igual que en un partido: buscás entre las canchas publicadas de ese deporte (las cercanas primero) o escribís dónde juegan.',
           'Si el otro grupo acepta, se arma el partido entre los dos.',
         ],
         enlace: { href: '/desafios', rotulo: 'Ver desafíos' },

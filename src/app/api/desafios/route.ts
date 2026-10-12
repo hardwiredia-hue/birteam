@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { deportesCompatibles } from '@/lib/lugares';
 import { prisma } from '@/lib/db';
 import { quienesQuieren } from '@/lib/avisos';
 import { usuarioActual } from '@/lib/auth';
@@ -69,7 +70,10 @@ export async function POST(request: Request) {
 
   let canchaId: string | null = null;
   if (d.canchaId) {
-    const cancha = await prisma.cancha.findUnique({ where: { id: d.canchaId }, select: { id: true } });
+    const cancha = await prisma.cancha.findUnique({ where: { id: d.canchaId }, select: { id: true, deporteId: true } });
+    if (cancha && !(await deportesCompatibles(retador.deporteId)).includes(cancha.deporteId)) {
+      return NextResponse.json({ error: 'Esa cancha no es del deporte de tu grupo. Elegí otra.' }, { status: 400 });
+    }
     canchaId = cancha?.id ?? null;
   }
 

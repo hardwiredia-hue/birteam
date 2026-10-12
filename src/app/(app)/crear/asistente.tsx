@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { PasoDonde, type CanchaElegible } from './donde';
+import { PasoDonde, type CanchaElegible } from '@/components/elegir-cancha';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
 import { SelectorDeporte } from '@/components/selector-deporte';
 import { Interruptor } from '@/components/interruptor';

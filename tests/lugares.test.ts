@@ -31,3 +31,18 @@ test('dónde juegan: una cancha sin suscripción al día no aparece', async () =
   const resultado = await buscarDonde({ q: `cancha ${sufijo}`, desde: null });
   assert.ok(!resultado.canchas.some((c) => c.id === cancha.id));
 });
+
+test('dónde juegan: solo canchas del deporte o de su familia', async () => {
+  const sufijo = `fam${Date.now()}`;
+  const { cancha } = await escenario(sufijo);
+  const crear = (slug: string, nombre: string) =>
+    prisma.deporte.upsert({ where: { slug }, create: { slug, nombre, orden: 50 }, update: {} });
+  const f5 = await crear('futbol-5', 'Fútbol 5');
+  const f7 = await crear('futbol-7', 'Fútbol 7');
+  const padel = await crear('padel', 'Pádel');
+  await prisma.cancha.update({ where: { id: cancha.id }, data: { deporteId: f5.id } });
+  const paraF7 = await buscarDonde({ q: `cancha ${sufijo}`, deporteId: f7.id, desde: null });
+  assert.equal(paraF7.canchas[0]?.id, cancha.id);
+  const paraPadel = await buscarDonde({ q: `cancha ${sufijo}`, deporteId: padel.id, desde: null });
+  assert.equal(paraPadel.canchas.length, 0);
+});

@@ -29,7 +29,7 @@ export default async function NuevoDesafio({
   }
 
   const deporteIds = [...new Set(misGrupos.map((g) => g.deporteId))];
-  const [candidatos, canchas, deportes] = await Promise.all([
+  const [candidatos, deportes] = await Promise.all([
     prisma.grupo.findMany({
       where: { deporteId: { in: deporteIds }, id: { notIn: misGrupos.map((g) => g.id) } },
       select: {
@@ -41,12 +41,6 @@ export default async function NuevoDesafio({
       },
       orderBy: { creadoEn: 'desc' },
       take: 100,
-    }),
-    prisma.cancha.findMany({
-      where: { activa: true, deporteId: { in: deporteIds }, dueno: { suscripcionHasta: { gt: new Date() } } },
-      select: { id: true, nombre: true, direccion: true, deporteId: true },
-      orderBy: { creadoEn: 'desc' },
-      take: 40,
     }),
     prisma.deporte.findMany({ where: { id: { in: deporteIds } }, select: { id: true, nombre: true } }),
   ]);
@@ -72,7 +66,9 @@ export default async function NuevoDesafio({
           deporteId: g.deporteId,
           miembros: g._count.miembros,
         }))}
-        canchas={canchas}
+        esDueno={usuario.tipoCuenta === 'CANCHA'}
+        ciudad={usuario.ciudad}
+        provincia={usuario.provincia}
         grupoInicial={misGrupos.some((g) => g.id === grupoId) ? grupoId! : null}
         rivalInicial={candidatos.some((g) => g.id === rivalId) ? rivalId! : null}
       />
