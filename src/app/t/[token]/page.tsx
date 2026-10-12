@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { sitioEnConstruccion } from '@/lib/sitio';
 import { PaginaConstruccion } from '@/components/construccion';
-import { calcularTabla } from '@/lib/torneos';
+import { avanzarCopa, calcularTabla } from '@/lib/torneos';
 import { Logotipo } from '@/components/marca';
 
 export const metadata = { title: 'Te invitaron a un torneo' };
@@ -35,7 +35,12 @@ export default async function TorneoPublico({ params }: { params: Promise<{ toke
   const volver = `/torneos/${torneo.id}`;
   const lugares = Math.max(0, torneo.maxEquipos - torneo.equipos.length);
   const tabla = calcularTabla(torneo.equipos, torneo.partidos);
-  const puntero = torneo.estado !== 'INSCRIPCION' ? tabla[0] : null;
+  // Liga: el primero de la tabla. Copa: solo hay "puntero" cuando sale el campeón.
+  const campeonCopa =
+    torneo.formato === 'COPA' && torneo.cuadro
+      ? torneo.equipos.find((e) => e.id === avanzarCopa(JSON.parse(torneo.cuadro!), torneo.partidos).campeonId)
+      : null;
+  const puntero = torneo.formato === 'COPA' ? (campeonCopa ?? null) : torneo.estado !== 'INSCRIPCION' ? tabla[0] : null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-10">
@@ -47,7 +52,9 @@ export default async function TorneoPublico({ params }: { params: Promise<{ toke
         </p>
 
         <div className="tarjeta flex flex-col gap-3 p-5">
-          <p className="t-rotulo text-verde-txt">{torneo.deporte.nombre}</p>
+          <p className="t-rotulo text-verde-txt">
+            {torneo.deporte.nombre} · {torneo.formato === 'COPA' ? 'copa' : 'liga'}
+          </p>
           <p className="t-display text-[28px]">{torneo.nombre}</p>
           {torneo.descripcion ? <p className="text-sm text-tinta-2">{torneo.descripcion}</p> : null}
           <p className="text-xs text-tinta-3">

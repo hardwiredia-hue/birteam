@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       ciudad: usuario.ciudad,
       provincia: usuario.provincia,
       maxEquipos: d.maxEquipos,
+      formato: d.formato,
     },
   });
 

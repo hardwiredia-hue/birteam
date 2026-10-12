@@ -7,6 +7,7 @@ import { useState } from 'react';
 export function FormularioTorneo({ deportes }: { deportes: { id: string; nombre: string; slug: string }[] }) {
   const router = useRouter();
   const [deporteId, setDeporteId] = useState<string | null>(null);
+  const [formato, setFormato] = useState<'LIGA' | 'COPA'>('LIGA');
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -25,6 +26,7 @@ export function FormularioTorneo({ deportes }: { deportes: { id: string; nombre:
         nombre: form.get('nombre'),
         deporteId,
         maxEquipos: Number(form.get('maxEquipos')),
+        formato,
         descripcion: form.get('descripcion') || null,
       }),
     });
@@ -53,6 +55,30 @@ export function FormularioTorneo({ deportes }: { deportes: { id: string; nombre:
           <SelectorDeporte deportes={deportes} valor={deporteId || null} alCambiar={(id) => setDeporteId(id ?? '')} />
         </div>
         {errores.deporteId ? <p className="mt-1 text-xs text-rojo">{errores.deporteId[0]}</p> : null}
+      </div>
+
+      <div>
+        <span className="rotulo-campo">Formato</span>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          {(
+            [
+              { valor: 'LIGA', titulo: 'Liga', detalle: 'Todos contra todos, gana el que suma más puntos.' },
+              { valor: 'COPA', titulo: 'Copa', detalle: 'Eliminación directa: el que pierde, afuera.' },
+            ] as const
+          ).map((opcion) => (
+            <button
+              key={opcion.valor}
+              type="button"
+              onClick={() => setFormato(opcion.valor)}
+              aria-pressed={formato === opcion.valor}
+              className="tarjeta flex flex-col items-start gap-1 p-3 text-left transition-colors"
+              style={formato === opcion.valor ? { borderColor: 'var(--verde)', outline: '1px solid var(--verde)' } : undefined}
+            >
+              <span className="text-sm font-semibold">{opcion.titulo}</span>
+              <span className="text-xs text-tinta-3">{opcion.detalle}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>

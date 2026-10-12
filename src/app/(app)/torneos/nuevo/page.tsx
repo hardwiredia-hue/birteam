@@ -15,8 +15,8 @@ export default async function NuevoTorneo() {
       <div>
         <h1 className="t-display text-[28px]">Armá tu torneo</h1>
         <p className="mt-2 text-sm text-tinta-2">
-          Liga, todos contra todos: los equipos se inscriben, el fixture se genera solo y la tabla
-          de posiciones se lleva sola con cada resultado.
+          Liga o copa: los equipos se inscriben, el fixture o el cuadro se arman solos y la tabla
+          (o la llave) avanza con cada resultado.
         </p>
       </div>
       <FormularioTorneo deportes={deportes} />

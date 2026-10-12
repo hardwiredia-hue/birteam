@@ -74,7 +74,15 @@ export function AnotarEquipo({ torneoId }: { torneoId: string }) {
   );
 }
 
-export function ArrancarTorneo({ torneoId, equipos }: { torneoId: string; equipos: number }) {
+export function ArrancarTorneo({
+  torneoId,
+  equipos,
+  formato = 'LIGA',
+}: {
+  torneoId: string;
+  equipos: number;
+  formato?: string;
+}) {
   const router = useRouter();
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,8 +119,9 @@ export function ArrancarTorneo({ torneoId, equipos }: { torneoId: string; equipo
   return (
     <div className="tarjeta flex flex-col gap-3 p-4">
       <p className="text-sm">
-        Se cierra la inscripción con {equipos} equipos y se genera el fixture de liga (todos
-        contra todos). No se puede deshacer.
+        {formato === 'COPA'
+          ? `Se cierra la inscripción con ${equipos} equipos y se sortea el cuadro de la copa. No se puede deshacer.`
+          : `Se cierra la inscripción con ${equipos} equipos y se genera el fixture de liga (todos contra todos). No se puede deshacer.`}
       </p>
       {error ? <p className="aviso-error">{error}</p> : null}
       <div className="grid grid-cols-2 gap-2">
@@ -130,15 +139,22 @@ export function ArrancarTorneo({ torneoId, equipos }: { torneoId: string; equipo
 export function CargarResultado({
   torneoId,
   partidoTorneoId,
+  copa = false,
 }: {
   torneoId: string;
   partidoTorneoId: string;
+  /** Copa: si empatan, se cargan los penales. */
+  copa?: boolean;
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [local, setLocal] = useState('');
   const [visitante, setVisitante] = useState('');
+  const [penalesLocal, setPenalesLocal] = useState('');
+  const [penalesVisitante, setPenalesVisitante] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const conPenales = copa && local !== '' && local === visitante;
 
   async function guardar() {
     if (local === '' || visitante === '') return;
@@ -150,10 +166,16 @@ export function CargarResultado({
         partidoTorneoId,
         golesLocal: Number(local),
         golesVisitante: Number(visitante),
+        ...(conPenales ? { penalesLocal: Number(penalesLocal), penalesVisitante: Number(penalesVisitante) } : {}),
       }),
     });
     setEnviando(false);
-    if (respuesta.ok) router.refresh();
+    if (respuesta.ok) {
+      router.refresh();
+      return;
+    }
+    const datos = await respuesta.json().catch(() => ({}));
+    setError(datos.error ?? 'No se pudo cargar.');
   }
 
   if (!abierto) {
@@ -168,38 +190,84 @@ export function CargarResultado({
       </button>
     );
   }
+  const incompleto =
+    local === '' ||
+    visitante === '' ||
+    (conPenales && (penalesLocal === '' || penalesVisitante === '' || penalesLocal === penalesVisitante));
   return (
-    <span className="flex flex-shrink-0 items-center gap-1">
-      <input
-        type="number"
-        min={0}
-        max={99}
-        className="campo w-11 !px-1 text-center tabular"
-        style={{ padding: '4px 2px' }}
-        value={local}
-        onChange={(evento) => setLocal(evento.target.value)}
-        aria-label="Goles del local"
-      />
-      <span className="t-rotulo">–</span>
-      <input
-        type="number"
-        min={0}
-        max={99}
-        className="campo w-11 text-center tabular"
-        style={{ padding: '4px 2px' }}
-        value={visitante}
-        onChange={(evento) => setVisitante(evento.target.value)}
-        aria-label="Goles del visitante"
-      />
-      <button
-        type="button"
-        className="btn btn-primario btn-sm"
-        style={{ padding: '5px 8px', fontSize: 11 }}
-        onClick={guardar}
-        disabled={enviando || local === '' || visitante === ''}
-      >
-        ✓
-      </button>
+    <span className="flex flex-shrink-0 flex-col items-center gap-1">
+      <span className="flex items-center gap-1">
+        <input
+          type="number"
+          min={0}
+          max={99}
+          className="campo w-11 !px-1 text-center tabular"
+          style={{ padding: '4px 2px' }}
+          value={local}
+          onChange={(evento) => setLocal(evento.target.value)}
+          aria-label="Goles del local"
+        />
+        <span className="t-rotulo">–</span>
+        <input
+          type="number"
+          min={0}
+          max={99}
+          className="campo w-11 text-center tabular"
+          style={{ padding: '4px 2px' }}
+          value={visitante}
+          onChange={(evento) => setVisitante(evento.target.value)}
+          aria-label="Goles del visitante"
+        />
+        <button
+          type="button"
+          className="btn btn-primario btn-sm"
+          style={{ padding: '5px 8px', fontSize: 11 }}
+          onClick={guardar}
+          disabled={enviando || incompleto}
+          aria-label="Guardar resultado"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M2.5 6.2 5 8.6l4.5-5" />
+          </svg>
+        </button>
+      </span>
+      {conPenales ? (
+        <span className="flex items-center gap-1 text-[10px] text-tinta-3">
+          Penales
+          <input
+            type="number"
+            min={0}
+            max={99}
+            className="campo w-10 text-center tabular"
+            style={{ padding: '2px' }}
+            value={penalesLocal}
+            onChange={(evento) => setPenalesLocal(evento.target.value)}
+            aria-label="Penales del local"
+          />
+          –
+          <input
+            type="number"
+            min={0}
+            max={99}
+            className="campo w-10 text-center tabular"
+            style={{ padding: '2px' }}
+            value={penalesVisitante}
+            onChange={(evento) => setPenalesVisitante(evento.target.value)}
+            aria-label="Penales del visitante"
+          />
+        </span>
+      ) : null}
+      {error ? <span className="max-w-40 text-center text-[10px] text-rojo">{error}</span> : null}
     </span>
   );
 }

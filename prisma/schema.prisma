@@ -710,6 +710,10 @@ model Torneo {
   provincia    String?
   // 'INSCRIPCION' | 'EN_JUEGO' | 'TERMINADO'
   estado       String   @default("INSCRIPCION")
+  // 'LIGA' (todos contra todos) | 'COPA' (eliminación directa)
+  formato      String   @default("LIGA")
+  // Copa: el cuadro sorteado al arrancar (JSON de ids en orden; null = pasa directo).
+  cuadro       String?
   maxEquipos   Int      @default(8)
   // Link publico para convocar equipos sin cuenta. Opcional para poder
   // agregarse sobre tablas con filas; la siembra rellena los que falten.
@@ -751,6 +755,10 @@ model PartidoTorneo {
   visitante      EquipoTorneo @relation("visitante", fields: [visitanteId], references: [id], onDelete: Cascade)
   golesLocal     Int?
   golesVisitante Int?
+  // Copa: posición del cruce dentro de la ronda y penales si empataron.
+  llave          Int?
+  penalesLocal   Int?
+  penalesVisitante Int?
   jugadoEn       DateTime?
 
   @@index([torneoId, ronda])

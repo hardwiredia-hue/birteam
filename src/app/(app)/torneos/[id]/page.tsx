@@ -4,7 +4,7 @@ import { SubirLogo } from '@/components/subir-logo';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
-import { calcularTabla } from '@/lib/torneos';
+import { avanzarCopa, calcularTabla, nombreRonda, rondasDeCopa } from '@/lib/torneos';
 import {
   AnotarEquipo,
   ArrancarTorneo,
@@ -43,7 +43,13 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
   );
   const tabla = calcularTabla(torneo.equipos, torneo.partidos);
   const pendientes = torneo.partidos.filter((partido) => partido.golesLocal === null).length;
-  const campeon = torneo.estado === 'TERMINADO' ? tabla[0] : null;
+  const esCopa = torneo.formato === 'COPA';
+  const cuadro: (string | null)[] = esCopa && torneo.cuadro ? JSON.parse(torneo.cuadro) : [];
+  const totalRondas = esCopa ? rondasDeCopa(cuadro) : 0;
+  // Liga: el primero de la tabla. Copa: el ganador de la final.
+  const campeonLiga = !esCopa && torneo.estado === 'TERMINADO' ? tabla[0] : null;
+  const campeonCopaId = esCopa && cuadro.length > 0 ? avanzarCopa(cuadro, torneo.partidos).campeonId : null;
+  const campeon = campeonLiga ?? (campeonCopaId ? { nombre: nombrePorId.get(campeonCopaId) ?? '' } : null);
 
   const rondas = [...new Set(torneo.partidos.map((partido) => partido.ronda))];
 
@@ -52,6 +58,7 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
       <header className="flex flex-col gap-1.5">
         <p className="t-rotulo text-verde-txt">
           {torneo.deporte.nombre} ·{' '}
+          {esCopa ? 'copa · ' : 'liga · '}
           {torneo.estado === 'INSCRIPCION'
             ? 'inscripción abierta'
             : torneo.estado === 'EN_JUEGO'
@@ -70,9 +77,13 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
         <div className="tarjeta p-5 text-center" style={{ borderColor: 'var(--verde)' }}>
           <p className="t-rotulo text-verde-txt">Campeón</p>
           <p className="t-display mt-1 text-[30px]">{campeon.nombre}</p>
-          <p className="t-rotulo mt-1 tabular">
-            {campeon.puntos} puntos · {campeon.pg}G {campeon.pe}E {campeon.pp}P
-          </p>
+          {campeonLiga ? (
+            <p className="t-rotulo mt-1 tabular">
+              {campeonLiga.puntos} puntos · {campeonLiga.pg}G {campeonLiga.pe}E {campeonLiga.pp}P
+            </p>
+          ) : (
+            <p className="t-rotulo mt-1">Ganó la final</p>
+          )}
         </div>
       ) : null}
 
@@ -111,11 +122,12 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
             <CompartirTorneo rutaPublica={`/t/${torneo.tokenPublico}`} />
           ) : null}
           {organizo ? (
-            <ArrancarTorneo torneoId={torneo.id} equipos={torneo.equipos.length} />
+            <ArrancarTorneo torneoId={torneo.id} equipos={torneo.equipos.length} formato={torneo.formato} />
           ) : null}
         </section>
       ) : (
         <>
+          {!esCopa ? (
           <section>
             <p className="t-rotulo mb-2">Tabla de posiciones</p>
             <div className="tarjeta overflow-x-auto p-2">
@@ -168,12 +180,15 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
               </table>
             </div>
           </section>
+          ) : null}
 
           <section className="flex flex-col gap-4">
-            <p className="t-rotulo">Fixture</p>
+            <p className="t-rotulo">{esCopa ? 'Cuadro' : 'Fixture'}</p>
             {rondas.map((ronda) => (
               <div key={ronda}>
-                <p className="t-rotulo mb-1 text-verde-txt">Fecha {ronda}</p>
+                <p className="t-rotulo mb-1 text-verde-txt">
+                  {esCopa ? nombreRonda(ronda, totalRondas) : `Fecha ${ronda}`}
+                </p>
                 <div className="flex flex-col gap-1.5">
                   {torneo.partidos
                     .filter((partido) => partido.ronda === ronda)
@@ -184,11 +199,18 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
                           {logo(partido.localId, 22)}
                         </span>
                         {partido.golesLocal !== null ? (
-                          <span className="t-display flex-shrink-0 px-1 text-[16px] tabular">
-                            {partido.golesLocal}–{partido.golesVisitante}
+                          <span className="flex flex-shrink-0 flex-col items-center px-1">
+                            <span className="t-display text-[16px] tabular">
+                              {partido.golesLocal}–{partido.golesVisitante}
+                            </span>
+                            {partido.penalesLocal != null ? (
+                              <span className="t-rotulo text-[9.5px] tabular">
+                                pen. {partido.penalesLocal}–{partido.penalesVisitante}
+                              </span>
+                            ) : null}
                           </span>
                         ) : organizo && torneo.estado === 'EN_JUEGO' ? (
-                          <CargarResultado torneoId={torneo.id} partidoTorneoId={partido.id} />
+                          <CargarResultado torneoId={torneo.id} partidoTorneoId={partido.id} copa={esCopa} />
                         ) : (
                           <span className="t-rotulo flex-shrink-0 px-1">vs</span>
                         )}
@@ -203,7 +225,7 @@ export default async function PaginaTorneo({ params }: { params: Promise<{ id: s
             ))}
           </section>
 
-          {organizo && torneo.estado === 'EN_JUEGO' ? (
+          {organizo && torneo.estado === 'EN_JUEGO' && !esCopa ? (
             <TerminarTorneo torneoId={torneo.id} pendientes={pendientes} />
           ) : null}
         </>

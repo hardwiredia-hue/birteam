@@ -171,6 +171,7 @@ export const esquemaTorneo = z.object({
     .int()
     .min(2, 'Un torneo necesita al menos 2 equipos.')
     .max(24, 'Hasta 24 equipos.'),
+  formato: z.enum(['LIGA', 'COPA']).default('LIGA'),
 });
 
 export const esquemaEquipoTorneo = z.object({
@@ -185,6 +186,9 @@ export const esquemaResultado = z.object({
   partidoTorneoId: z.string().min(1),
   golesLocal: z.number({ error: 'Cargá los goles.' }).int().min(0).max(99),
   golesVisitante: z.number({ error: 'Cargá los goles.' }).int().min(0).max(99),
+  // En copa, si empatan, se define por penales.
+  penalesLocal: z.number().int().min(0).max(99).nullish(),
+  penalesVisitante: z.number().int().min(0).max(99).nullish(),
 });
 
 export const esquemaGrupo = z.object({
