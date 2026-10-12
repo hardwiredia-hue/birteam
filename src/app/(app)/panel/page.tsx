@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db';
 import { duenosQueGestiono } from '@/lib/gestion';
 import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
+import { AvisoNovedad } from '@/components/aviso-novedad';
+import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
 import { formatearPlata } from '@/lib/formato';
 import { formatearDistancia } from '@/lib/geo';
@@ -170,6 +172,16 @@ export default async function Inicio() {
       </header>
 
       <Avisos avisos={avisos} />
+
+      {(() => {
+        // La última novedad para esta persona: las de complejos, solo a dueños.
+        const novedad = NOVEDADES.find(
+          (n) => n.para === 'todos' || (n.para === 'complejos') === (usuario.tipoCuenta === 'CANCHA')
+        );
+        return novedad ? (
+          <AvisoNovedad id={`${novedad.fecha}-${novedad.titulo}`} titulo={novedad.titulo} texto={novedad.texto} />
+        ) : null;
+      })()}
 
       <section>
         <p className="t-rotulo mb-2">Tu próximo partido</p>

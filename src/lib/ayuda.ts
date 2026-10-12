@@ -299,7 +299,7 @@ export const TEMAS: Tema[] = [
         id: 'faltas',
         titulo: '¿Qué es "No vino"?',
         texto: [
-          'Después del turno, el complejo puede marcar que no fuiste. Te avisamos para que reclames si fue un error. Al pedir turnos, los complejos ven tu historial: turnos jugados y faltas.',
+          'Después del turno, el complejo puede marcar que no fuiste. Te avisamos para que reclames si fue un error. Si el complejo lo corrige, el aviso se borra solo. Al pedir turnos, los complejos ven tu historial: turnos jugados y faltas.',
         ],
       },
     ],

@@ -77,16 +77,23 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Es un turno del propio complejo.' }, { status: 409 });
     }
     const noVino = accion === 'no_vino';
-    if (reserva.noVino === noVino) return NextResponse.json({ listo: true });
-    await prisma.reserva.update({ where: { id: reserva.id }, data: { noVino } });
+    // Condicionado: con doble clic o dos pestañas, cambia (y avisa) una sola vez.
+    const { count } = await prisma.reserva.updateMany({
+      where: { id: reserva.id, noVino: !noVino },
+      data: { noVino },
+    });
+    if (count === 0) return NextResponse.json({ listo: true });
+    const aviso = {
+      usuarioId: reserva.usuarioId,
+      tipo: 'RESERVA_NO_VINO',
+      titulo: `Faltaste a un turno · ${reserva.cancha.nombre}`,
+      cuerpo: `El complejo marcó que no fuiste el ${turno}. Si fue un error, hablá con ellos para que lo corrijan.`,
+    };
     if (noVino) {
-      await avisarReserva(
-        reserva.usuarioId,
-        'RESERVA_NO_VINO',
-        `Faltaste a un turno · ${reserva.cancha.nombre}`,
-        `El complejo marcó que no fuiste el ${turno}. Si fue un error, hablá con ellos para que lo corrijan.`,
-        `/canchas/${reserva.cancha.id}`
-      );
+      await avisarReserva(aviso.usuarioId, 'RESERVA_NO_VINO', aviso.titulo, aviso.cuerpo, `/canchas/${reserva.cancha.id}`);
+    } else {
+      // Lo corrigieron: el aviso de "faltaste" ya no corre.
+      await prisma.notificacion.deleteMany({ where: aviso });
     }
     return NextResponse.json({ listo: true });
   }
