@@ -131,7 +131,7 @@ export const TEMAS: Tema[] = [
         id: 'confirmar',
         titulo: 'Confirmar: Voy, Tal vez, No voy',
         texto: [
-          'En el partido respondés Voy, Tal vez o No voy. Lleno el cupo, los siguientes entran a la lista de espera.',
+          'En el partido respondés Voy, Tal vez o No voy. En el celular, si todavía no respondiste, abajo tenés siempre a mano cuántos faltan y el botón Voy. Lleno el cupo, los siguientes entran a la lista de espera.',
           'Si alguien se baja, al primero de la lista le llega el aviso y tiene 2 horas para confirmar el lugar; si no contesta, pasa al siguiente. En Inicio lo ves con la cuenta regresiva y lo confirmás con un toque.',
           'Las invitaciones a partidos (de tus grupos o de quien te invitó) también se responden desde Inicio: Voy o No voy, sin entrar al partido.',
           '24 h antes avisamos a los "tal vez" y a los del grupo que no respondieron, y 2 h antes les pedimos que reconfirmen.',
@@ -537,6 +537,12 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-12',
+    titulo: 'Voy, siempre a mano',
+    texto: 'En el celular, al abrir un partido que todavía no respondiste, abajo ves cuántos faltan y el botón Voy, sin bajar hasta el final.',
+    para: 'jugadores',
+  },
   {
     fecha: '2026-10-12',
     titulo: 'Quién pagó, a la vista',

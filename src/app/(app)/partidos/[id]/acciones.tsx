@@ -311,3 +311,57 @@ export function ElegirCoorganizador({
     </div>
   );
 }
+
+/**
+ * Pie fijo en el celular, arriba de la barra de abajo: el cupo y un "Voy"
+ * grande, para anotarse sin bajar hasta el final del partido. Se muestra a
+ * quien todavía no respondió (o puso "Tal vez").
+ */
+export function BarraVoy({ partidoId, faltan }: { partidoId: string; faltan: number }) {
+  const router = useRouter();
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function voy() {
+    setEnviando(true);
+    setError(null);
+    const respuesta = await fetch(`/api/partidos/${partidoId}/rsvp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'VOY' }),
+    });
+    if (!respuesta.ok) {
+      const datos = await respuesta.json().catch(() => ({}));
+      setError(datos.error ?? 'No pudimos anotarte. Probá de nuevo.');
+      setEnviando(false);
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <>
+      {/* Lugar para que el pie no tape lo último de la página. */}
+      <div className="h-20 lg:hidden" aria-hidden />
+      <div className="fixed inset-x-0 bottom-16 z-10 border-t border-borde bg-fondo/95 backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-3 px-5 py-3">
+          <div className="min-w-0 flex-1">
+            {error ? (
+              <p className="text-xs text-rojo">{error}</p>
+            ) : (
+              <>
+                <p className="text-sm font-semibold" style={{ color: faltan > 0 ? 'var(--verde-txt)' : 'var(--azul-txt)' }}>
+                  {faltan > 0 ? `Faltan ${faltan}` : 'Está completo'}
+                </p>
+                <p className="text-xs text-tinta-3">{faltan > 0 ? 'Anotate y quedás adentro.' : 'Entrás a la lista de espera.'}</p>
+              </>
+            )}
+          </div>
+          <button type="button" onClick={voy} disabled={enviando} className="btn btn-primario w-36">
+            {enviando ? 'Anotando…' : faltan > 0 ? 'Voy' : 'Anotarme'}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

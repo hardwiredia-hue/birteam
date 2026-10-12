@@ -21,7 +21,7 @@ import { AgregarCalendario } from '@/components/agregar-calendario';
 import { eventoDe } from '@/lib/calendario-eventos';
 import { enlaceGoogle } from '@/lib/calendario';
 import {
-  BotoneraRsvp,
+  BotoneraRsvp, BarraVoy,
   CancelarPartido,
   CompartirPartido,
   ElegirCoorganizador,
@@ -430,6 +430,10 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           </>
         ) : null}
       </div>
+
+      {!cerrado && !yaPaso && (!mia || mia.estado === 'TALVEZ') ? (
+        <BarraVoy partidoId={partido.id} faltan={Math.max(0, partido.cupo - voy.length)} />
+      ) : null}
     </div>
   );
 }
