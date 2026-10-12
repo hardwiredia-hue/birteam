@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ofrecerLugarLibre } from '@/lib/espera';
 import { enviarPush } from '@/lib/push';
+import { posiblesVecinos, vecinosDe } from '@/lib/cercania';
 import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 
 /**
@@ -165,8 +166,9 @@ export async function POST(request: Request) {
   }
 
   // ---- 5. Partidos abiertos a los que les faltan jugadores ----
-  // Una sola vez por partido, a quienes juegan ese deporte en la ciudad del
-  // partido, con la preferencia prendida y como mucho un aviso así por día.
+  // Una sola vez por partido, a quienes juegan ese deporte cerca (dentro del
+  // radio de cada uno, o en la misma ciudad), con la preferencia prendida y
+  // como mucho un aviso así por día. Los más cercanos primero.
   const en48h = new Date(ahora.getTime() + 48 * 3600 * 1000);
   const hace24h = new Date(ahora.getTime() - 24 * 3600 * 1000);
   const abiertos = await prisma.partido.findMany({
@@ -186,7 +188,8 @@ export async function POST(request: Request) {
     const voy = partido.participaciones.filter((p) => p.estado === 'VOY').length;
     const faltan = partido.cupo - voy;
     await prisma.partido.update({ where: { id: partido.id }, data: { avisoFaltanEn: ahora } });
-    if (faltan <= 0 || !partido.ciudad) continue;
+    const zona = posiblesVecinos(partido);
+    if (faltan <= 0 || !zona) continue;
     const bloqueos = await prisma.bloqueo.findMany({
       where: { OR: [{ bloqueadorId: partido.organizadorId }, { bloqueadoId: partido.organizadorId }] },
       select: { bloqueadorId: true, bloqueadoId: true },
@@ -196,18 +199,22 @@ export async function POST(request: Request) {
       ...partido.participaciones.map((p) => p.usuarioId),
       ...bloqueos.flatMap((b) => [b.bloqueadorId, b.bloqueadoId]),
     ];
-    const candidatos = await prisma.usuario.findMany({
-      where: {
-        id: { notIn: excluidos },
-        eliminadoEn: null,
-        avisosPartidos: true,
-        ciudad: partido.ciudad,
-        deportes: { some: { deporteId: partido.deporteId } },
-        notificaciones: { none: { tipo: 'FALTAN_JUGADORES', creadoEn: { gte: hace24h } } },
-      },
-      select: { id: true },
-      take: 30,
-    });
+    const candidatos = vecinosDe(
+      await prisma.usuario.findMany({
+        where: {
+          id: { notIn: excluidos },
+          eliminadoEn: null,
+          avisosPartidos: true,
+          deportes: { some: { deporteId: partido.deporteId } },
+          notificaciones: { none: { tipo: 'FALTAN_JUGADORES', creadoEn: { gte: hace24h } } },
+          ...zona,
+        },
+        select: { id: true, ciudad: true, latitud: true, longitud: true, radioKm: true },
+        take: 300,
+      }),
+      partido,
+      30
+    );
     if (candidatos.length === 0) continue;
     const dia = partido.fecha.toLocaleDateString('es-AR', { weekday: 'long', timeZone: 'America/Argentina/Buenos_Aires' });
     const horaPartido = partido.fecha.toLocaleTimeString('es-AR', {

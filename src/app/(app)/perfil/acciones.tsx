@@ -7,12 +7,13 @@ import { Interruptor } from '@/components/interruptor';
 import { CampoClave } from '@/components/campo-clave';
 import { prepararImagen } from '@/lib/preparar-imagen';
 import { borrarGuardadoOffline } from '@/lib/guardado-offline';
+import { RADIOS_AVISOS_KM } from '@/lib/cercania';
 
 const AVISOS = [
   { clave: 'avisosSociales', titulo: 'Avisos sociales', detalle: 'Me gusta, comentarios y seguidores nuevos.' },
-  { clave: 'avisosRadar', titulo: 'Radar de turnos libres', detalle: 'Descuentos de canchas de tu deporte en tu ciudad (máximo uno cada 12 h).' },
+  { clave: 'avisosRadar', titulo: 'Radar de turnos libres', detalle: 'Descuentos de canchas de tu deporte cerca tuyo (máximo uno cada 12 h).' },
   { clave: 'avisosDesafios', titulo: 'Desafíos', detalle: 'Cuando desafían a tu grupo o responden un desafío tuyo.' },
-  { clave: 'avisosPartidos', titulo: 'Partidos que buscan jugadores', detalle: 'Partidos abiertos de tu deporte en tu ciudad a los que les faltan jugadores (máximo uno por día).' },
+  { clave: 'avisosPartidos', titulo: 'Partidos que buscan jugadores', detalle: 'Partidos abiertos de tu deporte cerca tuyo a los que les faltan jugadores (máximo uno por día).' },
 ] as const;
 
 export type PreferenciasAvisos = Record<(typeof AVISOS)[number]['clave'], boolean>;
@@ -20,11 +21,13 @@ export type PreferenciasAvisos = Record<(typeof AVISOS)[number]['clave'], boolea
 export function AccionesPerfil({
   temaActual,
   avisos: avisosIniciales,
+  radioKm: radioInicial,
   usuario,
   conClave,
 }: {
   temaActual: string;
   avisos: PreferenciasAvisos;
+  radioKm: number;
   usuario: string;
   conClave: boolean;
 }) {
@@ -39,6 +42,19 @@ export function AccionesPerfil({
       body: JSON.stringify({ clave, valor }),
     });
     if (!respuesta.ok) setAvisos((previos) => ({ ...previos, [clave]: !valor }));
+  }
+
+  const [radioKm, setRadioKm] = useState(radioInicial);
+
+  async function cambiarRadio(km: number) {
+    const anterior = radioKm;
+    setRadioKm(km);
+    const respuesta = await fetch('/api/perfil/avisos', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clave: 'radioKm', valor: km }),
+    });
+    if (!respuesta.ok) setRadioKm(anterior);
   }
 
   const router = useRouter();
@@ -100,6 +116,29 @@ export function AccionesPerfil({
             />
           </div>
         ))}
+        {avisos.avisosRadar || avisos.avisosPartidos ? (
+          <div className="flex flex-col gap-2 border-t border-borde pt-3">
+            <div>
+              <p className="text-sm">Hasta qué distancia</p>
+              <p className="text-xs text-tinta-3">
+                Desde tu ciudad. Si no tenemos la ubicación de un partido o cancha, te avisamos si es de tu ciudad.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Distancia de los avisos">
+              {RADIOS_AVISOS_KM.map((km) => (
+                <button
+                  key={km}
+                  type="button"
+                  aria-pressed={radioKm === km}
+                  onClick={() => cambiarRadio(km)}
+                  className={radioKm === km ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                >
+                  {km} km
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <button type="button" className="btn btn-peligro" onClick={salir} disabled={saliendo}>

@@ -6,6 +6,7 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { erroresDeZod } from '@/lib/validacion';
 import { formatearPlata } from '@/lib/formato';
 import { enviarPush } from '@/lib/push';
+import { posiblesVecinos, vecinosDe } from '@/lib/cercania';
 import {
   ESTADOS_ACTIVOS,
   MINUTOS_ANTICIPACION,
@@ -103,22 +104,26 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
     update: { precioOriginal, precioOferta: precio },
   });
 
-  // Aviso a los que juegan ese deporte en la ciudad de la cancha (solo la primera vez).
+  // Aviso a los que juegan ese deporte cerca de la cancha, dentro del radio
+  // de cada uno (o en su ciudad). Solo la primera vez. Una cancha sin
+  // ciudad ni coordenadas avisa como antes, sin filtro de zona.
+  const zona = posiblesVecinos(cancha);
   if (!previa) {
     const descuento = porcentajeDescuento(precioOriginal, precio);
     const desde = new Date(Date.now() - HORAS_ENTRE_AVISOS * 3600_000);
-    const interesados = await prisma.usuario.findMany({
+    const candidatos = await prisma.usuario.findMany({
       where: {
         id: { not: usuario.id },
         avisosRadar: true,
         eliminadoEn: null,
         deportes: { some: { deporteId: cancha.deporteId } },
-        ...(cancha.ciudad ? { ciudad: cancha.ciudad } : {}),
         notificaciones: { none: { tipo: 'RADAR', creadoEn: { gte: desde } } },
+        ...(zona ?? {}),
       },
-      select: { id: true },
-      take: 200,
+      select: { id: true, ciudad: true, latitud: true, longitud: true, radioKm: true },
+      take: 600,
     });
+    const interesados = zona ? vecinosDe(candidatos, cancha, 200) : candidatos.slice(0, 200);
     if (interesados.length > 0) {
       const titulo = `Radar · ${cancha.nombre}${descuento ? ` −${descuento}%` : ''}`;
       const cuerpoAviso = `Turno libre ${rotuloDia(fecha)} a las ${hora} a ${formatearPlata(precio)}. Pedilo antes que otro.`;

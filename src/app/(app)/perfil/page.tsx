@@ -207,6 +207,7 @@ export default async function Perfil() {
           avisosDesafios: usuario.avisosDesafios,
           avisosPartidos: usuario.avisosPartidos,
         }}
+        radioKm={usuario.radioKm}
         usuario={usuario.usuario}
         conClave={Boolean(usuario.hashClave)}
       />

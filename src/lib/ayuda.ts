@@ -87,6 +87,7 @@ export const TEMAS: Tema[] = [
           'En Inicio, "Cerca tuyo" te muestra los partidos abiertos de tus deportes que quedan más cerca y a los que todavía no te sumaste.',
           'Se mide desde el centro de la ciudad de tu perfil. Para medir desde donde estás, tocá "Usar mi ubicación" y aceptá el permiso del navegador. Eligiendo 2, 5, 15, 30 o 50 km ves solo lo que queda dentro de esa distancia.',
           'Tu ubicación queda solo en tu navegador, redondeada a unos 100 m, durante 6 horas: no se guarda en tu cuenta ni se muestra a nadie. Con "Usar mi ciudad" la dejás de usar, y se borra al salir de tu cuenta.',
+          'Los avisos de partidos que buscan jugadores y del Radar te llegan hasta la distancia que elijas en Perfil → Ajustes (5, 15, 30 o 50 km desde tu ciudad).',
           'Si dice que no diste permiso, activalo desde el candado de la barra de direcciones (o en los ajustes de ubicación del celular) y probá de nuevo.',
         ],
         enlace: { href: '/explorar', rotulo: 'Ir a Explorar' },
@@ -135,7 +136,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Invitar y compartir',
         texto: [
           '"Compartir el partido" abre el panel con WhatsApp, Telegram, Facebook, X, Email y el link para copiar. El link se abre sin cuenta y deja sumarse en 30 segundos.',
-          'Si es un partido abierto y faltan jugadores dentro de las 48 h previas, avisamos a quienes juegan ese deporte en la ciudad (una sola vez).',
+          'Si es un partido abierto y faltan jugadores dentro de las 48 h previas, avisamos a quienes juegan ese deporte cerca: dentro de la distancia que cada uno eligió en sus avisos, o en la misma ciudad (una sola vez).',
         ],
       },
       {
@@ -352,7 +353,7 @@ export const TEMAS: Tema[] = [
         id: 'radar-complejo',
         titulo: 'Publicar en el Radar',
         texto: [
-          'Tocá un turno libre en la grilla y publicalo con descuento: le avisamos a quienes juegan ese deporte en tu ciudad. Si alguien lo toma, deja de aparecer.',
+          'Tocá un turno libre en la grilla y publicalo con descuento: le avisamos a quienes juegan ese deporte cerca de tu complejo (según la distancia que eligió cada uno). Si alguien lo toma, deja de aparecer.',
         ],
       },
       {
