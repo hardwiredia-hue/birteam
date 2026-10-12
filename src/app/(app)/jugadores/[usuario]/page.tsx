@@ -1,4 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
+import { DatosJugador } from '@/components/datos-jugador';
+import { vecesFigura } from '@/lib/figura';
 import { prisma } from '@/lib/db';
 import { FichaDeportiva } from '@/components/ficha-deportiva';
 import { usuarioActual } from '@/lib/auth';
@@ -48,6 +50,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
   const jugadas = await obtenerJugadas(yo.id, { autorId: jugador.id }, 10);
   const estadisticas = await estadisticasJugador(jugador.id);
   const jugados = conRegistro.filter((p) => p.asistio).length;
+  const figura = await vecesFigura(jugador.id);
   const asistencia =
     conRegistro.length > 0 ? Math.round((jugados / conRegistro.length) * 100) : null;
   const iniciales = jugador.nombre
@@ -79,22 +82,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
         ) : null}
       </header>
 
-      <section className="grid grid-cols-3 gap-2">
-        <div className="tarjeta px-2 py-3 text-center">
-          <p className="t-display text-[22px] text-verde-txt tabular">
-            {asistencia === null ? '—' : `${asistencia}%`}
-          </p>
-          <p className="t-rotulo mt-1 text-[9.5px]">Asistencia</p>
-        </div>
-        <div className="tarjeta px-2 py-3 text-center">
-          <p className="t-display text-[22px] tabular">{jugados}</p>
-          <p className="t-rotulo mt-1 text-[9.5px]">Jugados</p>
-        </div>
-        <div className="tarjeta px-2 py-3 text-center">
-          <p className="t-display text-[22px] tabular">{grupos}</p>
-          <p className="t-rotulo mt-1 text-[9.5px]">Grupos</p>
-        </div>
-      </section>
+      <DatosJugador asistencia={asistencia} jugados={jugados} figura={figura} grupos={grupos} />
 
       <div className="-mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <span className="t-rotulo tabular">

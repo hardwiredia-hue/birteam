@@ -12,6 +12,8 @@ import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
 import { Equipos } from './equipos';
+import { FiguraDelPartido } from './figura';
+import { HORAS_VOTACION, contarVotos, estadoVotacion, jugaron } from '@/lib/figura';
 import { AgregarCalendario } from '@/components/agregar-calendario';
 import { eventoDe } from '@/lib/calendario-eventos';
 import { enlaceGoogle } from '@/lib/calendario';
@@ -54,6 +56,16 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   const organizo = partido.organizadorId === usuario.id || partido.coOrganizadorId === usuario.id;
   const yaPaso = partido.fecha < new Date();
   const cerrado = partido.estado === 'JUGADO' || partido.estado === 'CANCELADO';
+  // Figura del partido: la votación abre al empezar y dura 72 h.
+  const votacion = estadoVotacion(partido);
+  const habilitados = votacion === 'NO_EMPEZO' ? [] : jugaron(partido.participaciones);
+  const votos =
+    habilitados.length >= 2
+      ? await prisma.votoFigura.findMany({ where: { partidoId: partido.id }, select: { votanteId: true, elegidoId: true } })
+      : [];
+  const recuento = contarVotos(votos);
+  const cierreVotacion = new Date(partido.fecha.getTime() + HORAS_VOTACION * 3600_000);
+
   // Para agendarlo: quien va o lo organiza, si todavía no se jugó.
   const evento =
     !yaPaso && !cerrado && (organizo || mia?.estado === 'VOY' || mia?.estado === 'TALVEZ')
@@ -281,6 +293,33 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           }))} />
         ) : null}
       </section>
+
+      {votacion !== 'NO_EMPEZO' && habilitados.length >= 2 ? (
+        <FiguraDelPartido
+          partidoId={partido.id}
+          estado={votacion}
+          candidatos={habilitados
+            .filter((p) => p.usuarioId !== usuario.id)
+            .map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre }))}
+          miVoto={votos.find((v) => v.votanteId === usuario.id)?.elegidoId ?? null}
+          puedoVotar={habilitados.some((p) => p.usuarioId === usuario.id)}
+          votaron={votos.length}
+          habilitados={habilitados.length}
+          ganadores={recuento.ganadores.map((id) => ({
+            nombre: habilitados.find((p) => p.usuarioId === id)?.usuario.nombre ?? 'Jugador',
+            votos: recuento.maximo,
+          }))}
+          cierra={`Cierra el ${cierreVotacion.toLocaleDateString('es-AR', {
+            weekday: 'long',
+            timeZone: 'America/Argentina/Buenos_Aires',
+          })} a las ${cierreVotacion.toLocaleTimeString('es-AR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'America/Argentina/Buenos_Aires',
+          })}`}
+        />
+      ) : null}
 
       {!cerrado && voy.length >= 2 ? (
         <Equipos

@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { DatosJugador } from '@/components/datos-jugador';
+import { vecesFigura } from '@/lib/figura';
 import { prisma } from '@/lib/db';
 import { FichaDeportiva } from '@/components/ficha-deportiva';
 import { usuarioActual } from '@/lib/auth';
@@ -40,6 +42,7 @@ export default async function Perfil() {
   const estadisticas = await estadisticasJugador(usuario.id);
 
   const jugados = conRegistro.filter((p) => p.asistio).length;
+  const figura = await vecesFigura(usuario.id);
   const asistencia =
     conRegistro.length > 0 ? Math.round((jugados / conRegistro.length) * 100) : null;
 
@@ -68,22 +71,7 @@ export default async function Perfil() {
         </div>
       </header>
 
-      <section className="grid grid-cols-3 gap-2">
-        <div className="tarjeta px-2 py-3 text-center">
-          <p className="t-display text-[22px] text-verde-txt tabular">
-            {asistencia === null ? '—' : `${asistencia}%`}
-          </p>
-          <p className="t-rotulo mt-1 text-[9.5px]">Asistencia</p>
-        </div>
-        <div className="tarjeta px-2 py-3 text-center">
-          <p className="t-display text-[22px] tabular">{jugados}</p>
-          <p className="t-rotulo mt-1 text-[9.5px]">Jugados</p>
-        </div>
-        <div className="tarjeta px-2 py-3 text-center">
-          <p className="t-display text-[22px] tabular">{grupos}</p>
-          <p className="t-rotulo mt-1 text-[9.5px]">Grupos</p>
-        </div>
-      </section>
+      <DatosJugador asistencia={asistencia} jugados={jugados} figura={figura} grupos={grupos} />
       {asistencia === null ? (
         <p className="-mt-3 text-xs text-tinta-3">
           El % de asistencia aparece cuando el organizador pasa lista en tu primer partido jugado.

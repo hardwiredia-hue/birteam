@@ -83,6 +83,8 @@ model Usuario {
   resenasCancha    ResenaCancha[]
   turnosFijos      TurnoFijo[]
   alertasTurno     AlertaTurno[]
+  votosEmitidos    VotoFigura[] @relation("votosEmitidos")
+  votosRecibidos   VotoFigura[] @relation("votosRecibidos")
   // Preferencias de avisos (los de partidos y reservas no se apagan).
   avisosSociales   Boolean @default(true)
   avisosRadar      Boolean @default(true)
@@ -246,6 +248,21 @@ model TurnoFijo {
 
   @@index([canchaId, activo])
   @@index([usuarioId])
+}
+
+// Figura del partido: cada jugador que fue vota a uno (no a sí mismo),
+// hasta 72 h después del partido. Un voto por persona, se puede cambiar.
+model VotoFigura {
+  partidoId String
+  partido   Partido  @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  votanteId String
+  votante   Usuario  @relation("votosEmitidos", fields: [votanteId], references: [id], onDelete: Cascade)
+  elegidoId String
+  elegido   Usuario  @relation("votosRecibidos", fields: [elegidoId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now())
+
+  @@id([partidoId, votanteId])
+  @@index([elegidoId])
 }
 
 // "Avisame si se libera": el jugador quiere un turno que está tomado. Si se
@@ -586,6 +603,7 @@ model Partido {
   actualizadoEn     DateTime  @updatedAt
 
   participaciones Participacion[]
+  votosFigura     VotoFigura[]
   mensajes        Mensaje[]
 
   @@index([fecha])
