@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
+import { prepararImagen } from '@/lib/preparar-imagen';
 
 export function FormularioEditar({
   inicial,
@@ -35,7 +36,7 @@ export function FormularioEditar({
     setSubiendoFoto(true);
     setError(null);
     const form = new FormData();
-    form.append('archivo', archivo);
+    form.append('archivo', await prepararImagen(archivo, { ladoMaximo: 800 }));
     const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
     const datos = await respuesta.json().catch(() => ({}));
     setSubiendoFoto(false);

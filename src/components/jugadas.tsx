@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import type { JugadaParaMostrar } from '@/lib/jugadas';
 import { Avatar } from '@/components/avatar';
 import { Compartir } from '@/components/compartir';
+import { prepararImagen } from '@/lib/preparar-imagen';
 
 /** Publicar una jugada: hasta 5 fotos + texto. */
 export function PublicarJugada({
@@ -59,7 +60,7 @@ export function PublicarJugada({
     setError(null);
     for (const archivo of elegidas) {
       const form = new FormData();
-      form.append('archivo', archivo);
+      form.append('archivo', await prepararImagen(archivo));
       const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
       const datos = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok) {

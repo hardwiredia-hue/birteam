@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
 import { CampoClave } from '@/components/campo-clave';
+import { prepararImagen } from '@/lib/preparar-imagen';
 
 interface Deporte {
   id: string;
@@ -61,7 +62,7 @@ export function FormularioRegistro({
   /** Sube una imagen ya con sesión creada y devuelve el nombre de archivo. */
   async function subirImagen(archivo: File) {
     const form = new FormData();
-    form.append('archivo', archivo);
+    form.append('archivo', await prepararImagen(archivo, { ladoMaximo: 2400, calidad: 0.9 }));
     const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
     const datos = await respuesta.json().catch(() => ({}));
     return respuesta.ok ? (datos.nombre as string) : null;

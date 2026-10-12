@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { ActivarPush } from '@/components/activar-push';
 import { Interruptor } from '@/components/interruptor';
 import { CampoClave } from '@/components/campo-clave';
+import { prepararImagen } from '@/lib/preparar-imagen';
 
 const AVISOS = [
   { clave: 'avisosSociales', titulo: 'Avisos sociales', detalle: 'Me gusta, comentarios y seguidores nuevos.' },
@@ -193,7 +194,8 @@ export function SubirComprobante({ nombreUsuario }: { nombreUsuario: string }) {
     setOcupado(true);
     setError(null);
     const form = new FormData();
-    form.append('archivo', archivo);
+    // Comprobante: más resolución para que se lea.
+    form.append('archivo', await prepararImagen(archivo, { ladoMaximo: 2400, calidad: 0.9 }));
     const subida = await fetch('/api/archivos', { method: 'POST', body: form });
     const datos = await subida.json().catch(() => ({}));
     if (!subida.ok) {

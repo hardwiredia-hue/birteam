@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { LogoEquipo } from './logo-equipo';
+import { prepararImagen } from '@/lib/preparar-imagen';
 
 /** Subir, cambiar o sacar el logo de un grupo o equipo. */
 export function SubirLogo({
@@ -39,7 +40,7 @@ export function SubirLogo({
     setError(null);
     try {
       const form = new FormData();
-      form.append('archivo', archivo);
+      form.append('archivo', await prepararImagen(archivo, { ladoMaximo: 800 }));
       const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
       const datos = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok) throw new Error(datos.error ?? 'No pudimos subir la imagen.');

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { SelectorCiudad } from '@/components/selector-ciudad';
 import { Interruptor } from '@/components/interruptor';
 import { nombresEnSerie, siguienteNombre } from '@/lib/serie';
+import { prepararImagen } from '@/lib/preparar-imagen';
 
 interface Deporte {
   id: string;
@@ -111,7 +112,7 @@ export function FormularioCancha({
     setError(null);
     for (const archivo of elegidas) {
       const form = new FormData();
-      form.append('archivo', archivo);
+      form.append('archivo', await prepararImagen(archivo));
       const respuesta = await fetch('/api/archivos', { method: 'POST', body: form });
       const datos = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok) {
