@@ -114,7 +114,7 @@ export default async function DetalleCancha({
             className="max-h-64 w-full rounded-[12px] border border-borde object-cover"
           />
           {fotos.length > 1 ? (
-            <div className="flex gap-2 overflow-x-auto">
+            <div className="sin-barra flex gap-2 overflow-x-auto">
               {fotos.slice(1).map((foto) => (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img

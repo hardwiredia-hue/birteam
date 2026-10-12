@@ -242,7 +242,7 @@ export function GrillaTurnos({
         ) : null}
       </div>
 
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+      <div className="fila-chips">
         {dias.map((otro, indice) => {
           const libres = otro.turnos.filter((t) => t.estado === 'LIBRE').length;
           const activo = indice === indiceDia;

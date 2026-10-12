@@ -31,7 +31,7 @@ export function ChipsDeportes({
     <>
       <div
         className={
-          envolver === 'contenido' ? 'contents' : envolver ? 'flex flex-wrap gap-2' : '-mx-1 flex gap-2 overflow-x-auto px-1 pb-1'
+          envolver === 'contenido' ? 'contents' : envolver ? 'flex flex-wrap gap-2' : 'fila-chips'
         }
       >
         {conTodos ? (

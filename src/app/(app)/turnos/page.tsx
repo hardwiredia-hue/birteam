@@ -101,7 +101,7 @@ export default async function BuscarTurno({
 
       <div className="flex flex-col gap-2">
         <span className="rotulo-campo">Día</span>
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div className="fila-chips">
           {dias.map((fecha) => (
             <Link
               key={fecha}

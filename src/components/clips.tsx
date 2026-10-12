@@ -138,7 +138,7 @@ function Clip({
           onClick={alternarReproduccion}
         />
       ) : clip.fotos.length > 1 ? (
-        <div className="flex h-full w-full snap-x snap-mandatory overflow-x-auto">
+        <div className="sin-barra flex h-full w-full snap-x snap-mandatory overflow-x-auto">
           {clip.fotos.map((foto) => (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img

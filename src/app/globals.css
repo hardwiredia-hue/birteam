@@ -364,6 +364,38 @@
     color: var(--tinta-3);
   }
 
+  /* ---------- filas de chips ---------- */
+  /* En el celular se desliza con el dedo (sin barra, con un fundido que
+     avisa que hay más); en pantallas anchas se acomodan en varias líneas. */
+  .fila-chips {
+    display: flex;
+    gap: 0.5rem;
+    margin-inline: -4px;
+    padding: 0 4px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+  .fila-chips::-webkit-scrollbar,
+  .sin-barra::-webkit-scrollbar {
+    display: none;
+  }
+  .fila-chips > * {
+    flex-shrink: 0;
+  }
+  @media (min-width: 640px) {
+    .fila-chips {
+      flex-wrap: wrap;
+      overflow: visible;
+      mask-image: none;
+    }
+  }
+  /* Galerías que se deslizan (fotos, clips): sin barra visible. */
+  .sin-barra {
+    scrollbar-width: none;
+  }
+
   /* ---------- carga ---------- */
   /* Bloque gris que late mientras llega el contenido (quieto si se pidió menos movimiento). */
   .esqueleto {

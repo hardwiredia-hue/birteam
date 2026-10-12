@@ -24,7 +24,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           <h1 className="t-display text-[22px]">Backoffice</h1>
           <Link href="/panel" className="text-xs font-semibold text-tinta-3">← Volver a la app</Link>
         </div>
-        <nav className="flex gap-2 overflow-x-auto pb-1">
+        <nav className="fila-chips">
           {SECCIONES.map((seccion) => (
             <Link key={seccion.href} href={seccion.href} className="chip-sel whitespace-nowrap">
               {seccion.rotulo}
