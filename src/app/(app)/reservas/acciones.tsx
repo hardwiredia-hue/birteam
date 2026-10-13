@@ -61,7 +61,7 @@ export function AccionesReserva({
           </>
         ) : null}
         {!esDueno && estado === 'CONFIRMADA' && armarPartido ? (
-          <Link href={armarPartido} className="btn btn-primario btn-sm">
+          <Link href={armarPartido} className="btn btn-secundario btn-sm">
             Armar el partido
           </Link>
         ) : null}

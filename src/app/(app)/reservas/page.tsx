@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { AgregarCalendario } from '@/components/agregar-calendario';
+import { ComoLlegar } from '@/components/como-llegar';
+import { kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import { eventoDe } from '@/lib/calendario-eventos';
 import { enlaceGoogle } from '@/lib/calendario';
 import { prisma } from '@/lib/db';
@@ -37,6 +39,7 @@ const COLOR_ESTADO: Record<string, string> = {
  */
 export default async function Reservas() {
   const usuario = (await usuarioActual())!;
+  const ubicacion = await ubicacionDe(usuario);
   await liberarVencidas();
 
   const ahora = new Date();
@@ -54,7 +57,20 @@ export default async function Reservas() {
         inicio: { gte: desde },
         cancha: { duenoId: { notIn: duenos } },
       },
-      include: { cancha: { select: { id: true, nombre: true, direccion: true, telefono: true, horasCancelacion: true } } },
+      include: {
+        cancha: {
+          select: {
+            id: true,
+            nombre: true,
+            direccion: true,
+            telefono: true,
+            horasCancelacion: true,
+            ciudad: true,
+            latitud: true,
+            longitud: true,
+          },
+        },
+      },
       orderBy: { inicio: 'asc' },
     }),
     prisma.reserva.findMany({
@@ -313,6 +329,7 @@ export default async function Reservas() {
                   {reserva.cancha.direccion}
                   {reserva.cancha.telefono ? ` · ${reserva.cancha.telefono}` : ''}
                 </p>
+                <ComoLlegar lugar={reserva.cancha} km={kmHasta(ubicacion, reserva.cancha)} className="mt-1.5" />
                 {calendario.has(reserva.id) && !reserva.turnoFijoId ? (
                   <div className="mt-2">
                     <AgregarCalendario ics={`/api/calendario/reserva/${reserva.id}`} google={calendario.get(reserva.id)!} />
@@ -365,7 +382,7 @@ export default async function Reservas() {
 
       {historial.length > 0 ? (
         <section className="flex flex-col gap-2">
-          <p className="t-rotulo">Anteriores</p>
+          <p className="t-rotulo">Historial</p>
           {historial.map((reserva) => (
             <Link
               key={reserva.id}
