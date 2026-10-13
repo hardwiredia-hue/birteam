@@ -10,6 +10,8 @@ import { TarjetaJugada } from '@/components/jugadas';
 import { obtenerJugadas } from '@/lib/jugadas';
 import { estadisticasJugador } from '@/lib/estadisticas';
 import { Avatar } from '@/components/avatar';
+import { InvitarAPartido } from '@/components/invitar-partido';
+import { partidosParaInvitar } from '@/lib/invitaciones';
 
 export const metadata = { title: 'Jugador' };
 export const dynamic = 'force-dynamic';
@@ -48,6 +50,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
   ]);
 
   const jugadas = await obtenerJugadas(yo.id, { autorId: jugador.id }, 10);
+  const paraInvitar = bloqueo ? [] : await partidosParaInvitar(yo.id, jugador.id);
   const estadisticas = await estadisticasJugador(jugador.id);
   const jugados = conRegistro.filter((p) => p.asistio).length;
   const figura = await vecesFigura(jugador.id);
@@ -78,6 +81,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
             <a href={`/mensajes/${jugador.usuario}`} className="btn btn-secundario btn-sm">
               Mensaje
             </a>
+            <InvitarAPartido usuarioId={jugador.id} nombre={jugador.nombre} partidos={paraInvitar} />
           </div>
         ) : null}
       </header>
