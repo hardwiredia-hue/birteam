@@ -10,7 +10,7 @@ import { DesconectarMercadoPago } from './mercadopago';
 import { EquipoComplejo } from './equipo';
 import { MapaOcupacion } from './ocupacion';
 import { PuestaAPunto } from './puesta-a-punto';
-import { Agenda } from './agenda';
+import { Agenda } from '@/components/agenda';
 import { agendaDelDia } from '@/lib/agenda';
 import { pasosDelComplejo } from '@/lib/puesta-a-punto';
 import { ocupacionPorFranja } from '@/lib/ocupacion';
@@ -179,7 +179,7 @@ export default async function MiComplejo({
         <EnlaceAyuda tema="complejos" rotulo="Guía para complejos" className="mt-2" />
       </header>
 
-      <Agenda turnos={turnosAgenda} dia={diaAgenda} fecha={fechaAgenda} rotuloManana="Mañana" />
+      <Agenda turnos={turnosAgenda} dia={diaAgenda} fecha={fechaAgenda} rotuloManana="Mañana" base="/complejo" />
 
       <PuestaAPunto pasos={pasos} />
 

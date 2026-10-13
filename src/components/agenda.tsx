@@ -19,11 +19,17 @@ export function Agenda({
   dia,
   fecha,
   rotuloManana,
+  base,
+  titulo,
 }: {
   turnos: TurnoAgenda[];
   dia: 'hoy' | 'manana';
   fecha: string;
   rotuloManana: string;
+  /** Pantalla donde vive (para las pestañas Hoy / Mañana). */
+  base: '/complejo' | '/panel';
+  /** Rótulo arriba (en Inicio de un empleado: "Agenda del complejo"). */
+  titulo?: string;
 }) {
   const ahora = Date.now();
   const tomados = turnos.filter((t) => t.estado !== 'BLOQUEADO');
@@ -35,6 +41,7 @@ export function Agenda({
 
   return (
     <section className="flex flex-col gap-3">
+      {titulo ? <p className="t-rotulo">{titulo}</p> : null}
       <div className="flex items-center justify-between gap-3">
         <div className="flex gap-1 rounded-[8px] border border-borde p-1" role="tablist" aria-label="Día de la agenda">
           {(
@@ -45,7 +52,7 @@ export function Agenda({
           ).map(([clave, rotulo]) => (
             <Link
               key={clave}
-              href={clave === 'hoy' ? '/complejo' : '/complejo?agenda=manana'}
+              href={clave === 'hoy' ? base : `${base}?agenda=manana`}
               role="tab"
               aria-selected={dia === clave}
               className="rounded-[6px] px-3 py-1.5 text-[13px] font-semibold"

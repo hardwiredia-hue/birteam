@@ -8,7 +8,9 @@ import { Avisos } from './avisos';
 import { Pendientes } from './pendientes';
 import { AvisoNovedad } from '@/components/aviso-novedad';
 import { NOVEDADES } from '@/lib/ayuda';
-import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
+import { cuandoEmpieza, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
+import { agendaDelDia } from '@/lib/agenda';
+import { Agenda } from '@/components/agenda';
 import { formatearPlata, haceCuanto } from '@/lib/formato';
 import { formatearDistancia, rotuloDistancia } from '@/lib/geo';
 import { RADIOS_KM, kmHasta, ubicacionDe } from '@/lib/ubicacion';
@@ -20,9 +22,17 @@ export const dynamic = 'force-dynamic';
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-export default async function Inicio() {
+export default async function Inicio({ searchParams }: { searchParams: Promise<{ agenda?: string }> }) {
+  const { agenda } = await searchParams;
   const usuario = (await usuarioActual())!;
   const hoy = new Date();
+
+  // Empleado de un complejo (no dueño): la agenda del día de los complejos
+  // donde trabaja, para atender el mostrador desde Inicio.
+  const complejosQueAtiendo = usuario.tipoCuenta === 'CANCHA' ? [] : await duenosQueGestiono(usuario.id);
+  const diaAgenda = agenda === 'manana' ? 'manana' : 'hoy';
+  const fechaAgenda = proximosDias(2)[diaAgenda === 'manana' ? 1 : 0];
+  const turnosAgenda = complejosQueAtiendo.length > 0 ? await agendaDelDia(complejosQueAtiendo, fechaAgenda) : null;
 
   // Tu próximo partido: el más cercano en el que estás anotado u organizás.
   const proxima = await prisma.participacion.findFirst({
@@ -287,6 +297,17 @@ export default async function Inicio() {
           </div>
           <span className="t-display text-[16px] text-verde-txt">→</span>
         </Link>
+      ) : null}
+
+      {turnosAgenda ? (
+        <Agenda
+          turnos={turnosAgenda}
+          dia={diaAgenda}
+          fecha={fechaAgenda}
+          rotuloManana="Mañana"
+          base="/panel"
+          titulo="Agenda del complejo"
+        />
       ) : null}
 
       {pedidosSinResponder > 0 ? (

@@ -401,6 +401,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Tu equipo: empleados',
         texto: [
           'Sumá hasta 10 personas por su @usuario. Gestionan los turnos (confirmar, rechazar, bloquear, cancelar) y reciben los avisos; no cambian precios, Radar ni cobros.',
+          'En su Inicio ven la agenda del complejo (hoy y mañana) igual que vos: quién juega, en qué cancha, si está confirmado, cuánto cobrar y el WhatsApp.',
         ],
       },
       {
@@ -553,7 +554,7 @@ export const NOVEDADES: Novedad[] = [
   {
     fecha: '2026-10-13',
     titulo: 'La agenda del día',
-    texto: 'Arriba de Mi complejo, los turnos de hoy y mañana por hora: quién juega, en qué cancha, si está confirmado, cuánto falta cobrar y su WhatsApp.',
+    texto: 'Arriba de Mi complejo (y en el Inicio de tus empleados), los turnos de hoy y mañana por hora: quién juega, en qué cancha, si está confirmado, cuánto falta cobrar y su WhatsApp.',
     para: 'complejos',
     enlace: { href: '/ayuda/complejos#agenda', rotulo: 'Cómo funciona' },
   },
