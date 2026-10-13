@@ -76,6 +76,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'En Perfil → Ajustes prendé "Avisos en este dispositivo" para recibir los avisos aunque la app esté cerrada: lugar liberado, recordatorios, mensajes, turnos.',
           'Ahí mismo elegís qué avisos sociales querés (me gusta, comentarios, seguidores).',
+          'En Notificaciones ves cada aviso con cuándo llegó ("hace 5 min", "ayer"). Al tocar uno se marca como leído; con "Marcar leídos" se marcan todos.',
         ],
         enlace: { href: '/perfil', rotulo: 'Ir a Ajustes' },
       },

@@ -38,3 +38,15 @@ test('ubicación: distancia aproximada sin falsa precisión', async () => {
   assert.equal(rotuloDistancia(12.4, true), 'a ~12 km');
   assert.equal(rotuloDistancia(4.5, true), 'a ~4,5 km');
 });
+
+test('formato: cuánto hace, corto', async () => {
+  const { haceCuanto } = await import('../src/lib/formato');
+  const ahora = new Date('2026-10-13T15:00:00-03:00');
+  const antes = (min: number) => new Date(ahora.getTime() - min * 60_000);
+  assert.equal(haceCuanto(antes(0.2), ahora), 'recién');
+  assert.equal(haceCuanto(antes(5), ahora), 'hace 5 min');
+  assert.equal(haceCuanto(antes(130), ahora), 'hace 2 h');
+  assert.equal(haceCuanto(antes(26 * 60), ahora), 'ayer');
+  assert.equal(haceCuanto(antes(3 * 24 * 60), ahora), 'hace 3 días');
+  assert.equal(haceCuanto(new Date('2026-10-01T12:00:00-03:00'), ahora), '1 oct');
+});

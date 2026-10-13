@@ -9,7 +9,7 @@ import { Pendientes } from './pendientes';
 import { AvisoNovedad } from '@/components/aviso-novedad';
 import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, rotuloDia } from '@/lib/reservas';
-import { formatearPlata } from '@/lib/formato';
+import { formatearPlata, haceCuanto } from '@/lib/formato';
 import { formatearDistancia, rotuloDistancia } from '@/lib/geo';
 import { RADIOS_KM, kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import iso from '../../../../public/birteam-iso.png';
@@ -46,7 +46,7 @@ export default async function Inicio() {
     where: { usuarioId: usuario.id, leidaEn: null },
     orderBy: { creadoEn: 'desc' },
     take: 5,
-    select: { id: true, tipo: true, titulo: true, cuerpo: true, url: true },
+    select: { id: true, tipo: true, titulo: true, cuerpo: true, url: true, creadoEn: true },
   });
 
   const mensajesSinLeer = await prisma.mensaje.count({
@@ -232,7 +232,7 @@ export default async function Inicio() {
         }))}
       />
 
-      <Avisos avisos={avisos} />
+      <Avisos avisos={avisos.map(({ creadoEn, ...aviso }) => ({ ...aviso, cuando: haceCuanto(creadoEn) }))} />
 
       {(() => {
         // La última novedad para esta persona: las de complejos, solo a dueños.

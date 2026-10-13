@@ -10,6 +10,18 @@ export interface Aviso {
   titulo: string;
   cuerpo: string | null;
   url: string | null;
+  /** "hace 5 min", calculado en el servidor. */
+  cuando: string;
+}
+
+/** Tocar un aviso lo marca leído (sin esperar: la navegación sigue igual). */
+function marcarLeido(id: string) {
+  fetch('/api/notificaciones/leer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+    keepalive: true,
+  }).catch(() => {});
 }
 
 export function Avisos({ avisos }: { avisos: Aviso[] }) {
@@ -48,10 +60,11 @@ export function Avisos({ avisos }: { avisos: Aviso[] }) {
                 {aviso.titulo}
               </p>
               {aviso.cuerpo ? <p className="mt-0.5 text-xs text-tinta-3">{aviso.cuerpo}</p> : null}
+              <p className="t-rotulo mt-1.5">{aviso.cuando}</p>
             </>
           );
           return aviso.url ? (
-            <Link key={aviso.id} href={aviso.url} className="tarjeta block p-3.5">
+            <Link key={aviso.id} href={aviso.url} onClick={() => marcarLeido(aviso.id)} className="tarjeta block p-3.5">
               {contenido}
             </Link>
           ) : (

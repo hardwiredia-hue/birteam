@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { Avisos } from '../panel/avisos';
+import { haceCuanto } from '@/lib/formato';
 
 export const metadata = { title: 'Notificaciones' };
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,7 @@ export default async function Notificaciones() {
           titulo: n.titulo,
           cuerpo: n.cuerpo,
           url: n.url,
+          cuando: haceCuanto(n.creadoEn),
         }))}
       />
 
@@ -50,13 +52,7 @@ export default async function Notificaciones() {
                 <>
                   <p className="text-sm font-semibold text-tinta-2">{aviso.titulo}</p>
                   {aviso.cuerpo ? <p className="mt-0.5 text-xs text-tinta-3">{aviso.cuerpo}</p> : null}
-                  <p className="t-rotulo mt-1">
-                    {aviso.creadoEn.toLocaleDateString('es-AR', {
-                      day: 'numeric',
-                      month: 'short',
-                      timeZone: 'America/Argentina/Buenos_Aires',
-                    })}
-                  </p>
+                  <p className="t-rotulo mt-1">{haceCuanto(aviso.creadoEn)}</p>
                 </>
               );
               return aviso.url ? (
