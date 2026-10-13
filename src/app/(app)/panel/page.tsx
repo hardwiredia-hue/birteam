@@ -27,44 +27,138 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
   const usuario = (await usuarioActual())!;
   const hoy = new Date();
 
-  // Empleado de un complejo (no dueño): la agenda del día de los complejos
-  // donde trabaja, para atender el mostrador desde Inicio.
-  const complejosQueAtiendo = usuario.tipoCuenta === 'CANCHA' ? [] : await duenosQueGestiono(usuario.id);
+  // Todo lo de Inicio sale de consultas independientes: se lanzan juntas (en
+  // paralelo) en vez de una atrás de otra, así la pantalla carga más rápido.
   const diaAgenda = agenda === 'manana' ? 'manana' : 'hoy';
   const fechaAgenda = proximosDias(2)[diaAgenda === 'manana' ? 1 : 0];
-  const turnosAgenda = complejosQueAtiendo.length > 0 ? await agendaDelDia(complejosQueAtiendo, fechaAgenda) : null;
+  const deportesMios = usuario.deportes.map((relacion) => relacion.deporteId);
+  const deporteDelRadar =
+    usuario.deportes.find((relacion) => relacion.principal)?.deporteId ?? usuario.deportes[0]?.deporteId;
+  const radioCerca = RADIOS_KM.find((km) => km >= usuario.radioKm) ?? RADIOS_KM[RADIOS_KM.length - 1];
+  const hace30dias = new Date(hoy.getTime() - 30 * 86400_000);
 
-  // Tu próximo partido: el más cercano en el que estás anotado u organizás.
-  const proxima = await prisma.participacion.findFirst({
-    where: {
-      usuarioId: usuario.id,
-      estado: { in: ['VOY', 'TALVEZ', 'ESPERA'] },
-      partido: { fecha: { gte: hoy }, estado: { in: ['ARMANDOSE', 'CONFIRMADO'] } },
-    },
-    orderBy: { partido: { fecha: 'asc' } },
-    include: { partido: { include: { deporte: true } } },
-  });
+  // Empleado de un complejo (no dueño): la agenda del día de los complejos
+  // donde trabaja, para atender el mostrador desde Inicio.
+  const cargarAgenda = async () => {
+    const complejos = usuario.tipoCuenta === 'CANCHA' ? [] : await duenosQueGestiono(usuario.id);
+    return complejos.length > 0 ? agendaDelDia(complejos, fechaAgenda) : null;
+  };
 
-  const membresias = await prisma.miembroGrupo.findMany({
-    where: { usuarioId: usuario.id },
-    include: { grupo: { include: { deporte: true, _count: { select: { miembros: true } } } } },
-    orderBy: { unidoEn: 'asc' },
-    take: 3,
-  });
+  // Turnos de cancha: los pedidos sin responder de los complejos que gestiono.
+  const contarPedidos = async () => {
+    const duenos = await duenosQueGestiono(usuario.id, usuario.tipoCuenta);
+    return duenos.length > 0
+      ? prisma.reserva.count({
+          where: { cancha: { duenoId: { in: duenos } }, estado: 'SOLICITADA', inicio: { gte: hoy } },
+        })
+      : 0;
+  };
 
-  const avisos = await prisma.notificacion.findMany({
-    where: { usuarioId: usuario.id, leidaEn: null },
-    orderBy: { creadoEn: 'desc' },
-    take: 5,
-    select: { id: true, tipo: true, titulo: true, cuerpo: true, url: true, creadoEn: true },
-  });
+  // Radar (de tu deporte) y Cerca tuyo (partidos abiertos de tus deportes en
+  // tu radio, a los que no te sumaste): los dos miden desde tu ubicación.
+  const cargarCercanos = async () => {
+    const ubicacion = await ubicacionDe(usuario);
+    const [ofertas, abiertos] = await Promise.all([
+      ofertasVigentes({ deporteId: deporteDelRadar }),
+      ubicacion
+        ? prisma.partido.findMany({
+            where: {
+              visibilidad: 'ABIERTO',
+              estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+              listaCerrada: false,
+              fecha: { gte: hoy },
+              organizadorId: { not: usuario.id },
+              participaciones: { none: { usuarioId: usuario.id } },
+              ...(deportesMios.length > 0 ? { deporteId: { in: deportesMios } } : {}),
+            },
+            include: {
+              deporte: { select: { nombre: true } },
+              participaciones: { where: { estado: 'VOY' }, select: { id: true } },
+            },
+            orderBy: { fecha: 'asc' },
+            take: 60,
+          })
+        : Promise.resolve([]),
+    ]);
+    // Con ubicación, la oferta que se destaca es la más cercana.
+    const radar = ofertas
+      .filter((oferta) => oferta.cancha.duenoId !== usuario.id)
+      .map((oferta) => ({ ...oferta, km: kmHasta(ubicacion, oferta.cancha) }))
+      .sort((a, b) => (ubicacion ? (a.km ?? Infinity) - (b.km ?? Infinity) : 0));
+    const cerca = abiertos
+      .map((partido) => ({ ...partido, km: kmHasta(ubicacion, partido) }))
+      .filter((partido) => partido.km != null && partido.km <= radioCerca)
+      .sort((a, b) => a.km! - b.km! || a.fecha.getTime() - b.fecha.getTime())
+      .slice(0, 3);
+    return { ubicacion, radar, cerca };
+  };
 
-  const mensajesSinLeer = await prisma.mensaje.count({
-    where: { destinatarioId: usuario.id, leidoEn: null },
-  });
+  // Partidos a los que te invitaron (de tus grupos o por aviso) y no contestaste.
+  const cargarInvitaciones = async () => {
+    const [gruposMios, recibidas] = await Promise.all([
+      prisma.miembroGrupo.findMany({ where: { usuarioId: usuario.id }, select: { grupoId: true } }),
+      prisma.notificacion.findMany({
+        where: { usuarioId: usuario.id, tipo: 'INVITACION', creadoEn: { gte: hace30dias } },
+        select: { url: true },
+      }),
+    ]);
+    const idsInvitado = recibidas
+      .map((n) => n.url?.match(/^\/partidos\/([^/?#]+)/)?.[1])
+      .filter((id): id is string => Boolean(id));
+    return prisma.partido.findMany({
+      where: {
+        fecha: { gt: hoy },
+        estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
+        organizadorId: { not: usuario.id },
+        listaCerrada: false,
+        participaciones: { none: { usuarioId: usuario.id } },
+        OR: [{ grupoId: { in: gruposMios.map((g) => g.grupoId) } }, { id: { in: idsInvitado } }],
+      },
+      include: { deporte: { select: { nombre: true } }, organizador: { select: { nombre: true } } },
+      orderBy: { fecha: 'asc' },
+      take: 3,
+    });
+  };
 
-  // Turnos de cancha: el próximo propio y, para dueños, los pedidos sin responder.
-  const [proximoTurno, pedidosSinResponder] = await Promise.all([
+  const [
+    turnosAgenda,
+    proxima,
+    membresias,
+    avisos,
+    mensajesSinLeer,
+    proximoTurno,
+    pedidosSinResponder,
+    { ubicacion, radar, cerca },
+    desafiosRecibidos,
+    desafiosAbiertos,
+    liberados,
+    invitaciones,
+  ] = await Promise.all([
+    cargarAgenda(),
+    // Tu próximo partido: el más cercano en el que estás anotado u organizás.
+    prisma.participacion.findFirst({
+      where: {
+        usuarioId: usuario.id,
+        estado: { in: ['VOY', 'TALVEZ', 'ESPERA'] },
+        partido: { fecha: { gte: hoy }, estado: { in: ['ARMANDOSE', 'CONFIRMADO'] } },
+      },
+      orderBy: { partido: { fecha: 'asc' } },
+      include: { partido: { include: { deporte: true } } },
+    }),
+    prisma.miembroGrupo.findMany({
+      where: { usuarioId: usuario.id },
+      include: { grupo: { include: { deporte: true, _count: { select: { miembros: true } } } } },
+      orderBy: { unidoEn: 'asc' },
+      take: 3,
+    }),
+    prisma.notificacion.findMany({
+      where: { usuarioId: usuario.id, leidaEn: null },
+      orderBy: { creadoEn: 'desc' },
+      take: 5,
+      select: { id: true, tipo: true, titulo: true, cuerpo: true, url: true, creadoEn: true },
+    }),
+    prisma.mensaje.count({ where: { destinatarioId: usuario.id, leidoEn: null } }),
+    // Tu próximo turno de cancha (no en tu propio complejo).
     prisma.reserva.findFirst({
       where: {
         usuarioId: usuario.id,
@@ -75,58 +169,9 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
       orderBy: { inicio: 'asc' },
       include: { cancha: { select: { nombre: true } } },
     }),
-    duenosQueGestiono(usuario.id, usuario.tipoCuenta).then((duenos) =>
-      duenos.length > 0
-        ? prisma.reserva.count({
-            where: { cancha: { duenoId: { in: duenos } }, estado: 'SOLICITADA', inicio: { gte: hoy } },
-          })
-        : 0
-    ),
-  ]);
-
-  // Radar: turnos libres con descuento, de tu deporte si tenés uno.
-  const deporteDelRadar =
-    usuario.deportes.find((relacion) => relacion.principal)?.deporteId ?? usuario.deportes[0]?.deporteId;
-  const ubicacion = await ubicacionDe(usuario);
-  // Con ubicación, la oferta que se destaca es la más cercana.
-  const radar = (await ofertasVigentes({ deporteId: deporteDelRadar }))
-    .filter((oferta) => oferta.cancha.duenoId !== usuario.id)
-    .map((oferta) => ({ ...oferta, km: kmHasta(ubicacion, oferta.cancha) }))
-    .sort((a, b) => (ubicacion ? (a.km ?? Infinity) - (b.km ?? Infinity) : 0));
-
-  // Cerca tuyo: partidos abiertos de tus deportes dentro de tu radio, a los
-  // que todavía no te sumaste. Lo más cerca primero.
-  const radioCerca = RADIOS_KM.find((km) => km >= usuario.radioKm) ?? RADIOS_KM[RADIOS_KM.length - 1];
-  const cerca = ubicacion
-    ? (
-        await prisma.partido.findMany({
-          where: {
-            visibilidad: 'ABIERTO',
-            estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
-            listaCerrada: false,
-            fecha: { gte: hoy },
-            organizadorId: { not: usuario.id },
-            participaciones: { none: { usuarioId: usuario.id } },
-            ...(usuario.deportes.length > 0
-              ? { deporteId: { in: usuario.deportes.map((relacion) => relacion.deporteId) } }
-              : {}),
-          },
-          include: {
-            deporte: { select: { nombre: true } },
-            participaciones: { where: { estado: 'VOY' }, select: { id: true } },
-          },
-          orderBy: { fecha: 'asc' },
-          take: 60,
-        })
-      )
-        .map((partido) => ({ ...partido, km: kmHasta(ubicacion, partido) }))
-        .filter((partido) => partido.km != null && partido.km <= radioCerca)
-        .sort((a, b) => a.km! - b.km! || a.fecha.getTime() - b.fecha.getTime())
-        .slice(0, 3)
-    : [];
-
-  // Desafíos: los que esperan tu respuesta y los abiertos de tus deportes.
-  const [desafiosRecibidos, desafiosAbiertos] = await Promise.all([
+    contarPedidos(),
+    cargarCercanos(),
+    // Desafíos: los que esperan tu respuesta y los abiertos de tus deportes.
     prisma.desafio.count({
       where: {
         estado: 'PENDIENTE',
@@ -139,16 +184,11 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
         estado: 'PENDIENTE',
         rivalId: null,
         fecha: { gt: hoy },
-        deporteId: { in: usuario.deportes.map((relacion) => relacion.deporteId) },
+        deporteId: { in: deportesMios },
         retador: { miembros: { none: { usuarioId: usuario.id } } },
       },
     }),
-  ]);
-
-  // Lo que espera tu respuesta: un lugar liberado para vos (2 h para
-  // confirmar) y los partidos a los que te invitaron y no contestaste.
-  const hace30dias = new Date(hoy.getTime() - 30 * 86400_000);
-  const [liberados, gruposMios, invitacionesRecibidas] = await Promise.all([
+    // Un lugar liberado para vos: 2 h para confirmarlo.
     prisma.participacion.findMany({
       where: {
         usuarioId: usuario.id,
@@ -159,28 +199,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
       include: { partido: { include: { deporte: { select: { nombre: true } } } } },
       orderBy: { invitacionExpiraEn: 'asc' },
     }),
-    prisma.miembroGrupo.findMany({ where: { usuarioId: usuario.id }, select: { grupoId: true } }),
-    prisma.notificacion.findMany({
-      where: { usuarioId: usuario.id, tipo: 'INVITACION', creadoEn: { gte: hace30dias } },
-      select: { url: true },
-    }),
+    cargarInvitaciones(),
   ]);
-  const idsInvitado = invitacionesRecibidas
-    .map((n) => n.url?.match(/^\/partidos\/([^/?#]+)/)?.[1])
-    .filter((id): id is string => Boolean(id));
-  const invitaciones = await prisma.partido.findMany({
-    where: {
-      fecha: { gt: hoy },
-      estado: { in: ['ARMANDOSE', 'CONFIRMADO'] },
-      organizadorId: { not: usuario.id },
-      listaCerrada: false,
-      participaciones: { none: { usuarioId: usuario.id } },
-      OR: [{ grupoId: { in: gruposMios.map((g) => g.grupoId) } }, { id: { in: idsInvitado } }],
-    },
-    include: { deporte: { select: { nombre: true } }, organizador: { select: { nombre: true } } },
-    orderBy: { fecha: 'asc' },
-    take: 3,
-  });
   const cuando = (fecha: Date) =>
     `${DIAS[fecha.getDay()]} ${fecha.toLocaleTimeString('es-AR', {
       hour12: false,
