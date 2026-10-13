@@ -334,6 +334,16 @@ export const TEMAS: Tema[] = [
         ],
       },
       {
+        id: 'agenda',
+        titulo: 'La agenda del día',
+        texto: [
+          'Arriba de Mi complejo está la agenda de hoy (y la de mañana): todos los turnos tomados de tus canchas por hora, con quién juega, en qué cancha y el estado (confirmado, turno fijo, pedido sin responder, esperando pago o bloqueado).',
+          'Cada turno dice cuánto falta cobrar en el complejo (descontando lo que se pagó online) y tiene el WhatsApp del jugador. Arriba ves el total a cobrar del día, contando solo lo confirmado. Lo que ya pasó queda apagado.',
+          'Si hay pedidos sin responder, te avisa: tocá "Responder" para confirmarlo o rechazarlo antes de que se venza.',
+        ],
+        enlace: { href: '/complejo', rotulo: 'Ir a Mi complejo' },
+      },
+      {
         id: 'puesta-a-punto',
         titulo: 'Dejar el complejo listo',
         texto: [
@@ -540,6 +550,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-13',
+    titulo: 'La agenda del día',
+    texto: 'Arriba de Mi complejo, los turnos de hoy y mañana por hora: quién juega, en qué cancha, si está confirmado, cuánto falta cobrar y su WhatsApp.',
+    para: 'complejos',
+    enlace: { href: '/ayuda/complejos#agenda', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-13',
     titulo: 'Invitá desde el perfil',

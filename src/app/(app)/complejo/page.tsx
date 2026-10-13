@@ -10,6 +10,8 @@ import { DesconectarMercadoPago } from './mercadopago';
 import { EquipoComplejo } from './equipo';
 import { MapaOcupacion } from './ocupacion';
 import { PuestaAPunto } from './puesta-a-punto';
+import { Agenda } from './agenda';
+import { agendaDelDia } from '@/lib/agenda';
 import { pasosDelComplejo } from '@/lib/puesta-a-punto';
 import { ocupacionPorFranja } from '@/lib/ocupacion';
 import { formatearPuntaje } from '@/lib/resenas';
@@ -43,9 +45,9 @@ const MENSAJES_MP: Record<string, { texto: string; error?: boolean }> = {
 export default async function MiComplejo({
   searchParams,
 }: {
-  searchParams: Promise<{ mp?: string }>;
+  searchParams: Promise<{ mp?: string; agenda?: string }>;
 }) {
-  const { mp } = await searchParams;
+  const { mp, agenda } = await searchParams;
   const usuario = (await usuarioActual())!;
   if (usuario.tipoCuenta !== 'CANCHA') redirect('/perfil');
   await liberarVencidas();
@@ -53,6 +55,10 @@ export default async function MiComplejo({
   const ahora = new Date();
   const hace30 = new Date(ahora.getTime() - 30 * 24 * 3600_000);
   const dias = proximosDias(7);
+  // Agenda de hoy (o de mañana): todos los turnos tomados de tus canchas.
+  const diaAgenda = agenda === 'manana' ? 'manana' : 'hoy';
+  const fechaAgenda = diaAgenda === 'manana' ? dias[1] : dias[0];
+  const turnosAgenda = await agendaDelDia([usuario.id], fechaAgenda);
   const limite = ahora.getTime() + MINUTOS_ANTICIPACION * 60_000;
 
   const canchas = await prisma.cancha.findMany({
@@ -172,6 +178,8 @@ export default async function MiComplejo({
         </p>
         <EnlaceAyuda tema="complejos" rotulo="Guía para complejos" className="mt-2" />
       </header>
+
+      <Agenda turnos={turnosAgenda} dia={diaAgenda} fecha={fechaAgenda} rotuloManana="Mañana" />
 
       <PuestaAPunto pasos={pasos} />
 
