@@ -58,17 +58,36 @@ export default async function MiComplejo({
   // Agenda de hoy (o de mañana): todos los turnos tomados de tus canchas.
   const diaAgenda = agenda === 'manana' ? 'manana' : 'hoy';
   const fechaAgenda = diaAgenda === 'manana' ? dias[1] : dias[0];
-  const turnosAgenda = await agendaDelDia([usuario.id], fechaAgenda);
   const limite = ahora.getTime() + MINUTOS_ANTICIPACION * 60_000;
+  // Ocupación por franja de las últimas 4 semanas (sin contar hoy).
+  const SEMANAS = 4;
+  const fechasPasadas = proximosDias(SEMANAS * 7, new Date(ahora.getTime() - SEMANAS * 7 * 86400_000));
 
-  const canchas = await prisma.cancha.findMany({
-    where: { duenoId: usuario.id },
-    include: { deporte: { select: { nombre: true } } },
-    orderBy: { creadoEn: 'asc' },
-  });
+  // Dos tandas en paralelo: primero lo que no depende de nada, después todo
+  // lo que sale de tus canchas.
+  const [turnosAgenda, canchas, cuentaMp, comision, cobroDisponible, simulador, equipo] = await Promise.all([
+    agendaDelDia([usuario.id], fechaAgenda),
+    prisma.cancha.findMany({
+      where: { duenoId: usuario.id },
+      include: { deporte: { select: { nombre: true } } },
+      orderBy: { creadoEn: 'asc' },
+    }),
+    prisma.cuentaMercadoPago.findUnique({
+      where: { usuarioId: usuario.id },
+      select: { conectadoEn: true, expiraEn: true, refreshToken: true, simulada: true },
+    }),
+    comisionPorcentaje(),
+    cobroOnlineHabilitado(),
+    pagosSimulados(),
+    prisma.empleadoComplejo.findMany({
+      where: { duenoId: usuario.id },
+      include: { usuario: { select: { nombre: true, usuario: true } } },
+      orderBy: { creadoEn: 'asc' },
+    }),
+  ]);
   const ids = canchas.map((c) => c.id);
 
-  const [proximas, ultimas, pendientes, ofertas, resenas] = await Promise.all([
+  const [proximas, ultimas, pendientes, ofertas, resenas, tomadasPasadas] = await Promise.all([
     prisma.reserva.findMany({
       where: { canchaId: { in: ids }, fecha: { in: dias }, estado: { in: ESTADOS_ACTIVOS } },
       select: { canchaId: true, inicio: true, duracion: true, estado: true },
@@ -87,6 +106,10 @@ export default async function MiComplejo({
       where: { canchaId: { in: ids } },
       _avg: { puntaje: true },
       _count: { _all: true },
+    }),
+    prisma.reserva.findMany({
+      where: { canchaId: { in: ids }, fecha: { in: fechasPasadas }, estado: { in: ['CONFIRMADA', 'BLOQUEO'] } },
+      select: { canchaId: true, fecha: true, hora: true },
     }),
   ]);
 
@@ -126,13 +149,6 @@ export default async function MiComplejo({
     };
   });
 
-  // Ocupación por franja de las últimas 4 semanas (sin contar hoy).
-  const SEMANAS = 4;
-  const fechasPasadas = proximosDias(SEMANAS * 7, new Date(ahora.getTime() - SEMANAS * 7 * 86400_000));
-  const tomadasPasadas = await prisma.reserva.findMany({
-    where: { canchaId: { in: ids }, fecha: { in: fechasPasadas }, estado: { in: ['CONFIRMADA', 'BLOQUEO'] } },
-    select: { canchaId: true, fecha: true, hora: true },
-  });
   const ocupacion = ocupacionPorFranja(canchas, fechasPasadas, tomadasPasadas);
 
   const totalTurnos = porCancha.reduce((suma, c) => suma + c.total, 0);
@@ -142,20 +158,6 @@ export default async function MiComplejo({
   const porRadar = jugadas.filter((r) => r.ofertaId).length;
   const canceladas = ultimas.filter((r) => r.estado === 'CANCELADA').length;
   const activa = suscripcionActiva(usuario);
-  const [cuentaMp, comision, cobroDisponible, simulador] = await Promise.all([
-    prisma.cuentaMercadoPago.findUnique({
-      where: { usuarioId: usuario.id },
-      select: { conectadoEn: true, expiraEn: true, refreshToken: true, simulada: true },
-    }),
-    comisionPorcentaje(),
-    cobroOnlineHabilitado(),
-    pagosSimulados(),
-  ]);
-  const equipo = await prisma.empleadoComplejo.findMany({
-    where: { duenoId: usuario.id },
-    include: { usuario: { select: { nombre: true, usuario: true } } },
-    orderBy: { creadoEn: 'asc' },
-  });
   const mpVigente = Boolean(cuentaMp && (cuentaMp.expiraEn > ahora || cuentaMp.refreshToken));
   const cobrando = canchas.filter((c) => c.cobroOnline !== 'NO').length;
   const pasos = pasosDelComplejo({
