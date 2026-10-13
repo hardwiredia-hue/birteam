@@ -68,28 +68,23 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
   // Figura del partido: la votación abre al empezar y dura 72 h.
   const votacion = estadoVotacion(partido);
   const habilitados = votacion === 'NO_EMPEZO' ? [] : jugaron(partido.participaciones);
-  const votos =
+  // Lo que falta cargar no depende entre sí: se pide todo junto (en paralelo).
+  const [votos, evento, desafio, turnoParaVincular, ubicacion, jugadas] = await Promise.all([
     habilitados.length >= 2
-      ? await prisma.votoFigura.findMany({ where: { partidoId: partido.id }, select: { votanteId: true, elegidoId: true } })
-      : [];
-  const recuento = contarVotos(votos);
-  const cierreVotacion = new Date(partido.fecha.getTime() + HORAS_VOTACION * 3600_000);
-
-  // Para agendarlo: quien va o lo organiza, si todavía no se jugó.
-  const evento =
+      ? prisma.votoFigura.findMany({ where: { partidoId: partido.id }, select: { votanteId: true, elegidoId: true } })
+      : Promise.resolve([]),
+    // Para agendarlo: quien va o lo organiza, si todavía no se jugó.
     !yaPaso && !cerrado && (organizo || mia?.estado === 'VOY' || mia?.estado === 'TALVEZ')
-      ? await eventoDe('partido', partido.id, usuario.id)
-      : null;
-  // Partido que salió de un desafío entre grupos.
-  const desafio = await prisma.desafio.findFirst({
-    where: { partidoId: partido.id },
-    select: { retador: { select: { nombre: true } }, rival: { select: { nombre: true } } },
-  });
-
-  // Turno confirmado del organizador, ese día y de ese deporte, listo para vincular.
-  const turnoParaVincular =
+      ? eventoDe('partido', partido.id, usuario.id)
+      : Promise.resolve(null),
+    // Partido que salió de un desafío entre grupos.
+    prisma.desafio.findFirst({
+      where: { partidoId: partido.id },
+      select: { retador: { select: { nombre: true } }, rival: { select: { nombre: true } } },
+    }),
+    // Turno confirmado del organizador, ese día y de ese deporte, listo para vincular.
     organizo && !partido.canchaId && !yaPaso && !cerrado
-      ? await prisma.reserva.findFirst({
+      ? prisma.reserva.findFirst({
           where: {
             usuarioId: usuario.id,
             estado: 'CONFIRMADA',
@@ -100,7 +95,12 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           include: { cancha: { select: { nombre: true } } },
           orderBy: { inicio: 'asc' },
         })
-      : null;
+      : Promise.resolve(null),
+    ubicacionDe(usuario),
+    obtenerJugadas(usuario.id, { partidoId: partido.id }),
+  ]);
+  const recuento = contarVotos(votos);
+  const cierreVotacion = new Date(partido.fecha.getTime() + HORAS_VOTACION * 3600_000);
 
   // Partido sin cancha publicada: turnos libres reales cerca de ese horario.
   const turnosSugeridos =
@@ -165,7 +165,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
             latitud: partido.canchaId ? partido.latitud : null,
             longitud: partido.canchaId ? partido.longitud : null,
           }}
-          km={kmHasta(await ubicacionDe(usuario), partido)}
+          km={kmHasta(ubicacion, partido)}
           aproximada={!partido.canchaId}
         />
         {partido.lugarTelefono ? (
@@ -396,7 +396,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
               invitacion={`Subí la jugada del ${DIAS[partido.fecha.getDay()]}`}
             />
           ) : null}
-          {(await obtenerJugadas(usuario.id, { partidoId: partido.id })).map((jugada) => (
+          {jugadas.map((jugada) => (
             <TarjetaJugada key={jugada.id} jugada={jugada} />
           ))}
         </section>
