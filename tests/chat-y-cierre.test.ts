@@ -56,17 +56,26 @@ test('cerrar el día: bloquea los libres, no toca lo reservado y se puede abrir'
   await prisma.reserva.create({
     data: { canchaId: cancha.id, usuarioId: dueno.id, fecha, hora: '10:00', inicio: manual.inicio, estado: 'BLOQUEO', nota: 'Pintura', ocupa: claveOcupa(cancha.id, fecha, '10:00') },
   });
+  // Un turno fijo de alguien sin cuenta: se guarda como bloqueo, pero es de un cliente.
+  const fijo = await prisma.turnoFijo.create({
+    data: { canchaId: cancha.id, diaSemana: new Date(`${fecha}T12:00:00-03:00`).getDay(), hora: '18:00', titular: 'Los del jueves', desde: fecha, creadoPorId: dueno.id },
+  });
+  const delFijo = turno(3, '18:00');
+  await prisma.reserva.create({
+    data: { canchaId: cancha.id, usuarioId: dueno.id, fecha, hora: '18:00', inicio: delFijo.inicio, estado: 'BLOQUEO', turnoFijoId: fijo.id, ocupa: claveOcupa(cancha.id, fecha, '18:00') },
+  });
   const horas = horariosDelDia(cancha).length;
 
   const resultado = await cerrarDia({ canchas: [cancha], fecha, motivo: 'Feriado', usuarioId: dueno.id });
-  assert.equal(resultado.bloqueados, horas - 2);
-  assert.deepEqual(resultado.reservadas.map((r) => [r.id, r.hora]), [[reserva.id, '20:00']]);
+  assert.equal(resultado.bloqueados, horas - 3);
+  assert.deepEqual(resultado.reservadas.map((r) => [r.hora, r.quien]), [['18:00', 'Los del jueves'], ['20:00', jugador.nombre]]);
+  assert.equal(resultado.reservadas[1].id, reserva.id);
   assert.deepEqual(await diasCerrados(cancha.id), [{ fecha, motivo: 'Feriado' }]);
   // Dos veces no duplica.
   assert.equal((await cerrarDia({ canchas: [cancha], fecha, motivo: 'Feriado', usuarioId: dueno.id })).bloqueados, 0);
 
-  assert.equal(await abrirDia([cancha.id], fecha), horas - 2);
+  assert.equal(await abrirDia([cancha.id], fecha), horas - 3);
   const activas = await prisma.reserva.findMany({ where: { canchaId: cancha.id, fecha, estado: { not: 'CANCELADA' } } });
-  assert.deepEqual(activas.map((r) => r.hora).sort(), ['10:00', '20:00'], 'quedan la reserva y el bloqueo a mano');
+  assert.deepEqual(activas.map((r) => r.hora).sort(), ['10:00', '18:00', '20:00'], 'quedan la reserva, el fijo y el bloqueo a mano');
   assert.deepEqual(await diasCerrados(cancha.id), []);
 });

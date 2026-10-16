@@ -92,8 +92,9 @@ export async function cerrarDia(opciones: {
     where: {
       canchaId: { in: opciones.canchas.map((c) => c.id) },
       fecha: opciones.fecha,
-      estado: { in: ESTADOS_ACTIVOS.filter((e) => e !== 'BLOQUEO') },
       inicio: { gt: ahora },
+      // Lo reservado, y los turnos fijos de gente sin cuenta (que se guardan como bloqueo).
+      OR: [{ estado: { in: ESTADOS_ACTIVOS.filter((e) => e !== 'BLOQUEO') } }, { estado: 'BLOQUEO', turnoFijoId: { not: null } }],
     },
     include: {
       cancha: { select: { nombre: true } },
