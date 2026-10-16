@@ -14,6 +14,7 @@ const AVISOS = [
   { clave: 'avisosSociales', titulo: 'Avisos sociales', detalle: 'Me gusta, comentarios y seguidores nuevos.' },
   { clave: 'avisosRadar', titulo: 'Radar de turnos libres', detalle: 'Descuentos de canchas de tu deporte cerca tuyo (máximo uno cada 12 h).' },
   { clave: 'avisosDesafios', titulo: 'Desafíos', detalle: 'Cuando desafían a tu grupo o responden un desafío tuyo.' },
+  { clave: 'avisosChats', titulo: 'Charlas de partidos y grupos', detalle: 'Un aviso por charla cuando escriben, hasta que la abrís.' },
   { clave: 'avisosPartidos', titulo: 'Partidos que buscan jugadores', detalle: 'Partidos abiertos de tu deporte cerca tuyo a los que les faltan jugadores (máximo uno por día).' },
 ] as const;
 

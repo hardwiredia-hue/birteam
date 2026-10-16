@@ -1,7 +1,7 @@
 import { prisma } from './db';
 
 /** Preferencias que se pueden apagar desde Ajustes. */
-export const PREFERENCIAS_AVISOS = ['avisosSociales', 'avisosRadar', 'avisosDesafios', 'avisosPartidos'] as const;
+export const PREFERENCIAS_AVISOS = ['avisosSociales', 'avisosRadar', 'avisosDesafios', 'avisosPartidos', 'avisosChats'] as const;
 export type PreferenciaAviso = (typeof PREFERENCIAS_AVISOS)[number];
 
 /** De una lista de usuarios, los que quieren recibir ese tipo de aviso. */

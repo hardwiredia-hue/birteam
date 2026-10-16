@@ -425,7 +425,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         </section>
       ) : null}
 
-      <section>
+      <section id="charla" className="scroll-mt-20">
         <p className="t-rotulo mb-2">Charla del partido</p>
         {mia || partido.organizadorId === usuario.id ? (
           <Chat partidoId={partido.id} />

@@ -75,7 +75,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Avisos en el celular',
         texto: [
           'En Perfil → Ajustes prendé "Avisos en este dispositivo" para recibir los avisos aunque la app esté cerrada: lugar liberado, recordatorios, mensajes, turnos.',
-          'Ahí mismo elegís qué avisos sociales querés (me gusta, comentarios, seguidores).',
+          'Ahí mismo elegís qué avisos querés: sociales (me gusta, comentarios, seguidores), charlas de partidos y grupos, Radar, desafíos y partidos que buscan jugadores.',
           'En Notificaciones ves cada aviso con cuándo llegó ("hace 5 min", "ayer"). Al tocar uno se marca como leído; con "Marcar leídos" se marcan todos.',
         ],
         enlace: { href: '/perfil', rotulo: 'Ir a Ajustes' },
@@ -213,7 +213,10 @@ export const TEMAS: Tema[] = [
       {
         id: 'chat',
         titulo: 'La charla del partido',
-        texto: ['Cada partido tiene su chat para los que participan: respondé Voy, Tal vez o No voy y entrás.'],
+        texto: [
+          'Cada partido tiene su chat para los que participan: respondé Voy, Tal vez o No voy y entrás. Los grupos tienen el suyo.',
+          'Cuando alguien escribe, les avisamos a los que van, los "tal vez" y la lista de espera (no a los que dijeron No voy): un solo aviso por charla hasta que la abrís, aunque escriban diez mensajes. Se apaga en Perfil → Ajustes → "Charlas de partidos y grupos".',
+        ],
       },
     ],
   },
@@ -397,6 +400,19 @@ export const TEMAS: Tema[] = [
         ],
       },
       {
+        id: 'cerrar-dia',
+        titulo: 'Cerrar un día (feriado, mantenimiento)',
+        pasos: [
+          'En la cancha, abajo de la grilla: "Cerrar un día" → "Elegir día".',
+          'Elegí el día (de los próximos 14) y el motivo: feriado, mantenimiento, evento privado o lluvia.',
+          'Si tenés varias canchas, marcá "Todas las canchas del complejo" para cerrarlas juntas.',
+        ],
+        texto: [
+          'Se bloquean de una todos los turnos libres de ese día (y salen del Radar). Lo que ya estaba reservado no se toca: te lo listamos para que avises o canceles uno por uno (si pagaron online, al cancelar se devuelve).',
+          'Para deshacerlo, tocá "Abrir" al lado del día: se sacan solo los bloqueos del cierre; los que pusiste a mano quedan.',
+        ],
+      },
+      {
         id: 'turnos-fijos',
         titulo: 'Turnos fijos',
         texto: [
@@ -575,6 +591,20 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: 'Cerrar un día de una',
+    texto: 'Feriado o mantenimiento: desde la cancha bloqueás todos los turnos libres del día (una o todas las canchas) y te listamos lo que ya estaba reservado.',
+    para: 'complejos',
+    enlace: { href: '/ayuda/complejos#cerrar-dia', rotulo: 'Cómo se hace' },
+  },
+  {
+    fecha: '2026-10-16',
+    titulo: 'Te avisamos cuando escriben en la charla',
+    texto: 'En la charla de tus partidos y grupos: un aviso por charla hasta que la abrís, sin llenarte el celular.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#chat', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-16',
     titulo: 'Partidos semanales de verdad',

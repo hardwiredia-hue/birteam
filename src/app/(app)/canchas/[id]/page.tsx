@@ -8,8 +8,10 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
 import { GrillaTurnos } from '@/components/turnos';
-import { diasDeLaCancha, grillaDeTurnos, horariosDelDia, precioDelTurno, rotuloDia } from '@/lib/reservas';
+import { DIAS_RESERVABLES, diaDeSemana, diasDeLaCancha, grillaDeTurnos, horariosDelDia, precioDelTurno, proximosDias, rotuloDia } from '@/lib/reservas';
 import { TurnosFijos } from './turnos-fijos';
+import { CerrarDia } from './cerrar-dia';
+import { diasCerrados } from '@/lib/cerrar-dia';
 import { duenoCobraOnline } from '@/lib/mercadopago';
 import { gestionaCancha } from '@/lib/gestion';
 import { formatearPuntaje, jugoEnLaCancha } from '@/lib/resenas';
@@ -243,6 +245,17 @@ export default async function DetalleCancha({
             nota: fijo.nota,
             proxima: fijo.reservas[0] ? rotuloDia(fijo.reservas[0].fecha) : null,
           }))}
+        />
+      ) : null}
+
+      {gestiona ? (
+        <CerrarDia
+          canchaId={cancha.id}
+          dias={proximosDias(DIAS_RESERVABLES)
+            .filter((dia) => diasDeLaCancha(cancha.diasDisponibles).includes(diaDeSemana(dia)))
+            .map((dia) => ({ fecha: dia, rotulo: rotuloDia(dia) }))}
+          cerrados={(await diasCerrados(cancha.id)).map((dia) => ({ ...dia, rotulo: rotuloDia(dia.fecha) }))}
+          variasCanchas={(await prisma.cancha.count({ where: { duenoId: cancha.duenoId, activa: true } })) > 1}
         />
       ) : null}
 

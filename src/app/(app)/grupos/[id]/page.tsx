@@ -121,7 +121,7 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
         )}
       </section>
 
-      <section>
+      <section id="charla" className="scroll-mt-20">
         <p className="t-rotulo mb-2">Charla del grupo</p>
         <Chat grupoId={grupo.id} />
       </section>

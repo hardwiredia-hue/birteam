@@ -94,6 +94,8 @@ model Usuario {
   avisosRadar      Boolean @default(true)
   avisosDesafios   Boolean @default(true)
   avisosPartidos   Boolean @default(true)
+  // Mensajes nuevos en la charla de tus partidos y grupos (un aviso por charla hasta que la leés).
+  avisosChats      Boolean @default(true)
   cuentaMercadoPago CuentaMercadoPago?
   empleados        EmpleadoComplejo[] @relation("empleadosDelComplejo")
   empleos          EmpleadoComplejo[] @relation("empleosEnComplejos")

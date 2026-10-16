@@ -205,6 +205,7 @@ export default async function Perfil() {
         rutaCalendario={usuario.tokenCalendario ? rutaCalendario(usuario.tokenCalendario) : null}
         avisos={{
           avisosSociales: usuario.avisosSociales,
+          avisosChats: usuario.avisosChats,
           avisosRadar: usuario.avisosRadar,
           avisosDesafios: usuario.avisosDesafios,
           avisosPartidos: usuario.avisosPartidos,

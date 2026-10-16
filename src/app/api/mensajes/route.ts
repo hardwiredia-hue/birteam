@@ -4,6 +4,7 @@ import { usuarioActual } from '@/lib/auth';
 import { esquemaMensaje, erroresDeZod } from '@/lib/validacion';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { enviarPush } from '@/lib/push';
+import { avisarMensajeDeChat, marcarChatLeido } from '@/lib/avisos-chat';
 
 /** ¿Puede este usuario leer y escribir en este chat? */
 async function puedeParticipar(
@@ -74,6 +75,8 @@ export async function GET(request: Request) {
     take: 100,
   });
 
+  // Abrir la charla de un partido o grupo da por leído su aviso.
+  if (partidoId || grupoId) await marcarChatLeido(usuario.id, { partidoId, grupoId });
   // Abrir la conversación directa marca como leído lo que te mandaron.
   if (destinatarioId) {
     await prisma.mensaje.updateMany({
@@ -121,8 +124,9 @@ export async function POST(request: Request) {
     },
   });
 
-  // Mensaje directo: push al destinatario (los chats de partido/grupo no
-  // empujan para no acribillar a nadie; se ven al entrar).
+  // Charla de partido o grupo: un aviso por charla hasta que la leen.
+  if (partidoId || grupoId) await avisarMensajeDeChat(usuario, { partidoId, grupoId }, texto);
+  // Mensaje directo: push al destinatario.
   if (destinatarioId) {
     await enviarPush(destinatarioId, {
       titulo: `${usuario.nombre} te escribió`,
