@@ -143,6 +143,11 @@ Siempre: campana de notificaciones arriba a la derecha. Un solo botón verde por
 - Modo organizador: editar, cerrar lista, cancelar, delegar co-organizador.
 - **Post-partido**: pasar lista (quién vino, un tap por jugador — alimenta el % de
   asistencia), resultado opcional, y "Subí la jugada" → publicación social (fase 2).
+  Al terminar, el organizador recibe "¿Cómo salió?" (hasta 6 h después). Sin lista,
+  a las 48 h de terminado se da por jugado si llegó al mínimo: los confirmados
+  cuentan como que fueron, lo ya marcado se respeta (`cierre-partidos.ts`).
+- **Pronóstico** (próximos 7 días): temperatura, cielo y lluvia de Open-Meteo,
+  pedido desde el navegador; si la cancha es techada, lo dice.
 
 ### 3.5 Crear partido — un paso por pantalla (6 pasos)
 1. Deporte · 2. Dónde (canchas publicadas en birteam, tus lugares guardados de un
@@ -156,7 +161,9 @@ cualquiera por nombre o usuario).
 
 **Reglas del partido:** estados `Armándose → Confirmado (llegó al mínimo) → Jugado →
 Cancelado`. Si a las 24 h del inicio no llega al mínimo, avisa a todos. Recurrente:
-cada edición nueva resetea confirmaciones. Tal vez no ocupa cupo y debe reconfirmar
+cuando termina, la tarea programada arma el de la semana siguiente (igual, con
+`repetidoDeId` único para no duplicar) e invita al grupo y a los que jugaron;
+para cortar la serie se destilda "Se repite" en el último. Tal vez no ocupa cupo y debe reconfirmar
 2 h antes. Lista de espera FIFO: al liberarse un lugar, el 1º recibe invitación con
 2 h de vencimiento; si no contesta, pasa al siguiente.
 
@@ -173,6 +180,9 @@ los dos. Los abiertos compatibles (tu deporte y tu ciudad) salen primero.
   chat, link de invitación.
 - Administradores: editan el grupo (nombre, descripción, abierto/cerrado), nombran
   o quitan otros admins y sacan miembros. Quien creó el grupo no se toca.
+- **¿Cuándo jugamos?**: un miembro propone de 2 a 5 horarios, cada uno marca los
+  que puede y quien la propuso (o un admin) arma el partido con el más votado
+  (la encuesta queda cerrada con su partido). Una abierta por grupo.
 - Crear grupo: nombre, deporte, zona, foto. También se crea al vuelo desde el
   paso 6 de crear partido.
 - "Competir como equipo" (escudo, plantel formal): apagado con sello "Próximamente"
@@ -221,7 +231,8 @@ partido, al grupo y a los que estuvieron.
 
 **Preferencias** (Perfil > Ajustes): los avisos de partidos, reservas e
 invitaciones llegan siempre; los sociales (me gusta, comentarios, seguidores),
-los del Radar (promocionales) y los de desafíos se pueden apagar.
+los del Radar (promocionales), los de desafíos y los de las charlas se pueden
+apagar. Charla de partido o grupo: un aviso por charla hasta que se abre.
 Centro de notificaciones + push: invitación · lugar liberado (countdown) ·
 recordatorio 24 h a los que no respondieron · "reconfirmá" 2 h antes a los Tal vez ·
 partido confirmado/cancelado/modificado · social (me gusta, comentario, etiqueta —
@@ -264,7 +275,10 @@ SOLICITADA/CONFIRMADA/RECHAZADA/CANCELADA/VENCIDA/BLOQUEO, precio, `ocupa`
 `CuentaMercadoPago` (dueño, tokens cifrados) · `PagoMercadoPago` (id de MP
 único, estado, monto, comisión, devolución) · `EventoPago` (auditoría) ·
 `Desafio` (grupo retador, grupo rival o abierto, fecha, lugar, jugadores por
-lado, nivel, estado, partido que salió).
+lado, nivel, estado, partido que salió) · `Encuesta` / `OpcionEncuesta` /
+`VotoEncuesta` ("¿Cuándo jugamos?" del grupo). La cancha suma `techada`,
+`superficie` y `servicios`; el usuario, `tokenCalendario` (calendario
+sincronizado) y `avisosChats`.
 
 ---
 
