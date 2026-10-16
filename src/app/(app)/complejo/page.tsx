@@ -9,7 +9,7 @@ import { cobroOnlineHabilitado, comisionPorcentaje, pagosSimulados } from '@/lib
 import { DesconectarMercadoPago } from './mercadopago';
 import { EquipoComplejo } from './equipo';
 import { MapaOcupacion } from './ocupacion';
-import { PuestaAPunto } from './puesta-a-punto';
+import { PuestaAPunto } from '@/components/puesta-a-punto';
 import { Agenda } from '@/components/agenda';
 import { agendaDelDia } from '@/lib/agenda';
 import { pasosDelComplejo } from '@/lib/puesta-a-punto';

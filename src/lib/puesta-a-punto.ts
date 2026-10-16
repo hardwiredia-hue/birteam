@@ -117,3 +117,67 @@ export function pasosDelComplejo(datos: {
   });
   return pasos;
 }
+
+/**
+ * Primeros pasos de un jugador en Inicio: lo que hace que birteam le sirva
+ * (que lo encuentren, que le lleguen los partidos). Sale de sus datos.
+ */
+export function pasosDelJugador(datos: {
+  deportes: number;
+  ciudad: string | null;
+  avatarUrl: string | null;
+  grupos: number;
+  partidos: number;
+  avisosEnElCelular: boolean;
+}): Paso[] {
+  return [
+    {
+      clave: 'deporte',
+      titulo: 'Contá qué jugás',
+      detalle: 'Deporte, nivel y posición: así te invitan a partidos que te van.',
+      hecho: datos.deportes > 0,
+      href: '/perfil/deportes',
+      accion: 'Elegir',
+    },
+    {
+      clave: 'ciudad',
+      titulo: 'Decí dónde jugás',
+      detalle: 'Para mostrarte partidos y canchas cerca.',
+      hecho: Boolean(datos.ciudad),
+      href: '/perfil/editar',
+      accion: 'Elegir',
+    },
+    {
+      clave: 'foto',
+      titulo: 'Poné una foto',
+      detalle: 'Que te reconozcan en la lista del partido.',
+      hecho: Boolean(datos.avatarUrl),
+      href: '/perfil/editar',
+      accion: 'Subir',
+    },
+    {
+      clave: 'grupo',
+      titulo: 'Sumate a un grupo',
+      detalle: 'O armá el tuyo: cada partido sale con un toque.',
+      hecho: datos.grupos > 0,
+      href: '/explorar?tab=grupos',
+      accion: 'Buscar',
+    },
+    {
+      clave: 'partido',
+      titulo: 'Anotate en tu primer partido',
+      detalle: 'Hay partidos abiertos a los que les faltan jugadores.',
+      hecho: datos.partidos > 0,
+      href: '/explorar',
+      accion: 'Ver',
+    },
+    {
+      clave: 'avisos',
+      titulo: 'Prendé los avisos en el celular',
+      detalle: 'Te enterás al toque si se libera un lugar o te invitan.',
+      hecho: datos.avisosEnElCelular,
+      href: '/perfil',
+      accion: 'Prender',
+    },
+  ];
+}

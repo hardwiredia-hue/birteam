@@ -7,6 +7,8 @@ import { usuarioActual } from '@/lib/auth';
 import { Avisos } from './avisos';
 import { Pendientes } from './pendientes';
 import { AvisoNovedad } from '@/components/aviso-novedad';
+import { PuestaAPunto } from '@/components/puesta-a-punto';
+import { pasosDelJugador } from '@/lib/puesta-a-punto';
 import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
 import { agendaDelDia } from '@/lib/agenda';
@@ -52,6 +54,24 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           where: { cancha: { duenoId: { in: duenos } }, estado: 'SOLICITADA', inicio: { gte: hoy } },
         })
       : 0;
+  };
+
+  // Primeros pasos de un jugador (los complejos tienen los suyos en Mi complejo).
+  const cargarPrimerosPasos = async () => {
+    if (usuario.tipoCuenta === 'CANCHA') return null;
+    const [partidos, celulares, grupos] = await Promise.all([
+      prisma.participacion.count({ where: { usuarioId: usuario.id, estado: 'VOY' } }),
+      prisma.suscripcionPush.count({ where: { usuarioId: usuario.id } }),
+      prisma.miembroGrupo.count({ where: { usuarioId: usuario.id } }),
+    ]);
+    return pasosDelJugador({
+      deportes: usuario.deportes.length,
+      ciudad: usuario.ciudad,
+      avatarUrl: usuario.avatarUrl,
+      grupos,
+      partidos,
+      avisosEnElCelular: celulares > 0,
+    });
   };
 
   // Radar (de tu deporte) y Cerca tuyo (partidos abiertos de tus deportes en
@@ -133,6 +153,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     desafiosAbiertos,
     liberados,
     invitaciones,
+    primerosPasos,
   ] = await Promise.all([
     cargarAgenda(),
     // Tu próximo partido: el más cercano en el que estás anotado u organizás.
@@ -200,6 +221,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
       orderBy: { invitacionExpiraEn: 'asc' },
     }),
     cargarInvitaciones(),
+    cargarPrimerosPasos(),
   ]);
   const cuando = (fecha: Date) =>
     `${DIAS[diaDeLaSemana(fecha)]} ${fecha.toLocaleTimeString('es-AR', {
@@ -262,6 +284,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           quien: partido.organizador.nombre.split(' ')[0],
         }))}
       />
+
+      {primerosPasos ? (
+        <PuestaAPunto pasos={primerosPasos} titulo="Arrancá en birteam" ocultable="birteam_primeros_pasos_oculto" />
+      ) : null}
 
       <Avisos avisos={avisos.map(({ creadoEn, ...aviso }) => ({ ...aviso, cuando: haceCuanto(creadoEn) }))} />
 

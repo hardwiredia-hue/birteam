@@ -51,7 +51,10 @@ export const TEMAS: Tema[] = [
           'Elegí hasta 5 deportes (el primero es el principal) y tu ciudad.',
           'Aceptá los términos y listo. También podés entrar con Google.',
         ],
-        texto: ['Con tu ciudad te mostramos partidos, canchas y jugadores de tu zona.'],
+        texto: [
+          'Con tu ciudad te mostramos partidos, canchas y jugadores de tu zona.',
+          'En Inicio, "Arrancá en birteam" te muestra lo que falta para sacarle el jugo (deporte, ciudad, foto, un grupo, tu primer partido y los avisos en el celular), cada cosa con su atajo. Se va solo cuando está todo, o con "Ahora no".',
+        ],
         enlace: { href: '/registro', rotulo: 'Crear cuenta' },
       },
       {
@@ -615,6 +618,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: 'Arrancá en birteam',
+    texto: 'En Inicio, los pasos para que birteam te sirva de verdad: tu deporte, tu ciudad, un grupo y tu primer partido.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/primeros-pasos#crear-cuenta', rotulo: 'Ver más' },
+  },
   {
     fecha: '2026-10-16',
     titulo: '¿Cuándo jugamos?',

@@ -1,10 +1,43 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import type { Paso } from '@/lib/puesta-a-punto';
 
-/** "Tu complejo al 60%": los pasos que faltan, cada uno con su atajo. */
-export function PuestaAPunto({ pasos }: { pasos: Paso[] }) {
+/**
+ * "Al 60%": los pasos que faltan, cada uno con su atajo. Con `ocultable`,
+ * tiene "Ahora no" y se recuerda en este navegador (bajo esa clave).
+ */
+export function PuestaAPunto({
+  pasos,
+  titulo = 'Tu complejo, listo para recibir reservas',
+  ocultable,
+}: {
+  pasos: Paso[];
+  titulo?: string;
+  ocultable?: string;
+}) {
+  const [oculta, setOculta] = useState(Boolean(ocultable));
+  useEffect(() => {
+    if (!ocultable) return;
+    try {
+      setOculta(localStorage.getItem(ocultable) === '1');
+    } catch {
+      setOculta(false);
+    }
+  }, [ocultable]);
+
+  function ocultar() {
+    setOculta(true);
+    try {
+      localStorage.setItem(ocultable!, '1');
+    } catch {
+      // Sin almacenamiento: se oculta solo por ahora.
+    }
+  }
+
   const hechos = pasos.filter((p) => p.hecho).length;
-  if (hechos === pasos.length) return null;
+  if (hechos === pasos.length || oculta) return null;
   const porcentaje = Math.round((hechos / pasos.length) * 100);
   const pendientes = pasos.filter((p) => !p.hecho);
 
@@ -12,7 +45,7 @@ export function PuestaAPunto({ pasos }: { pasos: Paso[] }) {
     <section className="tarjeta flex flex-col gap-3 p-4">
       <div>
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-sm font-semibold">Tu complejo, listo para recibir reservas</p>
+          <p className="text-sm font-semibold">{titulo}</p>
           <span className="t-display text-[18px] tabular">{porcentaje}%</span>
         </div>
         <div className="barra-progreso mt-2">
@@ -37,6 +70,11 @@ export function PuestaAPunto({ pasos }: { pasos: Paso[] }) {
           </li>
         ))}
       </ol>
+      {ocultable ? (
+        <button type="button" onClick={ocultar} className="self-start text-xs font-semibold text-tinta-3 hover:text-tinta">
+          Ahora no
+        </button>
+      ) : null}
     </section>
   );
 }
