@@ -6,6 +6,7 @@ import { posiblesVecinos, vecinosDe } from '@/lib/cercania';
 import { completarCoordenadasDePartidos } from '@/lib/coordenadas';
 import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 import { repetirSemanales } from '@/lib/repetir';
+import { pedirResenas } from '@/lib/resenas';
 
 /**
  * Tareas programadas (las corre el cron del servidor cada 10 minutos, ver
@@ -16,7 +17,8 @@ import { repetirSemanales } from '@/lib/repetir';
  * 2. Recordatorio 24 h antes a los "tal vez" y a los del grupo que no
  *    respondieron.
  * 3. "Reconfirmá" 2 h antes a los que siguen en "tal vez".
- * Además: arma el partido de la semana siguiente de los que se repiten.
+ * Además: arma el partido de la semana siguiente de los que se repiten y
+ * pide la reseña de la cancha a quien jugó (una vez por cancha).
  * Todo con control de duplicados: cada aviso sale una sola vez.
  */
 export async function POST(request: Request) {
@@ -42,6 +44,7 @@ export async function POST(request: Request) {
     avisosFaltanJugadores: 0,
     partidosUbicados: 0,
     partidosRepetidos: 0,
+    pedidosDeResena: 0,
   };
 
   // ---- 1. Invitaciones vencidas ----
@@ -174,6 +177,7 @@ export async function POST(request: Request) {
   // avisar, así el aviso por distancia les llega a los que están cerca.
   resumen.partidosUbicados = await completarCoordenadasDePartidos();
   resumen.partidosRepetidos = await repetirSemanales(ahora);
+  resumen.pedidosDeResena = await pedirResenas(ahora);
 
   // ---- 5. Partidos abiertos a los que les faltan jugadores ----
   // Una sola vez por partido, a quienes juegan ese deporte cerca (dentro del

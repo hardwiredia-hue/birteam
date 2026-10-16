@@ -349,7 +349,10 @@ export const TEMAS: Tema[] = [
       {
         id: 'resenas',
         titulo: 'Reseñas de canchas',
-        texto: ['Solo deja reseña quien jugó ahí (turno confirmado o partido en esa cancha). El complejo puede responder.'],
+        texto: [
+          'Solo deja reseña quien jugó ahí (turno confirmado o partido en esa cancha). El complejo puede responder.',
+          'Después de jugar (entre 1 y 26 horas después de que termina) te llega "¿Cómo estuvo…?" con el atajo a la reseña: una sola vez por cancha, y no si ya la reseñaste o si el complejo marcó que no fuiste.',
+        ],
       },
       {
         id: 'faltas',
@@ -618,6 +621,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: '¿Cómo estuvo la cancha?',
+    texto: 'Después de jugar te pedimos la reseña, una sola vez por cancha. Complejos: más reseñas, más reservas.',
+    para: 'todos',
+    enlace: { href: '/ayuda/canchas-y-turnos#resenas', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-16',
     titulo: 'Arrancá en birteam',
