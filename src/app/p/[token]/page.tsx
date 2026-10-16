@@ -58,9 +58,9 @@ export default async function PartidoPublico({ params }: { params: Promise<{ tok
             {partido.recurrenteSemanal ? ' · se repite' : ''}
           </p>
           <div>
-            <p className="t-display text-[30px]">
+            <h1 className="t-display text-[30px]">
               {DIAS[partido.fecha.getDay()]} {hora}
-            </p>
+            </h1>
             <p className="mt-1 text-sm text-tinta-2">
               {partido.lugarNombre}
               {partido.ciudad ? ` · ${partido.ciudad}` : ''}

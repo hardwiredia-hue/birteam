@@ -75,6 +75,7 @@ export function EquipoComplejo({ equipo }: { equipo: Miembro[] }) {
           value={usuario}
           onChange={(evento) => setUsuario(evento.target.value)}
           placeholder="@usuario de quien atiende"
+          aria-label="Usuario del empleado a sumar"
           autoComplete="off"
         />
         <button type="submit" className="btn btn-secundario btn-sm" disabled={enviando || !usuario.trim()}>

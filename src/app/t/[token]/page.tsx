@@ -55,7 +55,7 @@ export default async function TorneoPublico({ params }: { params: Promise<{ toke
           <p className="t-rotulo text-verde-txt">
             {torneo.deporte.nombre} · {torneo.formato === 'COPA' ? 'copa' : 'liga'}
           </p>
-          <p className="t-display text-[28px]">{torneo.nombre}</p>
+          <h1 className="t-display text-[28px]">{torneo.nombre}</h1>
           {torneo.descripcion ? <p className="text-sm text-tinta-2">{torneo.descripcion}</p> : null}
           <p className="text-xs text-tinta-3">
             Organiza {torneo.organizador.nombre}
