@@ -9,6 +9,7 @@ import { Pendientes } from './pendientes';
 import { AvisoNovedad } from '@/components/aviso-novedad';
 import { PuestaAPunto } from '@/components/puesta-a-punto';
 import { pasosDelJugador } from '@/lib/puesta-a-punto';
+import { encuestasSinMiVoto } from '@/lib/encuestas';
 import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
 import { agendaDelDia } from '@/lib/agenda';
@@ -154,6 +155,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     liberados,
     invitaciones,
     primerosPasos,
+    encuestas,
   ] = await Promise.all([
     cargarAgenda(),
     // Tu próximo partido: el más cercano en el que estás anotado u organizás.
@@ -222,6 +224,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     }),
     cargarInvitaciones(),
     cargarPrimerosPasos(),
+    encuestasSinMiVoto(usuario.id, hoy),
   ]);
   const cuando = (fecha: Date) =>
     `${DIAS[diaDeLaSemana(fecha)]} ${fecha.toLocaleTimeString('es-AR', {
@@ -284,6 +287,21 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           quien: partido.organizador.nombre.split(' ')[0],
         }))}
       />
+
+      {encuestas.map((encuesta) => (
+        <Link
+          key={encuesta.id}
+          href={`/grupos/${encuesta.grupo.id}#cuando`}
+          className="tarjeta flex items-center justify-between gap-3 p-4"
+        >
+          <span className="min-w-0">
+            <span className="t-rotulo block text-verde-txt">¿Cuándo jugamos?</span>
+            <span className="block truncate text-sm font-semibold">{encuesta.grupo.nombre}</span>
+            <span className="block text-xs text-tinta-3">Marcá los horarios que podés.</span>
+          </span>
+          <span className="btn btn-secundario btn-sm shrink-0">Votar</span>
+        </Link>
+      ))}
 
       {primerosPasos ? (
         <PuestaAPunto pasos={primerosPasos} titulo="Arrancá en birteam" ocultable="birteam_primeros_pasos_oculto" />

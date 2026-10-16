@@ -1,7 +1,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { prisma } from '../src/lib/db';
-import { cerrarEncuesta, crearEncuesta, encuestaAbierta, rotuloOpcion, votar } from '../src/lib/encuestas';
+import { cerrarEncuesta, crearEncuesta, encuestaAbierta, encuestasSinMiVoto, rotuloOpcion, votar } from '../src/lib/encuestas';
 import { escenario } from './ayuda';
 
 after(() => prisma.$disconnect());
@@ -37,8 +37,10 @@ test('¿Cuándo jugamos?: proponer, votar, una abierta por grupo y cerrar', asyn
   const abierta = (await encuestaAbierta(grupo.id))!;
   assert.deepEqual(abierta.opciones.map((o) => o.fecha.getTime()), [a.getTime(), b.getTime()], 'ordenadas');
   const [primera, segunda] = abierta.opciones;
+  assert.deepEqual((await encuestasSinMiVoto(jugador.id)).map((e) => e.id), [creada.id], 'en Inicio hasta que vota');
   assert.equal(await votar(jugador.id, creada.id, [primera.id, segunda.id]), null);
   assert.equal(await votar(jugador.id, creada.id, [segunda.id]), null, 'cambiar el voto reemplaza');
+  assert.deepEqual(await encuestasSinMiVoto(jugador.id), [], 'ya votó');
   assert.equal(await votar(otro.id, creada.id, [segunda.id, 'cualquiera']), null);
   assert.equal(await votar(dueno.id, creada.id, [segunda.id]), 'Votan los del grupo.');
   const votos = await prisma.votoEncuesta.groupBy({ by: ['opcionId'], where: { opcion: { encuestaId: creada.id } }, _count: { _all: true } });

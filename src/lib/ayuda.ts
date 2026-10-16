@@ -251,6 +251,7 @@ export const TEMAS: Tema[] = [
         ],
         texto: [
           'Hay una encuesta abierta por grupo. Se cierra al armar el partido, con "Cerrar sin armar" o sola cuando pasan todos sus horarios.',
+          'Mientras no votes, la ves arriba en tu Inicio con el botón "Votar".',
         ],
         enlace: { href: '/grupos', rotulo: 'Ir a mis grupos' },
       },

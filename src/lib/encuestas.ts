@@ -101,3 +101,17 @@ export async function cerrarEncuesta(usuarioId: string, encuestaId: string, part
   await prisma.encuesta.update({ where: { id: encuestaId }, data: { cerradaEn: new Date(), partidoId } });
   return null;
 }
+
+/** Encuestas abiertas de mis grupos en las que todavía no marqué nada (para Inicio). */
+export async function encuestasSinMiVoto(usuarioId: string, ahora = new Date()) {
+  return prisma.encuesta.findMany({
+    where: {
+      cerradaEn: null,
+      grupo: { miembros: { some: { usuarioId } } },
+      opciones: { some: { fecha: { gt: ahora } }, none: { votos: { some: { usuarioId } } } },
+    },
+    select: { id: true, grupo: { select: { id: true, nombre: true } }, _count: { select: { opciones: true } } },
+    orderBy: { creadoEn: 'desc' },
+    take: 3,
+  });
+}
