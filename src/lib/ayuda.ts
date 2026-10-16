@@ -184,6 +184,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Pasar lista, costo y asistencia',
         texto: [
           'Después del partido, quien organiza pasa lista (quién vino) y puede cargar el resultado. Eso alimenta el % de asistencia de cada perfil.',
+          'Cuando termina te llega el recordatorio "¿Cómo salió?". Si nadie pasa lista, a las 48 h de terminado lo damos por jugado con todos los confirmados (si llegó al mínimo); lo que ya hayas marcado se respeta.',
           'Si el partido tiene costo, en el partido se marca quién pagó.',
         ],
       },
@@ -621,6 +622,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: 'Partidos que se cierran solos',
+    texto: 'Al terminar, el organizador recibe "¿Cómo salió?" para pasar lista. Si no lo hace, a las 48 h el partido se da por jugado y suma a las estadísticas.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#pasar-lista', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-16',
     titulo: '¿Cómo estuvo la cancha?',

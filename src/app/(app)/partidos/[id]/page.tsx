@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HORAS_CIERRE } from '@/lib/cierre-partidos';
 import { PronosticoPartido } from '@/components/pronostico';
 import { hayPronostico } from '@/lib/pronostico';
 import { notFound } from 'next/navigation';
@@ -315,10 +316,15 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
       ) : null}
 
       {organizo && yaPaso && !cerrado && voy.length > 0 ? (
-        <PasarLista
-          partidoId={partido.id}
-          jugadores={voy.map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre }))}
-        />
+        <div id="lista" className="flex scroll-mt-20 flex-col gap-1.5">
+          <PasarLista
+            partidoId={partido.id}
+            jugadores={voy.map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre }))}
+          />
+          <p className="text-xs text-tinta-3">
+            Si no pasás lista, a las {HORAS_CIERRE} h de terminado lo damos por jugado con todos los confirmados.
+          </p>
+        </div>
       ) : null}
 
       <section className="flex flex-col gap-4">
