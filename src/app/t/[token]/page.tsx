@@ -7,8 +7,12 @@ import { sitioEnConstruccion } from '@/lib/sitio';
 import { PaginaConstruccion } from '@/components/construccion';
 import { avanzarCopa, calcularTabla } from '@/lib/torneos';
 import { Logotipo } from '@/components/marca';
+import { metadatosDe, vistaTorneo } from '@/lib/vista-previa';
 
-export const metadata = { title: 'Te invitaron a un torneo' };
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  return metadatosDe(await vistaTorneo(token), 'Te invitaron a un torneo');
+}
 export const dynamic = 'force-dynamic';
 
 /** El link público del torneo: se abre sin cuenta, para convocar equipos. */

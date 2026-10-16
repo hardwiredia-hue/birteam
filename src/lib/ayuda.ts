@@ -143,6 +143,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Invitar y compartir',
         texto: [
           '"Compartir el partido" abre el panel con WhatsApp, Telegram, Facebook, X, Email y el link para copiar. El link se abre sin cuenta y deja sumarse en 30 segundos.',
+          'Al pegarlo en WhatsApp (o en redes) se ve una tarjeta con el deporte, el día y la hora, dónde se juega y cuántos faltan. Los links de grupos y torneos también muestran la suya: el nombre, cuántos son y los lugares que quedan.',
           'Para sumar a alguien a un partido ya armado: entrá a su perfil y tocá "Invitar a un partido". Podés invitar a los partidos que organizás, o a los abiertos donde estás confirmado. Le llega el aviso y responde desde su Inicio.',
           'Si es un partido abierto y faltan jugadores dentro de las 48 h previas, avisamos a quienes juegan ese deporte cerca: dentro de la distancia que cada uno eligió en sus avisos, o en la misma ciudad (una sola vez).',
         ],
@@ -551,6 +552,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: 'Links que se ven mejor en WhatsApp',
+    texto: 'Al compartir un partido, un grupo o un torneo, la vista previa ya dice qué es, cuándo y cuántos faltan, con una imagen de birteam.',
+    para: 'todos',
+    enlace: { href: '/ayuda/partidos#invitar', rotulo: 'Cómo compartir' },
+  },
   {
     fecha: '2026-10-13',
     titulo: 'La agenda del día',

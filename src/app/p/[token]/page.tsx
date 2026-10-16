@@ -6,8 +6,12 @@ import { sitioEnConstruccion } from '@/lib/sitio';
 import { PaginaConstruccion } from '@/components/construccion';
 import { formatearPlata } from '@/lib/formato';
 import { Logotipo } from '@/components/marca';
+import { metadatosDe, vistaPartido } from '@/lib/vista-previa';
 
-export const metadata = { title: 'Te invitaron a jugar' };
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  return metadatosDe(await vistaPartido(token), 'Te invitaron a jugar');
+}
 export const dynamic = 'force-dynamic';
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];

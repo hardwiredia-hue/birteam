@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { obtenerMarca } from '@/lib/marca';
-import { ambiente } from '@/lib/publico';
+import { ambiente, sitioPublico } from '@/lib/publico';
 import './globals.css';
 
 // El favicon y el ícono pueden cambiarse desde el backoffice (Marca).
 export async function generateMetadata(): Promise<Metadata> {
   const marca = await obtenerMarca();
   return {
+    metadataBase: new URL(sitioPublico()),
     title: {
       default: 'birteam — ¿Querés jugar? Encontrá con quién.',
       template: '%s · birteam',
@@ -16,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
       'Organizá partidos, armá tu grupo y encontrá con quién jugar. Fútbol, básquet, vóley, tenis, pádel y más, cerca tuyo.',
     icons: { icon: marca.favicon, apple: marca.icono192 },
     manifest: '/manifest.webmanifest',
+    openGraph: { siteName: 'birteam', locale: 'es_AR', type: 'website' },
     appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'birteam' },
     // Staging y desarrollo no van a ningún buscador.
     ...(ambiente() !== 'produccion' ? { robots: { index: false, follow: false, nocache: true } } : {}),

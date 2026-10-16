@@ -6,9 +6,13 @@ import { usuarioActual } from '@/lib/auth';
 import { sitioEnConstruccion } from '@/lib/sitio';
 import { PaginaConstruccion } from '@/components/construccion';
 import { Logotipo } from '@/components/marca';
+import { metadatosDe, vistaGrupo } from '@/lib/vista-previa';
 import { BotonUnirse } from './unirse';
 
-export const metadata = { title: 'Te invitaron a un grupo' };
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  return metadatosDe(await vistaGrupo(token), 'Te invitaron a un grupo');
+}
 export const dynamic = 'force-dynamic';
 
 /** El link de invitación al grupo: se abre sin cuenta, igual que el del partido. */
