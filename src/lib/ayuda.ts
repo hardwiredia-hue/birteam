@@ -124,6 +124,7 @@ export const TEMAS: Tema[] = [
         ],
         texto: [
           'Con "Repetir el último" se carga todo lo de tu partido anterior y te propone la próxima fecha.',
+          'Si lo marcás "Se repite todas las semanas", cuando termina armamos solos el de la semana siguiente (mismo lugar, hora, cupo y costo) y avisamos al grupo y a los que jugaron. Si una semana no se juega, cancelá ese partido; para cortar la serie, editá el último y destildá "Se repite".',
           'Lo que escribís a mano (un club, una plaza, una cancha que no está en birteam) se usa solo para ese partido: no queda guardado como cancha. Las canchas las publican sus dueños con una cuenta de complejo.',
         ],
         enlace: { href: '/crear', rotulo: 'Crear partido' },
@@ -195,7 +196,18 @@ export const TEMAS: Tema[] = [
         id: 'calendario',
         titulo: 'Agregar al calendario',
         texto: [
-          'En el partido (si vas o lo organizás) tocá "Agregar al calendario": Google Calendar o el calendario del celular. Va con el lugar y un aviso 1 hora antes; los partidos semanales quedan repitiéndose.',
+          'En el partido (si vas o lo organizás) tocá "Agregar al calendario": Google Calendar o el calendario del celular. Va con el lugar y un aviso 1 hora antes.',
+          'Para no agregarlos de a uno: en tu perfil, "Tus partidos en tu calendario" crea un link que suma todos tus partidos (los que vas u organizás) y tus turnos, y se actualiza solo. En el iPhone se abre con "iPhone o Outlook"; en Google Calendar, con su botón. El calendario lo vuelve a leer cada tanto (Google puede tardar unas horas).',
+          'El link es tuyo: quien lo tenga ve tus partidos. Desde el perfil lo cambiás (el anterior deja de andar) o lo apagás.',
+        ],
+        enlace: { href: '/perfil', rotulo: 'Ir a mi perfil' },
+      },
+      {
+        id: 'pronostico',
+        titulo: 'El pronóstico del partido',
+        texto: [
+          'En los partidos de los próximos 7 días ves el pronóstico para esa hora: temperatura, cielo y la probabilidad de lluvia mientras se juega (y el viento, si es fuerte).',
+          'Si es probable que llueva te lo marcamos: si la cancha es techada, se juega igual; si no, coordinen por el chat del partido. El pronóstico es de Open-Meteo y lo pide tu celular; si no carga, no se muestra.',
         ],
       },
       {
@@ -256,6 +268,15 @@ export const TEMAS: Tema[] = [
           'Lo libre es lo que de verdad está libre: nada de disponibilidad inventada.',
         ],
         enlace: { href: '/turnos', rotulo: 'Buscar turno' },
+      },
+      {
+        id: 'como-es',
+        titulo: 'Cómo es la cancha: techada, superficie y servicios',
+        texto: [
+          'En la ficha de cada cancha, "Cómo es" dice si es techada, la superficie (césped sintético, cemento, parquet, polvo de ladrillo…) y los servicios: iluminación, vestuarios, duchas, estacionamiento, buffet y más. Lo carga el complejo.',
+          'En Explorar → Canchas, "Solo techadas" deja las que se pueden jugar con lluvia.',
+        ],
+        enlace: { href: '/explorar?tab=canchas&techada=1', rotulo: 'Ver canchas techadas' },
       },
       {
         id: 'pedir-turno',
@@ -348,7 +369,7 @@ export const TEMAS: Tema[] = [
         id: 'puesta-a-punto',
         titulo: 'Dejar el complejo listo',
         texto: [
-          'En Mi complejo, "Tu complejo, listo para recibir reservas" te muestra qué falta (fotos, precio, teléfono, pedidos online, Mercado Pago, verificación) y te lleva a completarlo.',
+          'En Mi complejo, "Tu complejo, listo para recibir reservas" te muestra qué falta (fotos, precio, cómo es cada cancha, teléfono, pedidos online, Mercado Pago, verificación) y te lleva a completarlo.',
         ],
         enlace: { href: '/complejo', rotulo: 'Mi complejo' },
       },
@@ -360,6 +381,7 @@ export const TEMAS: Tema[] = [
           'Si ya tenés una, arranca con sus datos ("Copiar los datos de"): cambiá solo lo distinto.',
           'Horario, duración del turno (1 h, 1 h 30 o 2 h), precio y, si querés, precio pico (desde una hora o los fines de semana).',
           '¿Varias iguales? Con "Canchas iguales" publicás hasta 10 de una (Cancha 1, 2, 3…).',
+          'En "¿Cómo es?" marcá si es techada, la superficie y los servicios (vestuarios, iluminación, estacionamiento…): se ve en la ficha y los jugadores filtran por techadas.',
         ],
         texto: [
           'También podés publicarla al crear un partido: en "¿Dónde juegan?" escribí el nombre y la dirección y, en "¿Es tu cancha?", tocá "Sí, cargarla en birteam". Queda con horario de 9 a 23 todos los días; precio, horarios y fotos los completás después desde Mi complejo.',
@@ -527,6 +549,7 @@ export const FRECUENTES: [string, string][] = [
   ['partidos', 'confirmar'],
   ['canchas-y-turnos', 'pago-online'],
   ['partidos', 'crear-partido'],
+  ['partidos', 'calendario'],
   ['complejos', 'cuenta-complejo'],
   ['primeros-pasos', 'avisos'],
   ['cuenta', 'contrasena'],
@@ -552,6 +575,34 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: 'Partidos semanales de verdad',
+    texto: 'Si el partido "se repite todas las semanas", al terminar armamos el de la semana siguiente y avisamos al grupo y a los que jugaron.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#crear-partido', rotulo: 'Cómo funciona' },
+  },
+  {
+    fecha: '2026-10-16',
+    titulo: 'Tus partidos en tu calendario',
+    texto: 'Un link desde tu perfil suma todos tus partidos y turnos a Google Calendar o al del iPhone, y se actualiza solo.',
+    para: 'todos',
+    enlace: { href: '/ayuda/partidos#calendario', rotulo: 'Cómo sincronizarlo' },
+  },
+  {
+    fecha: '2026-10-16',
+    titulo: 'El pronóstico en cada partido',
+    texto: 'Temperatura y probabilidad de lluvia para la hora del partido, en los de los próximos 7 días.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#pronostico', rotulo: 'Ver más' },
+  },
+  {
+    fecha: '2026-10-16',
+    titulo: 'Canchas techadas y sus servicios',
+    texto: 'Cada cancha dice si es techada, su superficie y sus servicios; en Explorar podés ver solo las techadas. Complejos: completalo en Editar cancha.',
+    para: 'todos',
+    enlace: { href: '/ayuda/canchas-y-turnos#como-es', rotulo: 'Cómo es la cancha' },
+  },
   {
     fecha: '2026-10-16',
     titulo: 'Links que se ven mejor en WhatsApp',

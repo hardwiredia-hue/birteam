@@ -1,6 +1,7 @@
 import type { Cancha } from '@prisma/client';
 import type { CanchaExistente } from '@/components/formulario-cancha';
 import { diasDeLaCancha } from './reservas';
+import { leerServicios } from './servicios-cancha';
 
 /** Una cancha guardada, en la forma que usa el formulario (editar o copiar). */
 export function canchaParaFormulario(cancha: Cancha): CanchaExistente {
@@ -32,6 +33,9 @@ export function canchaParaFormulario(cancha: Cancha): CanchaExistente {
     picoDesdeHora: cancha.picoDesdeHora,
     picoFinDeSemana: cancha.picoFinDeSemana,
     senaPorcentaje: cancha.senaPorcentaje,
+    techada: cancha.techada,
+    superficie: cancha.superficie,
+    servicios: leerServicios(cancha.servicios),
     activa: cancha.activa,
   };
 }

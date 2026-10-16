@@ -58,6 +58,9 @@ export async function PATCH(request: Request, contexto: { params: Promise<{ id: 
       picoDesdeHora: d.precioPico != null ? (d.picoDesdeHora ?? null) : null,
       picoFinDeSemana: d.precioPico != null ? d.picoFinDeSemana : false,
       senaPorcentaje: d.senaPorcentaje,
+      techada: d.techada,
+      superficie: d.superficie ?? null,
+      servicios: JSON.stringify([...new Set(d.servicios)]),
       activa: d.activa,
     },
   });

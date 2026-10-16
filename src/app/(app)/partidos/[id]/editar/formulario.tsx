@@ -169,9 +169,12 @@ export function FormularioEditarPartido({
         </div>
       </div>
 
-      <label className="flex items-center gap-2.5 text-sm">
-        <input type="checkbox" name="recurrenteSemanal" defaultChecked={inicial.recurrenteSemanal}  />
-        Se repite todas las semanas
+      <label className="flex items-start gap-2.5 text-sm">
+        <input type="checkbox" name="recurrenteSemanal" className="mt-1" defaultChecked={inicial.recurrenteSemanal}  />
+        <span>
+          Se repite todas las semanas
+          <span className="block text-xs text-tinta-3">Destildalo para cortar la serie: no se arma el de la semana siguiente.</span>
+        </span>
       </label>
 
       {error ? <p className="aviso-error">{error}</p> : null}

@@ -7,6 +7,7 @@ import { SelectorCiudad } from '@/components/selector-ciudad';
 import { Interruptor } from '@/components/interruptor';
 import { nombresEnSerie, siguienteNombre } from '@/lib/serie';
 import { prepararImagen } from '@/lib/preparar-imagen';
+import { SERVICIOS, SUPERFICIES, type Servicio } from '@/lib/servicios-cancha';
 
 interface Deporte {
   id: string;
@@ -36,6 +37,9 @@ export interface CanchaExistente {
   precioPico: number | null;
   picoDesdeHora: number | null;
   picoFinDeSemana: boolean;
+  techada: boolean;
+  superficie: string | null;
+  servicios: Servicio[];
   activa: boolean;
 }
 
@@ -100,6 +104,9 @@ export function FormularioCancha({
   const [picoDesde, setPicoDesde] = useState<number | null>(base?.picoDesdeHora ?? 18);
   const [picoFinde, setPicoFinde] = useState(base?.picoFinDeSemana ?? false);
   const [senaPorcentaje, setSenaPorcentaje] = useState(base?.senaPorcentaje ?? 30);
+  const [techada, setTechada] = useState(base?.techada ?? false);
+  const [superficie, setSuperficie] = useState<string | null>(base?.superficie ?? null);
+  const [servicios, setServicios] = useState<Servicio[]>(base?.servicios ?? []);
   const [subiendo, setSubiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
@@ -162,6 +169,9 @@ export function FormularioCancha({
       precioPico: conPico ? numero(form.get('precioPico')) : null,
       picoDesdeHora: conPico ? picoDesde : null,
       picoFinDeSemana: conPico && picoFinde,
+      techada,
+      superficie,
+      servicios,
       ...(cancha ? { activa } : { cantidad }),
     };
 
@@ -505,6 +515,56 @@ export function FormularioCancha({
         ) : null}
       </div>
 
+      <div className="tarjeta flex flex-col gap-3 p-4">
+        <div>
+          <p className="text-sm font-semibold">¿Cómo es?</p>
+          <p className="text-xs text-tinta-3">Se ve en la ficha. Los días de lluvia, muchos buscan techada.</p>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold">Techada</span>
+          <Interruptor prendido={techada} alCambiar={setTechada} rotulo="Techada" />
+        </div>
+        <div className="border-t border-borde pt-3">
+          <span className="rotulo-campo">Superficie</span>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {SUPERFICIES.map((opcion) => (
+              <button
+                key={opcion.valor}
+                type="button"
+                aria-pressed={superficie === opcion.valor}
+                onClick={() => setSuperficie(superficie === opcion.valor ? null : opcion.valor)}
+                className={superficie === opcion.valor ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {opcion.rotulo}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="border-t border-borde pt-3">
+          <span className="rotulo-campo">Servicios</span>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {SERVICIOS.map((opcion) => {
+              const marcado = servicios.includes(opcion.valor);
+              return (
+                <button
+                  key={opcion.valor}
+                  type="button"
+                  aria-pressed={marcado}
+                  onClick={() =>
+                    setServicios((actuales) =>
+                      marcado ? actuales.filter((otro) => otro !== opcion.valor) : [...actuales, opcion.valor]
+                    )
+                  }
+                  className={marcado ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+                >
+                  {opcion.rotulo}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <div>
         <label className="rotulo-campo" htmlFor="descripcion">
           Descripción
@@ -513,7 +573,7 @@ export function FormularioCancha({
           id="descripcion"
           name="descripcion"
           className="campo min-h-24"
-          placeholder="Césped sintético, vestuarios, estacionamiento, iluminación…"
+          placeholder="Lo que haga falta saber: cómo llegar, si se puede ir con chicos, reglas del lugar…"
           defaultValue={base?.descripcion ?? ''}
         />
         <ErrorDeCampo mensajes={errores.descripcion} />

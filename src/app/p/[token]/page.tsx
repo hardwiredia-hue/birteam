@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { sitioEnConstruccion } from '@/lib/sitio';
 import { PaginaConstruccion } from '@/components/construccion';
-import { formatearPlata } from '@/lib/formato';
+import { formatearPlata, diaDeLaSemana } from '@/lib/formato';
 import { Logotipo } from '@/components/marca';
 import { metadatosDe, vistaPartido } from '@/lib/vista-previa';
 
@@ -63,7 +63,7 @@ export default async function PartidoPublico({ params }: { params: Promise<{ tok
           </p>
           <div>
             <h1 className="t-display text-[30px]">
-              {DIAS[partido.fecha.getDay()]} {hora}
+              {DIAS[diaDeLaSemana(partido.fecha)]} {hora}
             </h1>
             <p className="mt-1 text-sm text-tinta-2">
               {partido.lugarNombre}

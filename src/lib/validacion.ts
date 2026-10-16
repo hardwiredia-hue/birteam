@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VALORES_SERVICIO, VALORES_SUPERFICIE } from './servicios-cancha';
 import { validarCuit } from './verificacion';
 import { NIVELES } from './constantes';
 
@@ -343,6 +344,9 @@ const camposCancha = z.object({
   picoDesdeHora: z.number().int().min(0).max(23).nullish(),
   picoFinDeSemana: z.boolean().default(false),
   senaPorcentaje: z.number().int().min(10, 'La seña va del 10 al 90%.').max(90, 'La seña va del 10 al 90%.').default(30),
+  techada: z.boolean().default(false),
+  superficie: z.enum(VALORES_SUPERFICIE).nullish(),
+  servicios: z.array(z.enum(VALORES_SERVICIO)).max(VALORES_SERVICIO.length).default([]),
 });
 
 const horarioAlcanza = {

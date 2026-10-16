@@ -8,6 +8,7 @@ import { CampoClave } from '@/components/campo-clave';
 import { prepararImagen } from '@/lib/preparar-imagen';
 import { borrarGuardadoOffline } from '@/lib/guardado-offline';
 import { RADIOS_AVISOS_KM } from '@/lib/cercania';
+import { CalendarioSincronizado } from '@/components/calendario-sincronizado';
 
 const AVISOS = [
   { clave: 'avisosSociales', titulo: 'Avisos sociales', detalle: 'Me gusta, comentarios y seguidores nuevos.' },
@@ -24,12 +25,15 @@ export function AccionesPerfil({
   radioKm: radioInicial,
   usuario,
   conClave,
+  rutaCalendario,
 }: {
   temaActual: string;
   avisos: PreferenciasAvisos;
   radioKm: number;
   usuario: string;
   conClave: boolean;
+  /** El calendario sincronizado, si ya lo creó. */
+  rutaCalendario: string | null;
 }) {
   const [avisos, setAvisos] = useState(avisosIniciales);
 
@@ -95,6 +99,8 @@ export function AccionesPerfil({
       </div>
 
       <ActivarPush />
+
+      <CalendarioSincronizado rutaInicial={rutaCalendario} />
 
       <div className="tarjeta flex flex-col gap-3 p-4">
         <div>

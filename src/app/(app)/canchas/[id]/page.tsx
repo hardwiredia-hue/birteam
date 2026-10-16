@@ -14,6 +14,7 @@ import { duenoCobraOnline } from '@/lib/mercadopago';
 import { gestionaCancha } from '@/lib/gestion';
 import { formatearPuntaje, jugoEnLaCancha } from '@/lib/resenas';
 import { Estrellas, FormularioResena, ResponderResena } from '@/components/resenas';
+import { CaracteristicasCancha } from '@/components/caracteristicas-cancha';
 
 export const dynamic = 'force-dynamic';
 
@@ -177,6 +178,8 @@ export default async function DetalleCancha({
       </div>
 
       <DiasDeLaCancha crudo={cancha.diasDisponibles} />
+
+      <CaracteristicasCancha cancha={cancha} />
 
       {cancha.descripcion ? (
         <p className="text-sm leading-relaxed text-tinta-2">{cancha.descripcion}</p>

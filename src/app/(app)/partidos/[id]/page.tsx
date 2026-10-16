@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { PronosticoPartido } from '@/components/pronostico';
+import { hayPronostico } from '@/lib/pronostico';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { ROTULOS_NIVEL } from '@/lib/constantes';
@@ -7,7 +9,7 @@ import { VincularTurno } from './vincular';
 import { usuarioActual } from '@/lib/auth';
 import { ComoLlegar } from '@/components/como-llegar';
 import { kmHasta, ubicacionDe } from '@/lib/ubicacion';
-import { formatearPlata } from '@/lib/formato';
+import { formatearPlata, diaDeLaSemana } from '@/lib/formato';
 import { Chat } from '@/components/chat';
 import { Moderacion } from '@/components/moderacion';
 import { PublicarJugada, TarjetaJugada } from '@/components/jugadas';
@@ -43,6 +45,8 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
       deporte: true,
       grupo: { select: { id: true, nombre: true } },
       organizador: { select: { id: true, nombre: true, usuario: true } },
+      cancha: { select: { techada: true } },
+      repeticion: { select: { id: true, fecha: true } },
       participaciones: {
         include: { usuario: { select: { id: true, nombre: true, usuario: true, avatarUrl: true } } },
         orderBy: [{ ordenEspera: 'asc' }, { creadoEn: 'asc' }],
@@ -130,6 +134,16 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         </Link>
       ) : null}
 
+      {partido.repeticion ? (
+        <Link href={`/partidos/${partido.repeticion.id}`} className="tarjeta flex items-center justify-between gap-3 p-3">
+          <span className="text-sm font-semibold">
+            <span className="t-rotulo mr-2 text-verde-txt">Se repite</span>
+            Ya está el del {DIAS[diaDeLaSemana(partido.repeticion.fecha)]} que viene
+          </span>
+          <span className="text-verde-txt">→</span>
+        </Link>
+      ) : null}
+
       <header className="flex flex-col gap-2">
         <p className="t-rotulo text-verde-txt">
           {partido.deporte.nombre}
@@ -141,7 +155,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           ) : null}
         </p>
         <h1 className="t-display text-[30px]">
-          {DIAS[partido.fecha.getDay()]} {hora}
+          {DIAS[diaDeLaSemana(partido.fecha)]} {hora}
         </h1>
         {partido.resultado ? (
           <p className="t-display text-[20px] tabular text-verde-txt">{partido.resultado}</p>
@@ -168,6 +182,15 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           km={kmHasta(ubicacion, partido)}
           aproximada={!partido.canchaId}
         />
+        {!cerrado && partido.latitud != null && partido.longitud != null && hayPronostico(partido.fecha, partido.duracionMin) ? (
+          <PronosticoPartido
+            latitud={partido.latitud}
+            longitud={partido.longitud}
+            inicio={partido.fecha.toISOString()}
+            minutos={partido.duracionMin}
+            techada={partido.cancha?.techada ?? false}
+          />
+        ) : null}
         {partido.lugarTelefono ? (
           <a
             href={`tel:${partido.lugarTelefono.replace(/[^+0-9]/g, '')}`}
@@ -258,7 +281,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
         <Pagos
           partidoId={partido.id}
           costo={partido.costoPorJugador}
-          titulo={`${partido.deporte.nombre} del ${DIAS[partido.fecha.getDay()]}`}
+          titulo={`${partido.deporte.nombre} del ${DIAS[diaDeLaSemana(partido.fecha)]}`}
           jugadores={voy.map((p) => ({
             usuarioId: p.usuarioId,
             nombre: p.usuario.nombre,
@@ -372,7 +395,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           partidoId={partido.id}
           organiza={organizo}
           rutaPublica={`/p/${partido.tokenPublico}`}
-          cuando={`${DIAS[partido.fecha.getDay()]} ${hora}`}
+          cuando={`${DIAS[diaDeLaSemana(partido.fecha)]} ${hora}`}
           jugadores={voy.map((p) => ({ usuarioId: p.usuarioId, nombre: p.usuario.nombre, equipo: p.equipo }))}
         />
       ) : null}
@@ -393,7 +416,7 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
           {mia || organizo ? (
             <PublicarJugada
               partidoId={partido.id}
-              invitacion={`Subí la jugada del ${DIAS[partido.fecha.getDay()]}`}
+              invitacion={`Subí la jugada del ${DIAS[diaDeLaSemana(partido.fecha)]}`}
             />
           ) : null}
           {jugadas.map((jugada) => (

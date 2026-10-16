@@ -10,7 +10,7 @@ import { usuarioActual } from '@/lib/auth';
 import { formatearDistancia, rotuloDistancia } from '@/lib/geo';
 import { dentroDelRadio, kmHasta, radioDelParametro, ubicacionDe, type Ubicacion } from '@/lib/ubicacion';
 import { FiltroCercania } from '@/components/filtro-cercania';
-import { formatearPlata } from '@/lib/formato';
+import { formatearPlata, diaDeLaSemana } from '@/lib/formato';
 import { normalizar } from '@/lib/normalizar';
 import { idsBloqueados } from '@/lib/bloqueos';
 import { calcularRanking } from '@/lib/estadisticas';
@@ -33,9 +33,12 @@ export default async function Explorar({
     ambito?: string;
     vista?: string;
     radio?: string;
+    techada?: string;
   }>;
 }) {
-  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo } = await searchParams;
+  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda } = await searchParams;
+  // "Solo techadas" (solapa Canchas): se mantiene al cambiar de deporte, vista o distancia.
+  const techada = tab === 'canchas' && techadaCruda === '1' ? '1' : undefined;
   const usuario = (await usuarioActual())!;
   const ubicacion = await ubicacionDe(usuario);
   const radio = ubicacion ? radioDelParametro(radioCrudo) : null;
@@ -47,7 +50,7 @@ export default async function Explorar({
       ciudad={usuario.ciudad}
       radio={radio}
       href={(km) =>
-        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined })
+        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada })
       }
     />
   );
@@ -67,6 +70,7 @@ export default async function Explorar({
         {deporte ? <input type="hidden" name="deporte" value={deporte} /> : null}
         {vista === 'mapa' ? <input type="hidden" name="vista" value="mapa" /> : null}
         {r ? <input type="hidden" name="radio" value={r} /> : null}
+        {techada ? <input type="hidden" name="techada" value="1" /> : null}
         <input
           id="buscador"
           name="q"
@@ -136,7 +140,7 @@ export default async function Explorar({
         </>
       ) : tab === 'canchas' ? (
         <>
-          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} />
+          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} techada={techada} />
           <div className="flex gap-2">
             <Link href={deporte ? `/radar?deporte=${deporte}` : '/radar'} className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
               <span>
@@ -158,10 +162,27 @@ export default async function Explorar({
             activo={deporte}
             conTodos={false}
             envolver
-            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r })}
+            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r, techada })}
           />
+          <div className="flex gap-2">
+            <Link
+              href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada: techada ? undefined : '1' })}
+              aria-pressed={Boolean(techada)}
+              className={techada ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+            >
+              Solo techadas
+            </Link>
+          </div>
           {cercania}
-          <Canchas deporteSlugs={slugsFiltro} q={q} usuario={usuario} vista={vista} ubicacion={ubicacion} radio={radio} />
+          <Canchas
+            deporteSlugs={slugsFiltro}
+            q={q}
+            usuario={usuario}
+            vista={vista}
+            ubicacion={ubicacion}
+            radio={radio}
+            soloTechadas={Boolean(techada)}
+          />
         </>
       ) : (
         <>
@@ -196,23 +217,25 @@ function AlternarVista({
   q,
   vista,
   radio,
+  techada,
 }: {
   tab?: string;
   deporte?: string;
   q?: string;
   vista?: string;
   radio?: string;
+  techada?: string;
 }) {
   return (
     <div className="flex gap-2">
       <Link
-        href={armarUrl({ tab, deporte, q, radio })}
+        href={armarUrl({ tab, deporte, q, radio, techada })}
         className={vista !== 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Lista
       </Link>
       <Link
-        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio })}
+        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada })}
         className={vista === 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Mapa
@@ -297,7 +320,7 @@ async function Partidos({
         id: p.id,
         latitud: p.latitud!,
         longitud: p.longitud!,
-        titulo: `${p.deporte.nombre} · ${DIAS[p.fecha.getDay()]} ${p.fecha.toLocaleTimeString(
+        titulo: `${p.deporte.nombre} · ${DIAS[diaDeLaSemana(p.fecha)]} ${p.fecha.toLocaleTimeString(
           'es-AR',
           { hour12: false, hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }
         )}`,
@@ -340,7 +363,7 @@ async function Partidos({
               ) : null}
             </div>
             <p className="t-display text-[19px]">
-              {DIAS[p.fecha.getDay()]} {hora}
+              {DIAS[diaDeLaSemana(p.fecha)]} {hora}
             </p>
             <p className="text-[13px] text-tinta-2">
               {p.lugarNombre}
@@ -376,6 +399,7 @@ async function Canchas({
   vista,
   ubicacion,
   radio,
+  soloTechadas,
 }: {
   deporteSlugs?: string[] | null;
   q?: string;
@@ -383,10 +407,12 @@ async function Canchas({
   vista?: string;
   ubicacion: Ubicacion | null;
   radio: number | null;
+  soloTechadas: boolean;
 }) {
   const canchas = await prisma.cancha.findMany({
     where: {
       activa: true,
+      ...(soloTechadas ? { techada: true } : {}),
       // Solo publicaciones de dueños con la suscripción al día.
       dueno: { suscripcionHasta: { gt: new Date() } },
       ...(deporteSlugs ? { deporte: { slug: { in: deporteSlugs } } } : {}),
@@ -416,8 +442,10 @@ async function Canchas({
       <div className="tarjeta p-5">
         <p className="text-sm text-tinta-2">
           {radio
-            ? `No hay canchas publicadas a menos de ${radio} km. Probá con más distancia.`
-            : `Todavía no hay canchas publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}.`}
+            ? `No hay canchas${soloTechadas ? ' techadas' : ''} publicadas a menos de ${radio} km. Probá con más distancia.`
+            : soloTechadas
+              ? `No hay canchas techadas publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}.`
+              : `Todavía no hay canchas publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}.`}
           {usuario.tipoCuenta === 'CANCHA' ? ' La tuya puede ser la primera.' : ''}
         </p>
         {usuario.tipoCuenta === 'CANCHA' ? (
@@ -480,6 +508,7 @@ async function Canchas({
               <div className="flex items-baseline justify-between gap-3">
                 <span className="t-rotulo text-verde-txt">
                   {c.deporte.nombre}
+                  {c.techada ? ' · Techada' : ''}
                   {c.dueno.verificacion === 'VERIFICADA' ? (
                     <span className="ml-1.5 text-naranja-txt">✓</span>
                   ) : null}

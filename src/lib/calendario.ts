@@ -24,7 +24,7 @@ function fechaUtc(instante: Date) {
 
 /** Escapa texto según RFC 5545 (barra, punto y coma, coma y saltos de línea). */
 function escapar(texto: string) {
-  return texto.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  return texto.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 }
 
 /** Corta las líneas largas a 75 bytes, como pide el formato (sin partir caracteres). */
@@ -46,15 +46,12 @@ function plegar(linea: string) {
   return partes.join('\r\n ');
 }
 
-export function archivoIcs(evento: EventoCalendario, ahora = new Date()) {
+const CABECERA = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//birteam//birteam.com//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+
+function lineasEvento(evento: EventoCalendario, ahora: Date) {
   const fin = new Date(evento.inicio.getTime() + evento.minutos * 60_000);
   const descripcion = [evento.descripcion, evento.url].filter(Boolean).join('\n');
-  const lineas = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//birteam//birteam.com//ES',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
+  return [
     'BEGIN:VEVENT',
     `UID:${evento.uid}@birteam.com`,
     `DTSTAMP:${fechaUtc(ahora)}`,
@@ -71,9 +68,30 @@ export function archivoIcs(evento: EventoCalendario, ahora = new Date()) {
     'TRIGGER:-PT1H',
     'END:VALARM',
     'END:VEVENT',
-    'END:VCALENDAR',
   ];
-  return lineas.map(plegar).join('\r\n') + '\r\n';
+}
+
+const armar = (lineas: string[]) => lineas.map(plegar).join('\r\n') + '\r\n';
+
+/** Un evento suelto (el .ics que se descarga desde un partido o turno). */
+export function archivoIcs(evento: EventoCalendario, ahora = new Date()) {
+  return armar([...CABECERA, ...lineasEvento(evento, ahora), 'END:VCALENDAR']);
+}
+
+/**
+ * El calendario completo de alguien, para suscribirse desde Google o el
+ * iPhone: el calendario lo vuelve a pedir solo y se mantiene al día.
+ */
+export function calendarioIcs(eventos: EventoCalendario[], ahora = new Date()) {
+  return armar([
+    ...CABECERA,
+    'X-WR-CALNAME:birteam',
+    'X-WR-CALDESC:Tus partidos y turnos de birteam',
+    'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
+    'X-PUBLISHED-TTL:PT1H',
+    ...eventos.flatMap((evento) => lineasEvento(evento, ahora)),
+    'END:VCALENDAR',
+  ]);
 }
 
 export function enlaceGoogle(evento: EventoCalendario) {

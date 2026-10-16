@@ -1,3 +1,5 @@
+import { leerServicios } from './servicios-cancha';
+
 /**
  * Puesta a punto del complejo: lo que conviene tener cargado para recibir
  * reservas. Sale de los datos reales; cuando está todo, no se muestra.
@@ -20,6 +22,9 @@ export function pasosDelComplejo(datos: {
     precioPorHora: number | null;
     telefono: string | null;
     reservasOnline: boolean;
+    techada: boolean;
+    superficie: string | null;
+    servicios: string;
   }[];
   mercadoPagoDisponible: boolean;
   mercadoPagoConectado: boolean;
@@ -34,6 +39,8 @@ export function pasosDelComplejo(datos: {
     }
   });
   const sinPrecio = canchas.find((c) => c.precioPorHora == null);
+  // "Cómo es": cargado si dice algo (techada, superficie o algún servicio).
+  const sinDetalle = canchas.find((c) => !c.techada && !c.superficie && leerServicios(c.servicios).length === 0);
   const primera = canchas[0];
 
   const pasos: Paso[] = [
@@ -60,6 +67,14 @@ export function pasosDelComplejo(datos: {
       hecho: canchas.length > 0 && !sinPrecio,
       href: sinPrecio ? `/canchas/${sinPrecio.id}/editar` : '/complejo',
       accion: 'Cargar',
+    },
+    {
+      clave: 'como-es',
+      titulo: 'Contá cómo es cada cancha',
+      detalle: 'Techada, superficie y servicios: muchos buscan techadas cuando llueve.',
+      hecho: canchas.length > 0 && !sinDetalle,
+      href: sinDetalle ? `/canchas/${sinDetalle.id}/editar` : '/complejo',
+      accion: 'Completar',
     },
     {
       clave: 'telefono',

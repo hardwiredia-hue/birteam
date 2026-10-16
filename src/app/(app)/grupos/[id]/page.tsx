@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { diaDeLaSemana } from '@/lib/formato';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
@@ -106,7 +107,7 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
                 <Link key={partido.id} href={`/partidos/${partido.id}`} className="tarjeta flex items-center justify-between gap-3 p-4">
                   <div>
                     <p className="t-display text-[17px]">
-                      {DIAS[partido.fecha.getDay()]} {hora}
+                      {DIAS[diaDeLaSemana(partido.fecha)]} {hora}
                     </p>
                     <p className="mt-0.5 text-xs text-tinta-3">{partido.lugarNombre}</p>
                   </div>

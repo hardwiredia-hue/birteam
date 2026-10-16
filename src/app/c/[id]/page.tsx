@@ -9,6 +9,7 @@ import { PaginaConstruccion } from '@/components/construccion';
 import { Logotipo } from '@/components/marca';
 import { formatearPlata } from '@/lib/formato';
 import { formatearPuntaje } from '@/lib/resenas';
+import { CaracteristicasCancha } from '@/components/caracteristicas-cancha';
 import { canchasVisibles, sitioPublico } from '@/lib/publico';
 import { diasDeLaCancha, grillaDeTurnos, ofertasVigentes, precioDelTurno } from '@/lib/reservas';
 
@@ -203,6 +204,7 @@ export default async function CanchaPublica({ params }: { params: Promise<{ id: 
         </div>
       ) : null}
 
+      <CaracteristicasCancha cancha={cancha} />
       {cancha.descripcion ? <p className="text-sm leading-relaxed text-tinta-2">{cancha.descripcion}</p> : null}
 
       {cancha.reservasOnline ? (

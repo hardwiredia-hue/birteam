@@ -23,3 +23,32 @@ export function haceCuanto(fecha: Date, ahora: Date = new Date()) {
     timeZone: 'America/Argentina/Buenos_Aires',
   });
 }
+
+const ZONA_AR = 'America/Argentina/Buenos_Aires';
+const NUMERO_DIA: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+/**
+ * Día, mes y día de la semana de un instante en hora argentina. El servidor
+ * corre en UTC: con getDay() un partido del viernes a las 22 salía "sábado".
+ */
+export function fechaArgentina(instante: Date) {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: ZONA_AR,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'numeric',
+  }).formatToParts(instante);
+  const valor = (tipo: string) => partes.find((p) => p.type === tipo)?.value ?? '';
+  return {
+    /** 0 = domingo … 6 = sábado. */
+    diaSemana: NUMERO_DIA[valor('weekday')] ?? instante.getUTCDay(),
+    dia: Number(valor('day')),
+    /** 0 = enero … 11 = diciembre (como getMonth). */
+    mes: Number(valor('month')) - 1,
+  };
+}
+
+/** 0 = domingo … 6 = sábado, en hora argentina. */
+export function diaDeLaSemana(instante: Date) {
+  return fechaArgentina(instante).diaSemana;
+}

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { calcularRanking } from '@/lib/estadisticas';
 import { distanciaKm, rotuloDistancia } from '@/lib/geo';
-import { formatearPlata } from '@/lib/formato';
+import { formatearPlata, diaDeLaSemana } from '@/lib/formato';
 import { agruparDeportes, infoDeporte } from '@/lib/deportes';
 import { IconoDeporte } from '@/components/icono-deporte';
 import { Avatar } from '@/components/avatar';
@@ -136,7 +136,7 @@ export default async function Comunidad({ params }: { params: Promise<{ slug: st
                 <Link key={partido.id} href={`/partidos/${partido.id}`} className="tarjeta flex items-center justify-between gap-3 p-4">
                   <div className="min-w-0">
                     <p className="t-display text-[16px]">
-                      {DIAS[partido.fecha.getDay()]} {hora}
+                      {DIAS[diaDeLaSemana(partido.fecha)]} {hora}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-tinta-3">
                       {partido.lugarNombre}

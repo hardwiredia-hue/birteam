@@ -8,6 +8,9 @@ const completa = {
   precioPorHora: 30000,
   telefono: '341 555 0000',
   reservasOnline: true,
+  techada: false,
+  superficie: 'SINTETICO',
+  servicios: '[]',
 };
 
 test('puesta a punto: un complejo nuevo arranca por publicar la cancha', () => {
@@ -19,7 +22,7 @@ test('puesta a punto: un complejo nuevo arranca por publicar la cancha', () => {
 
 test('puesta a punto: cada paso apunta a la cancha que le falta algo', () => {
   const pasos = pasosDelComplejo({
-    canchas: [completa, { ...completa, id: 'c2', fotos: '[]', precioPorHora: null }],
+    canchas: [completa, { ...completa, id: 'c2', fotos: '[]', precioPorHora: null, superficie: null, servicios: '["BUFFET"]' }],
     mercadoPagoDisponible: false,
     mercadoPagoConectado: false,
     verificacion: 'EN_REVISION',
@@ -28,6 +31,7 @@ test('puesta a punto: cada paso apunta a la cancha que le falta algo', () => {
   assert.equal(por.fotos.hecho, false);
   assert.equal(por.fotos.href, '/canchas/c2/editar');
   assert.equal(por.precio.href, '/canchas/c2/editar');
+  assert.equal(por['como-es'].hecho, true);
   assert.equal(por.mercadopago, undefined, 'sin cobro online habilitado, no se pide');
   assert.equal(por.verificacion.hecho, true, 'en revisión no depende del dueño');
 });

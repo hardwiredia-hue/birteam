@@ -32,6 +32,9 @@ model Usuario {
   latitud       Float?
   longitud      Float?
   radioKm       Int      @default(15)
+  // Link secreto del calendario (todos sus partidos y turnos, se actualiza
+  // solo en Google/Apple Calendar). Nulo hasta que lo pide.
+  tokenCalendario String? @unique
   // 'oscuro' (por defecto) | 'claro'
   tema          String   @default("oscuro")
   // 'USUARIO' | 'ADMIN'
@@ -181,6 +184,11 @@ model Cancha {
   // hasta estas horas antes del turno; después, solo hablando con el complejo.
   horasCancelacion Int   @default(6)
   senaPorcentaje Int     @default(30)
+  // Cómo es: techada (se juega con lluvia), superficie y servicios (JSON con
+  // claves de src/lib/servicios-cancha.ts).
+  techada       Boolean  @default(false)
+  superficie    String?
+  servicios     String   @default("[]")
   // El dueño la puede pausar sin borrarla.
   activa        Boolean  @default(true)
   creadoEn      DateTime @default(now())
@@ -630,6 +638,10 @@ model Partido {
   notas             String?
   // Token de la vista pública (link de WhatsApp).
   tokenPublico      String    @unique @default(cuid())
+  // Partido semanal: de cuál salió este (el de la semana anterior).
+  repetidoDeId      String?   @unique
+  repetidoDe        Partido?  @relation("repeticion", fields: [repetidoDeId], references: [id], onDelete: SetNull)
+  repeticion        Partido?  @relation("repeticion")
   creadoEn          DateTime  @default(now())
   actualizadoEn     DateTime  @updatedAt
 

@@ -1,8 +1,8 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { prisma } from '../src/lib/db';
-import { archivoIcs, enlaceGoogle } from '../src/lib/calendario';
-import { eventoDe } from '../src/lib/calendario-eventos';
+import { archivoIcs, calendarioIcs, enlaceGoogle } from '../src/lib/calendario';
+import { eventoDe, eventosDelUsuario } from '../src/lib/calendario-eventos';
 import { claveOcupa } from '../src/lib/reservas';
 import { escenario, turno } from './ayuda';
 
@@ -28,7 +28,7 @@ test('calendario: archivo .ics válido, con horas en UTC, texto escapado y aviso
   assert.match(ics, /TRIGGER:-PT1H/);
   assert.match(ics, /UID:partido-abc@birteam\.com/);
   // Comas, punto y coma y saltos de línea escapados.
-  assert.ok(ics.replace(/\r\n /g, '').includes('SUMMARY:Fútbol 5 · La Redonda\\, sede norte\; cancha 2'));
+  assert.ok(ics.replace(/\r\n /g, '').includes('SUMMARY:Fútbol 5 · La Redonda\\, sede norte\\; cancha 2'));
   assert.ok(ics.replace(/\r\n /g, '').includes('DESCRIPTION:Partido armado en birteam.\\nLlevar pechera.'));
   // Ninguna línea pasa los 75 bytes.
   for (const linea of ics.split('\r\n')) assert.ok(Buffer.byteLength(linea) <= 75, linea);
@@ -59,4 +59,42 @@ test('calendario: solo quien tiene el turno (o lo gestiona) lo puede agendar', a
   assert.equal((await eventoDe('reserva', reserva.id, jugador.id))?.titulo, `Turno · ${cancha.nombre}`);
   assert.ok(await eventoDe('reserva', reserva.id, dueno.id));
   assert.equal(await eventoDe('reserva', reserva.id, otro.id), null);
+});
+
+test('calendario sincronizado: partidos donde va, turnos y sin repetir el turno de un partido', async () => {
+  const { deporte, jugador, otro, cancha } = await escenario('calsinc');
+  const base = { deporteId: deporte.id, lugarNombre: 'Club', cupo: 10 };
+  const va = await prisma.partido.create({
+    data: {
+      ...base,
+      organizadorId: otro.id,
+      fecha: new Date(Date.now() + 86400_000),
+      participaciones: { create: [{ usuarioId: jugador.id, estado: 'VOY' }] },
+    },
+  });
+  const talvez = await prisma.partido.create({
+    data: { ...base, organizadorId: otro.id, fecha: new Date(Date.now() + 86400_000), participaciones: { create: [{ usuarioId: jugador.id, estado: 'TALVEZ' }] } },
+  });
+  const cancelado = await prisma.partido.create({
+    data: { ...base, organizadorId: jugador.id, fecha: new Date(Date.now() + 86400_000), estado: 'CANCELADO' },
+  });
+  const { fecha, inicio } = turno(3, '19:00');
+  const conPartido = await prisma.reserva.create({
+    data: { canchaId: cancha.id, usuarioId: jugador.id, fecha, hora: '19:00', inicio, estado: 'CONFIRMADA', ocupa: claveOcupa(cancha.id, fecha, '19:00'), partidoId: va.id },
+  });
+  const suelta = turno(4, '20:00');
+  const sola = await prisma.reserva.create({
+    data: { canchaId: cancha.id, usuarioId: jugador.id, fecha: suelta.fecha, hora: '20:00', inicio: suelta.inicio, estado: 'CONFIRMADA', ocupa: claveOcupa(cancha.id, suelta.fecha, '20:00') },
+  });
+
+  const uids = (await eventosDelUsuario(jugador.id)).map((e) => e.uid);
+  assert.ok(uids.includes(`partido-${va.id}`));
+  assert.ok(!uids.includes(`partido-${talvez.id}`), 'tal vez no entra');
+  assert.ok(!uids.includes(`partido-${cancelado.id}`), 'cancelado no entra');
+  assert.ok(!uids.includes(`reserva-${conPartido.id}`), 'el turno del partido sale una vez');
+  assert.ok(uids.includes(`reserva-${sola.id}`));
+
+  const ics = calendarioIcs(await eventosDelUsuario(jugador.id));
+  assert.match(ics, /X-WR-CALNAME:birteam\r\n/);
+  assert.equal(ics.match(/BEGIN:VEVENT/g)?.length, uids.length);
 });

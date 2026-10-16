@@ -12,6 +12,7 @@ import { obtenerJugadas } from '@/lib/jugadas';
 import { estadisticasJugador } from '@/lib/estadisticas';
 import { suscripcionActiva } from '@/lib/suscripcion';
 import { Avatar } from '@/components/avatar';
+import { rutaCalendario } from '@/lib/calendario-eventos';
 
 export const metadata = { title: 'Perfil' };
 export const dynamic = 'force-dynamic';
@@ -201,6 +202,7 @@ export default async function Perfil() {
 
       <AccionesPerfil
         temaActual={usuario.tema}
+        rutaCalendario={usuario.tokenCalendario ? rutaCalendario(usuario.tokenCalendario) : null}
         avisos={{
           avisosSociales: usuario.avisosSociales,
           avisosRadar: usuario.avisosRadar,

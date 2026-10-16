@@ -11,7 +11,7 @@ import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
 import { agendaDelDia } from '@/lib/agenda';
 import { Agenda } from '@/components/agenda';
-import { formatearPlata, haceCuanto } from '@/lib/formato';
+import { formatearPlata, haceCuanto, diaDeLaSemana, fechaArgentina } from '@/lib/formato';
 import { formatearDistancia, rotuloDistancia } from '@/lib/geo';
 import { RADIOS_KM, kmHasta, ubicacionDe } from '@/lib/ubicacion';
 import iso from '../../../../public/birteam-iso.png';
@@ -202,13 +202,14 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     cargarInvitaciones(),
   ]);
   const cuando = (fecha: Date) =>
-    `${DIAS[fecha.getDay()]} ${fecha.toLocaleTimeString('es-AR', {
+    `${DIAS[diaDeLaSemana(fecha)]} ${fecha.toLocaleTimeString('es-AR', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'America/Argentina/Buenos_Aires',
     })}`;
 
+  const hoyAr = fechaArgentina(hoy);
   const primerNombre = usuario.nombre.split(' ')[0];
   const deportePrincipal =
     usuario.deportes.find((relacion) => relacion.principal)?.deporte ??
@@ -223,7 +224,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           <div>
             <p className="text-sm text-tinta-2">Hola, {primerNombre}</p>
             <p className="t-pantalla">
-              {DIAS[hoy.getDay()]} {hoy.getDate()} {MESES[hoy.getMonth()]}
+              {DIAS[hoyAr.diaSemana]} {hoyAr.dia} {MESES[hoyAr.mes]}
             </p>
           </div>
         </div>
@@ -284,7 +285,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
             </p>
             <div>
               <p className="t-display text-[26px]">
-                {DIAS[proxima.partido.fecha.getDay()]}{' '}
+                {DIAS[diaDeLaSemana(proxima.partido.fecha)]}{' '}
                 {proxima.partido.fecha.toLocaleTimeString('es-AR', {
                   hour12: false, hour: '2-digit',
                   minute: '2-digit',
@@ -396,7 +397,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">
-                      {partido.deporte.nombre} · {DIAS[partido.fecha.getDay()]}{' '}
+                      {partido.deporte.nombre} · {DIAS[diaDeLaSemana(partido.fecha)]}{' '}
                       {partido.fecha.toLocaleTimeString('es-AR', {
                         hour12: false,
                         hour: '2-digit',

@@ -486,7 +486,7 @@ export function Asistente({
           <div className="tarjeta flex items-center justify-between gap-3 p-4">
             <div>
               <p className="text-sm font-semibold">Se repite todas las semanas</p>
-              <p className="text-xs text-tinta-3">Las confirmaciones se reinician en cada edición.</p>
+              <p className="text-xs text-tinta-3">Cuando termina, armamos el de la semana siguiente y avisamos al grupo y a los que jugaron.</p>
             </div>
             <Interruptor prendido={repite} alCambiar={setRepite} rotulo="Se repite todas las semanas" />
           </div>

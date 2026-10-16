@@ -78,6 +78,9 @@ export async function POST(request: Request) {
           picoDesdeHora: d.precioPico != null ? (d.picoDesdeHora ?? null) : null,
           picoFinDeSemana: d.precioPico != null ? d.picoFinDeSemana : false,
           senaPorcentaje: d.senaPorcentaje,
+          techada: d.techada,
+          superficie: d.superficie ?? null,
+          servicios: JSON.stringify([...new Set(d.servicios)]),
         },
       })
     )
