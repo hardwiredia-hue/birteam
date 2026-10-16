@@ -38,7 +38,7 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
 
       <Form action="/complejo/clientes" className="flex gap-2">
         {soloPerdidos ? <input type="hidden" name="ver" value="perdidos" /> : null}
-        <input name="q" className="campo" placeholder="Buscar por nombre o usuario…" defaultValue={q ?? ''} />
+        <input name="q" aria-label="Buscar cliente" className="campo" placeholder="Buscar por nombre o usuario…" defaultValue={q ?? ''} />
         <button type="submit" className="btn btn-secundario btn-sm">Buscar</button>
       </Form>
 

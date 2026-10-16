@@ -74,6 +74,7 @@ export default async function Explorar({
         <input
           id="buscador"
           name="q"
+          aria-label="Buscar"
           className="campo"
           placeholder={tab === 'jugadores' ? 'Buscar por nombre, usuario o ciudad…' : 'Buscar por lugar o ciudad…'}
           defaultValue={q ?? ''}

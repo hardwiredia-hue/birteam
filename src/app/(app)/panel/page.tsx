@@ -245,9 +245,9 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           <Image src={iso} alt="" width={22} />
           <div>
             <p className="text-sm text-tinta-2">Hola, {primerNombre}</p>
-            <p className="t-pantalla">
+            <h1 className="t-pantalla">
               {DIAS[hoyAr.diaSemana]} {hoyAr.dia} {MESES[hoyAr.mes]}
-            </p>
+            </h1>
           </div>
         </div>
         <Link

@@ -127,6 +127,7 @@ export function Chat({
           id={`chat-${partidoId ?? grupoId ?? dmUsuarioId}`}
           className="campo"
           placeholder="Escribí un mensaje…"
+          aria-label="Mensaje"
           value={texto}
           maxLength={500}
           onChange={(evento) => setTexto(evento.target.value)}

@@ -284,6 +284,7 @@ export function ElegirCoorganizador({
         <div className="flex gap-2">
           <select
             className="campo flex-1"
+            aria-label="Co-organizador"
             value={elegido}
             onChange={(evento) => setElegido(evento.target.value)}
           >
