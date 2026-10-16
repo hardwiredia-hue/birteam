@@ -18,6 +18,13 @@ import { BotonSumarme } from '@/components/sumarse-grupo';
 import { Avatar } from '@/components/avatar';
 import { Mapa, type PuntoMapa } from '@/components/mapa';
 
+/** Los servicios por los que se puede filtrar en Explorar → Canchas. */
+const FILTROS_SERVICIO = [
+  { valor: 'ILUMINACION', rotulo: 'Con iluminación' },
+  { valor: 'VESTUARIOS', rotulo: 'Con vestuarios' },
+  { valor: 'ESTACIONAMIENTO', rotulo: 'Con estacionamiento' },
+];
+
 export const metadata = { title: 'Explorar' };
 export const dynamic = 'force-dynamic';
 
@@ -34,11 +41,19 @@ export default async function Explorar({
     vista?: string;
     radio?: string;
     techada?: string;
+    con?: string;
   }>;
 }) {
-  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda } = await searchParams;
-  // "Solo techadas" (solapa Canchas): se mantiene al cambiar de deporte, vista o distancia.
+  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda, con: conCrudo } = await searchParams;
+  // "Solo techadas" y "con iluminación…" (solapa Canchas): se mantienen al
+  // cambiar de deporte, vista o distancia.
   const techada = tab === 'canchas' && techadaCruda === '1' ? '1' : undefined;
+  const servicios = tab === 'canchas' ? FILTROS_SERVICIO.filter((f) => (conCrudo ?? '').split(',').includes(f.valor)).map((f) => f.valor) : [];
+  const con = servicios.length > 0 ? servicios.join(',') : undefined;
+  const alternarServicio = (valor: string) => {
+    const nuevos = servicios.includes(valor) ? servicios.filter((v) => v !== valor) : [...servicios, valor];
+    return nuevos.length > 0 ? nuevos.join(',') : undefined;
+  };
   const usuario = (await usuarioActual())!;
   const ubicacion = await ubicacionDe(usuario);
   const radio = ubicacion ? radioDelParametro(radioCrudo) : null;
@@ -50,7 +65,7 @@ export default async function Explorar({
       ciudad={usuario.ciudad}
       radio={radio}
       href={(km) =>
-        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada })
+        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada, con })
       }
     />
   );
@@ -71,6 +86,7 @@ export default async function Explorar({
         {vista === 'mapa' ? <input type="hidden" name="vista" value="mapa" /> : null}
         {r ? <input type="hidden" name="radio" value={r} /> : null}
         {techada ? <input type="hidden" name="techada" value="1" /> : null}
+        {con ? <input type="hidden" name="con" value={con} /> : null}
         <input
           id="buscador"
           name="q"
@@ -141,7 +157,7 @@ export default async function Explorar({
         </>
       ) : tab === 'canchas' ? (
         <>
-          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} techada={techada} />
+          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} techada={techada} con={con} />
           <div className="flex gap-2">
             <Link href={deporte ? `/radar?deporte=${deporte}` : '/radar'} className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
               <span>
@@ -163,16 +179,26 @@ export default async function Explorar({
             activo={deporte}
             conTodos={false}
             envolver
-            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r, techada })}
+            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r, techada, con })}
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link
-              href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada: techada ? undefined : '1' })}
+              href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada: techada ? undefined : '1', con })}
               aria-pressed={Boolean(techada)}
               className={techada ? 'chip-sel chip-sel-activo' : 'chip-sel'}
             >
               Solo techadas
             </Link>
+            {FILTROS_SERVICIO.map((filtro) => (
+              <Link
+                key={filtro.valor}
+                href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada, con: alternarServicio(filtro.valor) })}
+                aria-pressed={servicios.includes(filtro.valor)}
+                className={servicios.includes(filtro.valor) ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {filtro.rotulo}
+              </Link>
+            ))}
           </div>
           {cercania}
           <Canchas
@@ -183,6 +209,7 @@ export default async function Explorar({
             ubicacion={ubicacion}
             radio={radio}
             soloTechadas={Boolean(techada)}
+            servicios={servicios}
           />
         </>
       ) : (
@@ -219,6 +246,7 @@ function AlternarVista({
   vista,
   radio,
   techada,
+  con,
 }: {
   tab?: string;
   deporte?: string;
@@ -226,17 +254,18 @@ function AlternarVista({
   vista?: string;
   radio?: string;
   techada?: string;
+  con?: string;
 }) {
   return (
     <div className="flex gap-2">
       <Link
-        href={armarUrl({ tab, deporte, q, radio, techada })}
+        href={armarUrl({ tab, deporte, q, radio, techada, con })}
         className={vista !== 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Lista
       </Link>
       <Link
-        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada })}
+        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada, con })}
         className={vista === 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Mapa
@@ -401,6 +430,7 @@ async function Canchas({
   ubicacion,
   radio,
   soloTechadas,
+  servicios,
 }: {
   deporteSlugs?: string[] | null;
   q?: string;
@@ -409,11 +439,14 @@ async function Canchas({
   ubicacion: Ubicacion | null;
   radio: number | null;
   soloTechadas: boolean;
+  servicios: string[];
 }) {
   const canchas = await prisma.cancha.findMany({
     where: {
       activa: true,
       ...(soloTechadas ? { techada: true } : {}),
+      // Los servicios se guardan como lista JSON: cada uno tiene que estar.
+      ...(servicios.length > 0 ? { AND: servicios.map((valor) => ({ servicios: { contains: `"${valor}"` } })) } : {}),
       // Solo publicaciones de dueños con la suscripción al día.
       dueno: { suscripcionHasta: { gt: new Date() } },
       ...(deporteSlugs ? { deporte: { slug: { in: deporteSlugs } } } : {}),
@@ -443,9 +476,9 @@ async function Canchas({
       <div className="tarjeta p-5">
         <p className="text-sm text-tinta-2">
           {radio
-            ? `No hay canchas${soloTechadas ? ' techadas' : ''} publicadas a menos de ${radio} km. Probá con más distancia.`
-            : soloTechadas
-              ? `No hay canchas techadas publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}.`
+            ? `No hay canchas${soloTechadas || servicios.length > 0 ? ' así' : ''} publicadas a menos de ${radio} km. Probá con más distancia.`
+            : soloTechadas || servicios.length > 0
+              ? `No hay canchas con eso publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}. Probá sacando algún filtro.`
               : `Todavía no hay canchas publicadas ${buscado ? 'con esa búsqueda' : 'por acá'}.`}
           {usuario.tipoCuenta === 'CANCHA' ? ' La tuya puede ser la primera.' : ''}
         </p>

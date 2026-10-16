@@ -296,7 +296,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Cómo es la cancha: techada, superficie y servicios',
         texto: [
           'En la ficha de cada cancha, "Cómo es" dice si es techada, la superficie (césped sintético, cemento, parquet, polvo de ladrillo…) y los servicios: iluminación, vestuarios, duchas, estacionamiento, buffet y más. Lo carga el complejo.',
-          'En Explorar → Canchas, "Solo techadas" deja las que se pueden jugar con lluvia.',
+          'En Explorar → Canchas, "Solo techadas" deja las que se pueden jugar con lluvia, y también filtrás por iluminación, vestuarios o estacionamiento (se pueden combinar).',
         ],
         enlace: { href: '/explorar?tab=canchas&techada=1', rotulo: 'Ver canchas techadas' },
       },
