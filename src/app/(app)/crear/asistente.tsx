@@ -185,6 +185,7 @@ export function Asistente({
   deporteInicial,
   deportePrincipal,
   turnoInicial,
+  cuandoInicial = null,
   ultimo,
   esDueno = false,
   ciudad = null,
@@ -200,6 +201,8 @@ export function Asistente({
   /** El deporte principal del perfil: arranca elegido. */
   deportePrincipal?: string | null;
   turnoInicial?: TurnoInicial | null;
+  /** Día y hora elegidos en la encuesta del grupo. */
+  cuandoInicial?: { dia: string; hora: string; encuestaId: string } | null;
   ultimo?: PartidoParaRepetir | null;
   /** Dueño de cancha: puede publicar la suya desde "¿Dónde juegan?". */
   esDueno?: boolean;
@@ -222,8 +225,8 @@ export function Asistente({
       deportePrincipal ??
       null
   );
-  const [dia, setDia] = useState<string | null>(turnoInicial?.dia ?? null);
-  const [hora, setHora] = useState(turnoInicial?.hora ?? '21:00');
+  const [dia, setDia] = useState<string | null>(turnoInicial?.dia ?? cuandoInicial?.dia ?? null);
+  const [hora, setHora] = useState(turnoInicial?.hora ?? cuandoInicial?.hora ?? '21:00');
   const [repite, setRepite] = useState(false);
   const [lugarNombre, setLugarNombre] = useState(canchaDelTurno?.nombre ?? '');
   const [direccion, setDireccion] = useState(canchaDelTurno?.direccion ?? '');
@@ -324,6 +327,7 @@ export function Asistente({
         reservaId:
           turnoInicial && canchaElegida?.id === turnoInicial.canchaId ? turnoInicial.reservaId : null,
         invitadoIds: invitados.map((i) => i.id),
+        encuestaId: cuandoInicial?.encuestaId ?? null,
         cupo,
         minimo,
         costoPorJugador: costo.trim() ? Number(costo) : null,

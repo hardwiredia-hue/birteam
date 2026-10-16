@@ -237,6 +237,20 @@ export const TEMAS: Tema[] = [
         enlace: { href: '/grupos/nuevo', rotulo: 'Crear grupo' },
       },
       {
+        id: 'cuando-jugamos',
+        titulo: '¿Cuándo jugamos? Elegir el horario entre todos',
+        pasos: [
+          'En el grupo, "¿Cuándo jugamos?" → "Proponer".',
+          'Cargá de 2 a 5 días y horarios y tocá "Mandar al grupo": les avisamos a todos.',
+          'Cada uno toca los horarios que puede (puede cambiarlos cuando quiera). Ves cuántos y quiénes pueden en cada uno.',
+          'Quien la propuso, o un admin, toca "Armar el partido" con el más votado: se abre "Crear partido" con el día y la hora puestos.',
+        ],
+        texto: [
+          'Hay una encuesta abierta por grupo. Se cierra al armar el partido, con "Cerrar sin armar" o sola cuando pasan todos sus horarios.',
+        ],
+        enlace: { href: '/grupos', rotulo: 'Ir a mis grupos' },
+      },
+      {
         id: 'administrar',
         titulo: 'Administradores y logo',
         texto: [
@@ -601,6 +615,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: '¿Cuándo jugamos?',
+    texto: 'En el grupo proponés de 2 a 5 horarios, cada uno marca los que puede y armás el partido con el más votado.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/grupos#cuando-jugamos', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-16',
     titulo: 'Tus clientes',

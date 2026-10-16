@@ -97,6 +97,8 @@ model Usuario {
   // Mensajes nuevos en la charla de tus partidos y grupos (un aviso por charla hasta que la leés).
   avisosChats      Boolean @default(true)
   cuentaMercadoPago CuentaMercadoPago?
+  encuestasCreadas Encuesta[]
+  votosEncuesta    VotoEncuesta[]
   empleados        EmpleadoComplejo[] @relation("empleadosDelComplejo")
   empleos          EmpleadoComplejo[] @relation("empleosEnComplejos")
 }
@@ -575,10 +577,50 @@ model Grupo {
   creadoEn        DateTime @default(now())
 
   miembros MiembroGrupo[]
+  encuestas Encuesta[]
   partidos Partido[]
   mensajes Mensaje[]
   desafiosEnviados  Desafio[] @relation("desafioRetador")
   desafiosRecibidos Desafio[] @relation("desafioRival")
+}
+
+// "¿Cuándo jugamos?": un miembro propone días y horarios, el grupo marca
+// los que puede y con el más votado se arma el partido. Una abierta por grupo.
+model Encuesta {
+  id         String    @id @default(cuid())
+  grupoId    String
+  grupo      Grupo     @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  creadorId  String
+  creador    Usuario   @relation(fields: [creadorId], references: [id], onDelete: Cascade)
+  cerradaEn  DateTime?
+  // El partido que salió de la encuesta (si se armó).
+  partidoId  String?
+  creadoEn   DateTime  @default(now())
+
+  opciones OpcionEncuesta[]
+
+  @@index([grupoId, cerradaEn])
+}
+
+model OpcionEncuesta {
+  id         String   @id @default(cuid())
+  encuestaId String
+  encuesta   Encuesta @relation(fields: [encuestaId], references: [id], onDelete: Cascade)
+  fecha      DateTime
+
+  votos VotoEncuesta[]
+
+  @@index([encuestaId])
+}
+
+model VotoEncuesta {
+  opcionId  String
+  opcion    OpcionEncuesta @relation(fields: [opcionId], references: [id], onDelete: Cascade)
+  usuarioId String
+  usuario   Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime       @default(now())
+
+  @@id([opcionId, usuarioId])
 }
 
 model MiembroGrupo {

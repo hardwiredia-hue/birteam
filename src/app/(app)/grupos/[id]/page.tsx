@@ -10,6 +10,8 @@ import { AccionesMiembro, CopiarInvitacion, EditarGrupo } from './acciones';
 import { Avatar } from '@/components/avatar';
 import { LogoEquipo } from '@/components/logo-equipo';
 import { SubirLogo } from '@/components/subir-logo';
+import { EncuestaGrupo } from './encuesta';
+import { encuestaAbierta, puedeCerrar, rotuloOpcion } from '@/lib/encuestas';
 
 export const metadata = { title: 'Grupo' };
 export const dynamic = 'force-dynamic';
@@ -44,6 +46,8 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
   // Los grupos son de sus miembros; el link de invitación es la puerta.
   if (!membresia) redirect(`/g/${grupo.tokenInvitacion}`);
   const soyAdmin = membresia.rol === 'ADMIN';
+  const encuesta = await encuestaAbierta(grupo.id);
+  const ZONA = 'America/Argentina/Buenos_Aires';
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,6 +70,28 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
         <Link href={`/crear?grupo=${grupo.id}`} className="btn btn-primario">Armar partido</Link>
         <CopiarInvitacion ruta={`/g/${grupo.tokenInvitacion}`} />
       </div>
+
+      <EncuestaGrupo
+        grupoId={grupo.id}
+        miId={usuario.id}
+        puedeCerrar={encuesta ? await puedeCerrar(usuario.id, encuesta) : false}
+        encuesta={
+          encuesta
+            ? {
+                id: encuesta.id,
+                creador: encuesta.creador.id === usuario.id ? 'vos' : encuesta.creador.nombre.split(' ')[0],
+                // Los horarios que ya pasaron no se votan ni se arman.
+                opciones: encuesta.opciones.filter((opcion) => opcion.fecha > new Date()).map((opcion) => ({
+                  id: opcion.id,
+                  rotulo: rotuloOpcion(opcion.fecha),
+                  dia: opcion.fecha.toLocaleDateString('en-CA', { timeZone: ZONA }),
+                  hora: opcion.fecha.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ZONA }),
+                  votos: opcion.votos.map((voto) => ({ id: voto.usuario.id, nombre: voto.usuario.nombre })),
+                })),
+              }
+            : null
+        }
+      />
       {soyAdmin ? (
         <Link href={`/desafios/nuevo?grupo=${grupo.id}`} className="btn btn-secundario">
           Desafiar a otro grupo

@@ -9,9 +9,9 @@ export const dynamic = 'force-dynamic';
 export default async function Crear({
   searchParams,
 }: {
-  searchParams: Promise<{ grupo?: string; deporte?: string; reserva?: string }>;
+  searchParams: Promise<{ grupo?: string; deporte?: string; reserva?: string; fecha?: string; hora?: string; encuesta?: string }>;
 }) {
-  const { grupo, deporte, reserva: reservaId } = await searchParams;
+  const { grupo, deporte, reserva: reservaId, fecha, hora, encuesta } = await searchParams;
   const usuario = (await usuarioActual())!;
 
   const [deportes, membresias, lugares, seguimientos] = await Promise.all([
@@ -154,6 +154,11 @@ export default async function Crear({
         };
       })}
       seguidores={seguimientos.map((s) => s.seguidor)}
+      cuandoInicial={
+        fecha && hora && encuesta && /^\d{4}-\d{2}-\d{2}$/.test(fecha) && /^\d{2}:\d{2}$/.test(hora)
+          ? { dia: fecha, hora, encuestaId: encuesta }
+          : null
+      }
       grupoInicial={grupoInicial?.id ?? null}
       deporteInicial={deporteInicial}
       deportePrincipal={principal?.deporteId ?? null}

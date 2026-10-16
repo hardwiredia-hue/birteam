@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cerrarEncuesta } from '@/lib/encuestas';
 import { coordenadasDelLugar } from '@/lib/coordenadas';
 import { deportesCompatibles } from '@/lib/lugares';
 import { prisma } from '@/lib/db';
@@ -96,6 +97,12 @@ export async function POST(request: Request) {
       participaciones: { create: { usuarioId: usuario.id, estado: 'VOY' } },
     },
   });
+
+  // Salió de un "¿Cuándo jugamos?" del grupo: la encuesta queda cerrada con su partido.
+  if (d.encuestaId && d.grupoId) {
+    const encuesta = await prisma.encuesta.findFirst({ where: { id: d.encuestaId, grupoId: d.grupoId, cerradaEn: null } });
+    if (encuesta) await cerrarEncuesta(usuario.id, encuesta.id, partido.id);
+  }
 
   // Partido armado sobre un turno confirmado propio: la reserva apunta al partido.
   if (d.reservaId && canchaId) {

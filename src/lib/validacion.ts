@@ -139,6 +139,8 @@ export const esquemaPartido = z.object({
   canchaId: z.string().nullish(),
   // Turno confirmado del que sale el partido (opcional): quedan vinculados.
   reservaId: z.string().nullish(),
+  // Partido que sale de un "¿Cuándo jugamos?" del grupo: la encuesta se cierra.
+  encuestaId: z.string().max(40).nullish(),
   // Nivel sugerido para sumarse (null = cualquiera).
   nivel: z.enum(NIVELES).nullish(),
   // Invitados elegidos a mano (seguidores o buscados) al crear el partido.
