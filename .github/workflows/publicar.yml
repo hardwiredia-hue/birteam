@@ -67,7 +67,16 @@ jobs:
           chmod 600 ~/.ssh/clave
           printf '%s\n' "$SSH_CLAVE_DEL_SERVIDOR" \
             | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' > ~/.ssh/known_hosts
+          # Si el servidor no contesta (corte breve, reinicio), se espera y se
+          # reintenta solo la llegada al puerto: la publicación corre una vez.
+          for intento in 1 2 3 4 5; do
+            if timeout 20 bash -c "</dev/tcp/$SSH_SERVIDOR/$SSH_PUERTO" 2>/dev/null; then break; fi
+            if [ "$intento" = 5 ]; then echo "::error::El servidor no responde en el puerto SSH."; exit 1; fi
+            echo "El servidor no responde (intento $intento de 5); reintento en 45 s."
+            sleep 45
+          done
           # La clave está restringida en el servidor: solo puede ejecutar el
           # script de publicación, que valida estos dos argumentos.
-          ssh -i ~/.ssh/clave -p "$SSH_PUERTO" -o StrictHostKeyChecking=yes \
+          ssh -i ~/.ssh/clave -p "$SSH_PUERTO" -o StrictHostKeyChecking=yes -o ConnectTimeout=30 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=10 \
             "$SSH_USUARIO@$SSH_SERVIDOR" "$GITHUB_SHA $AMBIENTE"
