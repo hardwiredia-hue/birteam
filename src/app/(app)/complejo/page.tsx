@@ -278,6 +278,14 @@ export default async function MiComplejo({
 
           <MapaOcupacion semanas={SEMANAS} {...ocupacion} />
 
+          <Link href="/complejo/clientes" className="tarjeta flex items-center justify-between gap-3 p-4">
+            <span>
+              <span className="block text-sm font-semibold">Tus clientes</span>
+              <span className="block text-xs text-tinta-3">Quiénes vienen, cuánto, la última vez y quiénes hace rato que no vuelven.</span>
+            </span>
+            <span className="text-verde-txt">→</span>
+          </Link>
+
           <EquipoComplejo
             equipo={equipo.map((e) => ({ id: e.id, nombre: e.usuario.nombre, usuario: e.usuario.usuario }))}
           />

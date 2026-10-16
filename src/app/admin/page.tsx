@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/db';
+import { tendenciaSemanal } from '@/lib/tendencia';
+import { Tendencia } from '@/components/tendencia';
 
 export const metadata = { title: 'Backoffice' };
 export const dynamic = 'force-dynamic';
@@ -58,6 +60,7 @@ export default async function Metricas() {
     prisma.desafio.count({ where: { respondidoEn: { gte: hace30 }, estado: 'ACEPTADO' } }),
     prisma.resenaCancha.count(),
   ]);
+  const tendencia = await tendenciaSemanal(ahora);
   const conversion = turnosPedidos30 > 0 ? Math.round((turnosConfirmados30 / turnosPedidos30) * 100) : null;
 
   return (
@@ -68,6 +71,15 @@ export default async function Metricas() {
         <p className="mt-1 text-xs text-tinta-3">
           Todo lo que hacemos empuja este número. Si no sube, lo demás es decoración.
         </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <p className="t-rotulo">Semana a semana · últimas 8</p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Tendencia titulo="Partidos jugados" semanas={tendencia.partidos} />
+          <Tendencia titulo="Usuarios nuevos" semanas={tendencia.usuarios} />
+          <Tendencia titulo="Turnos jugados" semanas={tendencia.turnos} />
+        </div>
       </section>
 
       <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -105,8 +117,8 @@ export default async function Metricas() {
           <Cifra valor={desafiosAceptados30} rotulo="Desafíos aceptados" detalle={`${resenas} reseñas en total`} />
         </div>
         <p className="text-xs text-tinta-3">
-          Conteos de la base. Los turnos se pagan en el complejo: todavía no hay facturación ni
-          comisiones de la plataforma.
+          Conteos de la base. Los cobros online con Mercado Pago, las devoluciones y la comisión
+          de birteam están en Pagos.
         </p>
       </section>
     </div>

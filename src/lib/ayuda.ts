@@ -400,6 +400,16 @@ export const TEMAS: Tema[] = [
         ],
       },
       {
+        id: 'clientes',
+        titulo: 'Tus clientes',
+        texto: [
+          'En Mi complejo → "Tus clientes" ves a todos los que reservaron en los últimos 6 meses: cuántos turnos jugaron, cuánto sumaron, faltas, si tienen turno reservado o fijo y cuándo vinieron por última vez. Se busca por nombre y tiene el WhatsApp de cada uno.',
+          '"Hace rato que no vienen" junta a los que vinieron al menos 2 veces, no vuelven hace más de 30 días y no tienen turno: un mensaje a tiempo los trae de vuelta.',
+          'Lo ve solo el dueño (tus empleados no ven lo que gastó cada cliente).',
+        ],
+        enlace: { href: '/complejo/clientes', rotulo: 'Ver mis clientes' },
+      },
+      {
         id: 'cerrar-dia',
         titulo: 'Cerrar un día (feriado, mantenimiento)',
         pasos: [
@@ -591,6 +601,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-16',
+    titulo: 'Tus clientes',
+    texto: 'Quiénes reservan, cuánto vienen, la última vez y quiénes hace rato que no vuelven, con su WhatsApp a mano.',
+    para: 'complejos',
+    enlace: { href: '/ayuda/complejos#clientes', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-16',
     titulo: 'Cerrar un día de una',
