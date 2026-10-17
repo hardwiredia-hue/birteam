@@ -8,9 +8,21 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { formatearPlata } from '@/lib/formato';
 import { Avatar } from '@/components/avatar';
 import { GrillaTurnos } from '@/components/turnos';
-import { DIAS_RESERVABLES, diaDeSemana, diasDeLaCancha, grillaDeTurnos, horariosDelDia, precioDelTurno, proximosDias, rotuloDia } from '@/lib/reservas';
+import {
+  DIAS_RESERVABLES,
+  diaDeSemana,
+  diasDeLaCancha,
+  grillaDeTurnos,
+  historialDeTurnos,
+  horariosDelDia,
+  precioDelTurno,
+  proximosDias,
+  rotuloDia,
+  rotuloHistorial,
+} from '@/lib/reservas';
 import { TurnosFijos } from './turnos-fijos';
 import { CerrarDia } from './cerrar-dia';
+import { PedidosFijoComplejo, PedirFijo } from './pedidos-fijo';
 import { diasCerrados } from '@/lib/cerrar-dia';
 import { duenoCobraOnline } from '@/lib/mercadopago';
 import { gestionaCancha } from '@/lib/gestion';
@@ -227,6 +239,40 @@ export default async function DetalleCancha({
           }
           duracion={cancha.duracionTurno}
           telefono={cancha.telefono}
+        />
+      ) : null}
+
+      {gestiona ? (
+        <div id="fijos" className="scroll-mt-20">
+          <PedidosFijoComplejo
+            pedidos={await (async () => {
+              const pedidos = await prisma.pedidoFijo.findMany({
+                where: { canchaId: cancha.id, estado: 'PENDIENTE' },
+                include: { usuario: { select: { id: true, nombre: true, usuario: true } } },
+                orderBy: { creadoEn: 'asc' },
+              });
+              const antecedentes = await historialDeTurnos(pedidos.map((p) => p.usuarioId));
+              return pedidos.map((p) => ({
+                id: p.id,
+                nombre: p.usuario.nombre,
+                usuario: p.usuario.usuario,
+                diaSemana: p.diaSemana,
+                hora: p.hora,
+                nota: p.nota,
+                historial: rotuloHistorial(antecedentes.get(p.usuarioId)),
+              }));
+            })()}
+          />
+        </div>
+      ) : visible && cancha.reservasOnline ? (
+        <PedirFijo
+          canchaId={cancha.id}
+          dias={diasDeLaCancha(cancha.diasDisponibles)}
+          horarios={horariosDelDia(cancha)}
+          pendiente={await prisma.pedidoFijo.findFirst({
+            where: { canchaId: cancha.id, usuarioId: usuario.id, estado: 'PENDIENTE' },
+            select: { id: true, diaSemana: true, hora: true },
+          })}
         />
       ) : null}
 

@@ -4,11 +4,13 @@ import {
   ESTADOS_ACTIVOS,
   avisarAlComplejo,
   avisarReserva,
+  claveDia,
   claveOcupa,
   diaDeSemana,
   diasDeLaCancha,
   horariosDelDia,
   inicioDelTurno,
+  liberarVencidas,
   precioDelTurnoEn,
   proximosDias,
   rotuloDia,
@@ -202,4 +204,72 @@ export async function terminarFijo(fijoId: string, quien: 'COMPLEJO' | 'JUGADOR'
     );
   }
   return true;
+}
+
+/**
+ * Arma un turno fijo: valida día, horario, que no esté tomado como fijo y
+ * el tope por cancha; genera las semanas y avisa al jugador si es de
+ * birteam. Lo usan el complejo al cargarlo y al aceptar un pedido.
+ */
+export async function armarTurnoFijo(
+  cancha: { id: string; nombre: string; diasDisponibles: string; horaApertura: number; horaCierre: number; duracionTurno: number },
+  creadorId: string,
+  datos: {
+    diaSemana: number;
+    hora: string;
+    titular: string;
+    jugadorId: string | null;
+    telefono?: string | null;
+    nota?: string | null;
+    desde?: string | null;
+  }
+): Promise<{ id: string; reservadas: string[]; tomadas: string[] } | { error: string; estado: number }> {
+  const { diaSemana, hora } = datos;
+  if (!diasDeLaCancha(cancha.diasDisponibles).includes(diaSemana)) return { error: 'La cancha no abre ese día.', estado: 400 };
+  if (!horariosDelDia(cancha).includes(hora)) return { error: 'Ese horario no es un turno de la cancha.', estado: 400 };
+  const hoy = claveDia();
+  const desde = datos.desde && datos.desde > hoy ? datos.desde : hoy;
+
+  const [repetido, cantidad] = await Promise.all([
+    prisma.turnoFijo.findFirst({ where: { canchaId: cancha.id, diaSemana, hora, activo: true } }),
+    prisma.turnoFijo.count({ where: { canchaId: cancha.id, activo: true } }),
+  ]);
+  if (repetido) return { error: `Ese horario ya es el turno fijo de ${repetido.titular}.`, estado: 409 };
+  if (cantidad >= MAXIMO_FIJOS_POR_CANCHA) return { error: `Hasta ${MAXIMO_FIJOS_POR_CANCHA} turnos fijos por cancha.`, estado: 409 };
+
+  await liberarVencidas(cancha.id);
+  const fijo = await prisma.turnoFijo.create({
+    data: {
+      canchaId: cancha.id,
+      diaSemana,
+      hora,
+      titular: datos.titular,
+      usuarioId: datos.jugadorId,
+      telefono: datos.telefono || null,
+      nota: datos.nota || null,
+      desde,
+      creadoPorId: creadorId,
+    },
+  });
+  await materializarFijos(cancha.id, { sinAvisoDe: fijo.id });
+
+  const semanas = await prisma.reserva.findMany({
+    where: { turnoFijoId: fijo.id },
+    select: { fecha: true, estado: true },
+    orderBy: { fecha: 'asc' },
+  });
+  if (datos.jugadorId && datos.jugadorId !== creadorId) {
+    await avisarReserva(
+      datos.jugadorId,
+      'TURNO_FIJO',
+      `Tenés turno fijo · ${cancha.nombre}`,
+      `Te anotaron los ${rotuloFijo(fijo).toLowerCase()} todas las semanas. Si una semana no van, cancelala desde Reservas con tiempo.`,
+      '/reservas'
+    );
+  }
+  return {
+    id: fijo.id,
+    reservadas: semanas.filter((s) => s.estado !== 'CANCELADA').map((s) => s.fecha),
+    tomadas: semanas.filter((s) => s.estado === 'CANCELADA').map((s) => s.fecha),
+  };
 }

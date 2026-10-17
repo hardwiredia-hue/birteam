@@ -98,6 +98,7 @@ model Usuario {
   avisosChats      Boolean @default(true)
   cuentaMercadoPago CuentaMercadoPago?
   encuestasCreadas Encuesta[]
+  pedidosFijo      PedidoFijo[]
   votosEncuesta    VotoEncuesta[]
   empleados        EmpleadoComplejo[] @relation("empleadosDelComplejo")
   empleos          EmpleadoComplejo[] @relation("empleosEnComplejos")
@@ -203,6 +204,7 @@ model Cancha {
   ofertas  OfertaTurno[]
   resenas  ResenaCancha[]
   turnosFijos TurnoFijo[]
+  pedidosFijo PedidoFijo[]
   alertas  AlertaTurno[]
 
   @@index([deporteId, activa])
@@ -289,6 +291,26 @@ model TurnoFijo {
 
 // Figura del partido: cada jugador que fue vota a uno (no a sí mismo),
 // hasta 72 h después del partido. Un voto por persona, se puede cambiar.
+// Un jugador pide a la cancha un turno fijo (mismo día y hora todas las
+// semanas); el complejo lo acepta (se arma el TurnoFijo) o lo rechaza.
+model PedidoFijo {
+  id         String    @id @default(cuid())
+  canchaId   String
+  cancha     Cancha    @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  usuarioId  String
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  diaSemana  Int
+  hora       String
+  nota       String?
+  // 'PENDIENTE' | 'ACEPTADO' | 'RECHAZADO' | 'RETIRADO'
+  estado     String    @default("PENDIENTE")
+  respondidoEn DateTime?
+  creadoEn   DateTime  @default(now())
+
+  @@index([canchaId, estado])
+  @@index([usuarioId, estado])
+}
+
 model VotoFigura {
   partidoId String
   partido   Partido  @relation(fields: [partidoId], references: [id], onDelete: Cascade)

@@ -350,6 +350,7 @@ export const TEMAS: Tema[] = [
         id: 'turno-fijo-jugador',
         titulo: 'Tener un turno fijo',
         texto: [
+          'En la cancha, "Pedir fijo": elegís día y hora (y una nota para el complejo) y el complejo lo acepta o te avisa que no puede. Hay un pedido pendiente por cancha; mientras espera, lo podés retirar.',
           'Si el complejo te anota un turno fijo (el mismo día y hora todas las semanas), lo ves en Reservas. Si una semana no van, cancelás solo esa; también podés dejar el fijo.',
         ],
       },
@@ -468,6 +469,7 @@ export const TEMAS: Tema[] = [
         id: 'turnos-fijos',
         titulo: 'Turnos fijos',
         texto: [
+          'Los jugadores también te piden turno fijo desde la cancha: te llega el aviso y en la cancha, arriba de tus turnos fijos, ves cada pedido con el historial del que pide. "Aceptar" arma el fijo a su nombre; "No puedo" le avisa.',
           'En la cancha, "Turnos fijos": el mismo día y horario todas las semanas para un equipo o cliente. Se reserva solo semana a semana; si una semana no vienen, liberás solo esa.',
           'Si le ponés el @usuario, el jugador lo ve en sus reservas y puede avisar si una semana no va. Si una semana ya estaba tomada, no se pisa y te avisamos.',
         ],
@@ -644,6 +646,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Pedí tu turno fijo',
+    texto: '¿Juegan siempre el mismo día? Pedile a la cancha un turno fijo y el complejo lo acepta con un toque.',
+    para: 'todos',
+    enlace: { href: '/ayuda/canchas-y-turnos#turno-fijo-jugador', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Tu día, a primera hora',
