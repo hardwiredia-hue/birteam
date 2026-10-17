@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { prisma } from './db';
 import { formatearPlata } from './formato';
+import { HORAS_VOTACION, VOTOS_MINIMOS, contarVotos } from './figura';
 import { sitioEnConstruccion } from './sitio';
 
 /**
@@ -31,6 +32,7 @@ export async function vistaPartido(token: string): Promise<VistaPrevia | null> {
       deporte: { select: { nombre: true } },
       organizador: { select: { nombre: true } },
       participaciones: { where: { estado: 'VOY' }, select: { id: true } },
+      votosFigura: { select: { elegidoId: true } },
     },
   });
   if (!partido || partido.estado === 'CANCELADO') return null;
@@ -46,6 +48,29 @@ export async function vistaPartido(token: string): Promise<VistaPrevia | null> {
         ? `Faltan ${faltan}`
         : 'Completo · lista de espera';
   const lugar = [partido.lugarNombre, partido.ciudad].filter(Boolean).join(', ');
+
+  // Ya jugado: lo que se comparte es cómo salió (resultado y figura).
+  if (partido.estado === 'JUGADO') {
+    const { ganadores, maximo } = contarVotos(partido.votosFigura);
+    const votacionCerrada = Date.now() - partido.fecha.getTime() >= HORAS_VOTACION * 3600_000;
+    const figuraId = votacionCerrada && maximo >= VOTOS_MINIMOS && ganadores.length === 1 ? ganadores[0] : null;
+    const figura = figuraId
+      ? await prisma.usuario.findUnique({ where: { id: figuraId }, select: { nombre: true, eliminadoEn: true } })
+      : null;
+    const nombreFigura = figura && !figura.eliminadoEn ? figura.nombre.split(' ')[0] : null;
+    const cuenta = [partido.resultado ? `Terminó ${partido.resultado}` : 'Se jugó', nombreFigura ? `Figura: ${nombreFigura}` : null]
+      .filter(Boolean)
+      .join(' · ');
+    return {
+      titulo: `${partido.deporte.nombre} · ${dia} ${hora} · ${cuenta}`,
+      descripcion: `${lugar ? `En ${lugar}. ` : ''}${partido.participaciones.length} jugadores. Organizó ${partido.organizador.nombre.split(' ')[0]}. Armá el próximo en birteam.`,
+      rotulo: `${partido.deporte.nombre} · Jugado`,
+      grande: partido.resultado ?? `${dia} ${hora}`,
+      detalle: [lugar, nombreFigura ? `Figura: ${nombreFigura}` : null].filter(Boolean).join(' · '),
+      destacado: null,
+    };
+  }
+
   return {
     titulo: `${partido.deporte.nombre} · ${dia} ${hora}${destacado && !jugado ? ` · ${destacado}` : ''}`,
     descripcion: `${lugar ? `En ${lugar}. ` : ''}Organiza ${partido.organizador.nombre.split(' ')[0]}.${

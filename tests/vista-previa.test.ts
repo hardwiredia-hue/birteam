@@ -38,3 +38,31 @@ test('vista previa de un partido: lo que se ve al compartir el link', async () =
   assert.equal(await vistaPartido('no-existe'), null);
   assert.deepEqual(metadatosDe(null, 'Te invitaron a jugar'), { title: 'Te invitaron a jugar' });
 });
+
+test('vista previa de un partido jugado: resultado y figura', async () => {
+  const sufijo = `vpj${Date.now()}`;
+  const { deporte, jugador, otro, dueno } = await escenario(sufijo);
+  const partido = await prisma.partido.create({
+    data: {
+      deporteId: deporte.id,
+      organizadorId: jugador.id,
+      fecha: new Date(Date.now() - 4 * 86400_000),
+      lugarNombre: 'Club Norte',
+      cupo: 10,
+      estado: 'JUGADO',
+      resultado: '5-3',
+      tokenPublico: `tok${sufijo}`,
+      participaciones: { create: [{ usuarioId: jugador.id, estado: 'VOY' }, { usuarioId: otro.id, estado: 'VOY' }] },
+    },
+  });
+  await prisma.votoFigura.createMany({
+    data: [
+      { partidoId: partido.id, votanteId: jugador.id, elegidoId: otro.id },
+      { partidoId: partido.id, votanteId: dueno.id, elegidoId: otro.id },
+    ],
+  });
+  const vista = await vistaPartido(`tok${sufijo}`);
+  assert.equal(vista?.grande, '5-3');
+  assert.match(vista?.titulo ?? '', /Terminó 5-3 · Figura: Otro$/);
+  assert.equal(vista?.destacado, null);
+});

@@ -151,7 +151,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Invitar y compartir',
         texto: [
           '"Compartir el partido" abre el panel con WhatsApp, Telegram, Facebook, X, Email y el link para copiar. El link se abre sin cuenta y deja sumarse en 30 segundos.',
-          'Al pegarlo en WhatsApp (o en redes) se ve una tarjeta con el deporte, el día y la hora, dónde se juega y cuántos faltan. Los links de grupos y torneos también muestran la suya: el nombre, cuántos son y los lugares que quedan.',
+          'Al pegarlo en WhatsApp (o en redes) se ve una tarjeta con el deporte, el día y la hora, dónde se juega y cuántos faltan; si ya se jugó, el resultado y la figura. Los links de grupos y torneos también muestran la suya: el nombre, cuántos son y los lugares que quedan.',
           'Para sumar a alguien a un partido ya armado: entrá a su perfil y tocá "Invitar a un partido". Podés invitar a los partidos que organizás, o a los abiertos donde estás confirmado. Le llega el aviso y responde desde su Inicio.',
           'Si faltan jugadores, en tu partido aparece "Pueden venir": gente de ese deporte, cerca, que marcó que puede ese día a esa hora. Los invitás de un toque.',
           'Si es un partido abierto y faltan jugadores dentro de las 48 h previas, avisamos a quienes juegan ese deporte cerca: dentro de la distancia que cada uno eligió en sus avisos, o en la misma ciudad (una sola vez).',
