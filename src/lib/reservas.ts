@@ -674,3 +674,13 @@ export function rotuloHistorial(datos: { jugados: number; faltas: number } | und
   const total = datos.jugados + datos.faltas;
   return `${datos.faltas} ${datos.faltas === 1 ? 'falta' : 'faltas'} en ${total} ${total === 1 ? 'turno' : 'turnos'}`;
 }
+
+/**
+ * "Otra vez": el próximo día igual (mismo día de la semana y hora) que
+ * todavía se puede reservar, o null si cae fuera de los días reservables.
+ */
+export function proximoIgual(fecha: string, hora: string, ahora = new Date()) {
+  const dias = proximosDias(DIAS_RESERVABLES, ahora);
+  const dia = diaDeSemana(fecha);
+  return dias.find((d) => diaDeSemana(d) === dia && d !== fecha && inicioDelTurno(d, hora) > ahora) ?? null;
+}

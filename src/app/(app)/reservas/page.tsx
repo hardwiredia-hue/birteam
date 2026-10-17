@@ -16,6 +16,7 @@ import {
   liberarVencidas,
   rotuloDia,
   rotuloHistorial,
+  proximoIgual,
 } from '@/lib/reservas';
 import { equipoDelComplejo } from '@/lib/gestion';
 import { rotuloFijo } from '@/lib/turnos-fijos';
@@ -383,20 +384,30 @@ export default async function Reservas() {
       {historial.length > 0 ? (
         <section className="flex flex-col gap-2">
           <p className="t-rotulo">Historial</p>
-          {historial.map((reserva) => (
-            <Link
-              key={reserva.id}
-              href={`/canchas/${reserva.cancha.id}`}
-              className="tarjeta flex items-center justify-between gap-3 p-3.5 opacity-70"
-            >
-              <span className="min-w-0 truncate text-sm">
-                {rotuloDia(reserva.fecha)} · {reserva.hora} · {reserva.cancha.nombre}
-              </span>
-              <span className="shrink-0 text-xs text-tinta-3">
-                {reserva.inicio < desde && reserva.estado === 'CONFIRMADA' ? 'Jugado' : ROTULOS_ESTADO[reserva.estado]}
-              </span>
-            </Link>
-          ))}
+          {historial.map((reserva) => {
+            const jugado = reserva.inicio < desde && reserva.estado === 'CONFIRMADA';
+            // Lo que se jugó, otra vez: mismo día de la semana y hora, con el turno elegido.
+            const otraVez = jugado ? proximoIgual(reserva.fecha, reserva.hora) : null;
+            return (
+              <div key={reserva.id} className="tarjeta flex items-center justify-between gap-3 p-3.5">
+                <Link href={`/canchas/${reserva.cancha.id}`} className="min-w-0 flex-1 opacity-70">
+                  <span className="block truncate text-sm">
+                    {rotuloDia(reserva.fecha)} · {reserva.hora} · {reserva.cancha.nombre}
+                  </span>
+                  <span className="block text-xs text-tinta-3">{jugado ? 'Jugado' : ROTULOS_ESTADO[reserva.estado]}</span>
+                </Link>
+                {otraVez ? (
+                  <Link
+                    href={`/canchas/${reserva.cancha.id}?fecha=${otraVez}&hora=${reserva.hora}`}
+                    className="btn btn-secundario btn-sm shrink-0"
+                    aria-label={`Reservar otra vez: ${rotuloDia(otraVez)} ${reserva.hora}`}
+                  >
+                    Otra vez
+                  </Link>
+                ) : null}
+              </div>
+            );
+          })}
         </section>
       ) : null}
 

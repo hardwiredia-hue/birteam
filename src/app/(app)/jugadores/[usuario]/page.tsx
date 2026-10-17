@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { jugaronJuntos } from '@/lib/tabla-grupo';
 import { DatosJugador } from '@/components/datos-jugador';
 import { vecesFigura } from '@/lib/figura';
 import { prisma } from '@/lib/db';
@@ -54,6 +55,7 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
   const estadisticas = await estadisticasJugador(jugador.id);
   const jugados = conRegistro.filter((p) => p.asistio).length;
   const figura = await vecesFigura(jugador.id);
+  const juntos = await jugaronJuntos(yo.id, jugador.id);
   const asistencia =
     conRegistro.length > 0 ? Math.round((jugados / conRegistro.length) * 100) : null;
   const iniciales = jugador.nombre
@@ -74,6 +76,11 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
             {jugador.ciudad ? ` · ${jugador.ciudad}` : ''}
             {seguidores > 0 ? ` · ${seguidores} ${seguidores === 1 ? 'seguidor' : 'seguidores'}` : ''}
           </p>
+          {juntos > 0 ? (
+            <p className="mt-1 text-xs font-semibold text-verde-txt">
+              Jugaron juntos {juntos === 1 ? 'una vez' : `${juntos} veces`}
+            </p>
+          ) : null}
         </div>
         {!bloqueo ? (
           <div className="flex flex-col items-end gap-2">

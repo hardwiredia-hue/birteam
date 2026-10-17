@@ -12,6 +12,7 @@ import { LogoEquipo } from '@/components/logo-equipo';
 import { SubirLogo } from '@/components/subir-logo';
 import { EncuestaGrupo } from './encuesta';
 import { encuestaAbierta, puedeCerrar, rotuloOpcion } from '@/lib/encuestas';
+import { tablaDelGrupo } from '@/lib/tabla-grupo';
 
 export const metadata = { title: 'Grupo' };
 export const dynamic = 'force-dynamic';
@@ -46,7 +47,7 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
   // Los grupos son de sus miembros; el link de invitación es la puerta.
   if (!membresia) redirect(`/g/${grupo.tokenInvitacion}`);
   const soyAdmin = membresia.rol === 'ADMIN';
-  const encuesta = await encuestaAbierta(grupo.id);
+  const [encuesta, tabla] = await Promise.all([encuestaAbierta(grupo.id), tablaDelGrupo(grupo.id)]);
   const ZONA = 'America/Argentina/Buenos_Aires';
 
   return (
@@ -146,6 +147,57 @@ export default async function PaginaGrupo({ params }: { params: Promise<{ id: st
           </div>
         )}
       </section>
+
+      {(() => {
+        const filas = tabla.filas.slice(0, 10);
+        return (
+          <section>
+            <div className="mb-2 flex items-baseline justify-between gap-3">
+              <p className="t-rotulo">Tabla del grupo</p>
+              {tabla.partidos > 0 ? (
+                <span className="text-xs text-tinta-3 tabular">
+                  {tabla.partidos} {tabla.partidos === 1 ? 'partido jugado' : 'partidos jugados'}
+                </span>
+              ) : null}
+            </div>
+            {filas.length === 0 ? (
+              <p className="tarjeta p-4 text-sm text-tinta-2">
+                Cuando jueguen y se pase lista, acá aparece quién juega más, la asistencia y las figuras.
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="t-rotulo text-left">
+                    <th scope="col" className="w-7 pb-2 font-normal">#</th>
+                    <th scope="col" className="pb-2 font-normal">Jugador</th>
+                    <th scope="col" className="pb-2 text-right font-normal" title="Partidos jugados">PJ</th>
+                    <th scope="col" className="pb-2 text-right font-normal" title="Asistencia">Asist.</th>
+                    <th scope="col" className="pb-2 text-right font-normal" title="Veces figura">Fig.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filas.map((fila, i) => (
+                    <tr key={fila.id} className="border-t border-borde">
+                      <td className="py-2 text-tinta-3 tabular">{i + 1}</td>
+                      <td className="py-2">
+                        <Link href={fila.id === usuario.id ? '/perfil' : `/jugadores/${fila.usuario}`} className="flex min-w-0 items-center gap-2">
+                          <Avatar nombre={fila.nombre} avatarUrl={fila.avatarUrl} tam={24} />
+                          <span className={`truncate ${fila.id === usuario.id ? 'font-semibold text-verde-txt' : 'font-semibold'}`}>
+                            {fila.id === usuario.id ? 'Vos' : fila.nombre}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="py-2 text-right font-semibold tabular">{fila.jugados}</td>
+                      <td className="py-2 text-right text-tinta-2 tabular">{fila.asistencia != null ? `${fila.asistencia}%` : '—'}</td>
+                      <td className="py-2 text-right text-tinta-2 tabular">{fila.figuras || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        );
+      })()}
 
       <section id="charla" className="scroll-mt-20">
         <p className="t-rotulo mb-2">Charla del grupo</p>

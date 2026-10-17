@@ -63,6 +63,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'En Perfil → Mis deportes cargás tu nivel (inicial, intermedio, avanzado o competitivo) y tu posición en cada deporte.',
           'El nivel se usa para sugerirte partidos y para armar equipos parejos.',
+          'En el perfil de otro jugador ves cuántas veces jugaron juntos (partidos ya jugados donde fueron los dos).',
         ],
         enlace: { href: '/perfil/deportes', rotulo: 'Mis deportes' },
       },
@@ -237,6 +238,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'Armás el grupo una vez y cada partido sale con un toque. Invitás con un link (por WhatsApp o donde quieras).',
           'Abierto: aparece en Explorar con botón "Sumarme". Cerrado: solo entran con el link.',
+          'La "Tabla del grupo" muestra, con los partidos del grupo ya jugados, quién jugó más (PJ), su asistencia (fue sobre las veces que dijo Voy) y cuántas veces fue la figura.',
         ],
         enlace: { href: '/grupos/nuevo', rotulo: 'Crear grupo' },
       },
@@ -307,6 +309,7 @@ export const TEMAS: Tema[] = [
           'Elegís el horario en la grilla de la cancha y tocás "Pedir este turno". Se puede reservar hasta 14 días para adelante y hasta 30 minutos antes de que empiece.',
           'Si la cancha no cobra online, el complejo confirma tu pedido (tiene 12 horas; si no contesta, el turno se libera y te avisamos). Se paga en el complejo.',
           'Podés tener hasta 3 pedidos sin confirmar por cancha.',
+          'En Reservas → Historial, cada turno jugado tiene "Otra vez": abre la cancha con el mismo día de la semana y la misma hora ya elegidos (el próximo que se pueda reservar).',
         ],
       },
       {
@@ -623,6 +626,20 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Tabla del grupo',
+    texto: 'Quién juega más con el grupo, su asistencia y las veces que fue figura. Y en cada perfil, cuántas veces jugaron juntos.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/grupos#crear-grupo', rotulo: 'Ver más' },
+  },
+  {
+    fecha: '2026-10-17',
+    titulo: 'Reservar otra vez',
+    texto: 'En tu historial de turnos, "Otra vez" abre la cancha con el mismo día y hora de la semana que viene.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/canchas-y-turnos#pedir-turno', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-16',
     titulo: 'Partidos que se cierran solos',
