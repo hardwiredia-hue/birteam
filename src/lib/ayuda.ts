@@ -126,6 +126,7 @@ export const TEMAS: Tema[] = [
           'Elegí día y hora; podés hacer que se repita todas las semanas.',
           'Cupo y mínimo: te sugerimos según el deporte (Fútbol 7 → 14).',
           'Costo por jugador (opcional) y si es abierto o solo para tu grupo.',
+          'Invitá gente: primero te mostramos con quiénes más jugás, después tus seguidores; o buscá a cualquiera por nombre.',
         ],
         texto: [
           'Con "Repetir el último" se carga todo lo de tu partido anterior y te propone la próxima fecha.',

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { companerosFrecuentes } from '@/lib/tabla-grupo';
 import { usuarioActual } from '@/lib/auth';
 import { Asistente, type PartidoParaRepetir } from './asistente';
 import { ZONA, claveDia, diaDeSemana, rotuloDia } from '@/lib/reservas';
@@ -36,6 +37,8 @@ export default async function Crear({
       take: 50,
     }),
   ]);
+
+  const frecuentes = await companerosFrecuentes(usuario.id);
 
   // Canchas que el asistente necesita conocer de entrada (la del turno y la del
   // último partido); el resto se busca en "¿Dónde juegan?".
@@ -153,7 +156,11 @@ export default async function Crear({
           diasDisponibles: dias,
         };
       })}
-      seguidores={seguimientos.map((s) => s.seguidor)}
+      // Para invitar de un toque: primero con quienes más jugás, después tus seguidores.
+      seguidores={[...frecuentes, ...seguimientos.map((s) => s.seguidor)]
+        .filter((persona, i, todos) => todos.findIndex((otra) => otra.id === persona.id) === i)
+        .slice(0, 24)
+        .map(({ id, nombre, usuario }) => ({ id, nombre, usuario }))}
       cuandoInicial={
         fecha && hora && encuesta && /^\d{4}-\d{2}-\d{2}$/.test(fecha) && /^\d{2}:\d{2}$/.test(hora)
           ? { dia: fecha, hora, encuestaId: encuesta }

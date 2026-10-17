@@ -74,3 +74,40 @@ export async function jugaronJuntos(unoId: string, otroId: string) {
   });
   return prisma.partido.count({ where: { estado: 'JUGADO', AND: [fue(unoId), fue(otroId)] } });
 }
+
+/**
+ * Con quiénes jugás más (partidos ya jugados, los últimos 100), para
+ * invitarlos de un toque al armar un partido. Sin bloqueados ni cuentas
+ * cerradas.
+ */
+export async function companerosFrecuentes(usuarioId: string, limite = 12) {
+  const fue = { estado: 'VOY', OR: [{ asistio: true }, { asistio: null }] };
+  const mios = await prisma.participacion.findMany({
+    where: { usuarioId, ...fue, partido: { estado: 'JUGADO' } },
+    select: { partidoId: true },
+    orderBy: { partido: { fecha: 'desc' } },
+    take: 100,
+  });
+  if (mios.length === 0) return [];
+  const bloqueos = await prisma.bloqueo.findMany({
+    where: { OR: [{ bloqueadorId: usuarioId }, { bloqueadoId: usuarioId }] },
+    select: { bloqueadorId: true, bloqueadoId: true },
+  });
+  const ocultos = [usuarioId, ...bloqueos.flatMap((b) => [b.bloqueadorId, b.bloqueadoId])];
+  const conteo = await prisma.participacion.groupBy({
+    by: ['usuarioId'],
+    where: { partidoId: { in: mios.map((m) => m.partidoId) }, usuarioId: { notIn: ocultos }, ...fue },
+    _count: { _all: true },
+    orderBy: { _count: { usuarioId: 'desc' } },
+    take: limite * 2,
+  });
+  const usuarios = await prisma.usuario.findMany({
+    where: { id: { in: conteo.map((c) => c.usuarioId) }, eliminadoEn: null },
+    select: { id: true, nombre: true, usuario: true },
+  });
+  const porId = new Map(usuarios.map((u) => [u.id, u]));
+  return conteo
+    .map((c) => ({ ...porId.get(c.usuarioId)!, veces: c._count._all }))
+    .filter((c) => c.id)
+    .slice(0, limite);
+}

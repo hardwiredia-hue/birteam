@@ -1,7 +1,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { prisma } from '../src/lib/db';
-import { jugaronJuntos, tablaDelGrupo } from '../src/lib/tabla-grupo';
+import { companerosFrecuentes, jugaronJuntos, tablaDelGrupo } from '../src/lib/tabla-grupo';
 import { proximoIgual } from '../src/lib/reservas';
 import { escenario } from './ayuda';
 
@@ -49,6 +49,10 @@ test('tabla del grupo y "jugaron juntos"', async () => {
   );
   assert.equal(await jugaronJuntos(jugador.id, otro.id), 1);
   assert.equal(await jugaronJuntos(jugador.id, dueno.id), 0);
+  // Para invitar: con quién jugó (el partido donde otro faltó no suma).
+  assert.deepEqual((await companerosFrecuentes(jugador.id)).map((c) => [c.id, c.veces]), [[otro.id, 1]]);
+  await prisma.bloqueo.create({ data: { bloqueadorId: otro.id, bloqueadoId: jugador.id } });
+  assert.deepEqual(await companerosFrecuentes(jugador.id), [], 'sin bloqueados');
 });
 
 test('"Otra vez": el próximo día igual que se puede reservar', () => {
