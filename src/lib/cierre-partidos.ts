@@ -73,3 +73,56 @@ export async function cerrarPartidosSinLista(ahora = new Date()) {
   }
   return cerrados;
 }
+
+/** El recordatorio de pago sale entre 20 y 30 h después de terminado. */
+const HORAS_PAGO_DESDE = 20;
+const HORAS_PAGO_HASTA = 30;
+
+/**
+ * "Te falta pagar": al día siguiente del partido con costo, a los que
+ * jugaron (sin marcar o presentes) y el organizador no marcó como pagos.
+ * Una vez por partido y persona. Al organizador no (es quien cobra).
+ */
+export async function recordarPagos(ahora = new Date()) {
+  const partidos = await prisma.partido.findMany({
+    where: {
+      estado: { not: 'CANCELADO' },
+      costoPorJugador: { gt: 0 },
+      fecha: { gte: new Date(ahora.getTime() - (HORAS_PAGO_HASTA + 4) * 3600_000), lte: new Date(ahora.getTime() - HORAS_PAGO_DESDE * 3600_000) },
+    },
+    include: {
+      deporte: { select: { nombre: true } },
+      organizador: { select: { nombre: true, usuario: true } },
+      participaciones: {
+        where: { estado: 'VOY', pago: false, OR: [{ asistio: true }, { asistio: null }] },
+        select: { usuarioId: true },
+      },
+    },
+  });
+  let enviados = 0;
+  for (const partido of partidos) {
+    const horas = (ahora.getTime() - fin(partido)) / 3600_000;
+    if (horas < HORAS_PAGO_DESDE || horas > HORAS_PAGO_HASTA) continue;
+    const deudores = partido.participaciones.map((p) => p.usuarioId).filter((id) => id !== partido.organizadorId);
+    if (deudores.length === 0) continue;
+    const url = `/partidos/${partido.id}`;
+    const ya = new Set(
+      (
+        await prisma.notificacion.findMany({
+          where: { usuarioId: { in: deudores }, tipo: 'RECORDAR_PAGO', url },
+          select: { usuarioId: true },
+        })
+      ).map((n) => n.usuarioId)
+    );
+    const nuevos = deudores.filter((id) => !ya.has(id));
+    if (nuevos.length === 0) continue;
+    const dia = partido.fecha.toLocaleDateString('es-AR', { weekday: 'long', timeZone: ZONA });
+    const monto = `$${Math.round(partido.costoPorJugador!).toLocaleString('es-AR')}`;
+    const titulo = `Te falta pagar ${monto} del ${partido.deporte.nombre} del ${dia}`;
+    const cuerpo = `Se arregla con ${partido.organizador.nombre.split(' ')[0]} (@${partido.organizador.usuario}). Si ya pagaste, avisale para que lo marque.`;
+    await prisma.notificacion.createMany({ data: nuevos.map((usuarioId) => ({ usuarioId, tipo: 'RECORDAR_PAGO', titulo, cuerpo, url })) });
+    await enviarPush(nuevos, { titulo, cuerpo, url });
+    enviados += nuevos.length;
+  }
+  return enviados;
+}

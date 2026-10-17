@@ -41,3 +41,32 @@ test('después del partido: recordatorio de lista y cierre a las 48 h', async ()
   assert.equal((await prisma.partido.findUniqueOrThrow({ where: { id: cancelado.id } })).estado, 'CANCELADO');
   assert.equal((await prisma.partido.findUniqueOrThrow({ where: { id: recien.id } })).estado, 'ARMANDOSE', 'el de recién no se cierra');
 });
+
+test('recordatorio de pago: al día siguiente, a los que jugaron y no pagaron, una vez', async () => {
+  const { recordarPagos } = await import('../src/lib/cierre-partidos');
+  const { deporte, jugador, otro, dueno } = await escenario(`pago${Date.now()}`);
+  const ahora = new Date();
+  const partido = await prisma.partido.create({
+    data: {
+      deporteId: deporte.id,
+      organizadorId: jugador.id,
+      lugarNombre: 'Club',
+      cupo: 10,
+      duracionMin: 60,
+      costoPorJugador: 4000,
+      fecha: new Date(ahora.getTime() - 25 * 3600_000),
+      participaciones: {
+        create: [
+          { usuarioId: jugador.id, estado: 'VOY' },
+          { usuarioId: otro.id, estado: 'VOY' },
+          { usuarioId: dueno.id, estado: 'VOY', pago: true },
+        ],
+      },
+    },
+  });
+  assert.equal(await recordarPagos(ahora), 1, 'solo el que no pagó (el organizador cobra)');
+  const aviso = await prisma.notificacion.findFirstOrThrow({ where: { usuarioId: otro.id, tipo: 'RECORDAR_PAGO' } });
+  assert.match(aviso.titulo, /^Te falta pagar \$4\.000 del /);
+  assert.equal(aviso.url, `/partidos/${partido.id}`);
+  assert.equal(await recordarPagos(new Date(ahora.getTime() + 30 * 60_000)), 0, 'una sola vez');
+});

@@ -171,6 +171,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'Si el partido tiene costo por jugador, quien organiza ve la lista de confirmados y toca a cada uno para marcar "Pagó" o "Debe". Arriba ve lo cobrado y lo que falta.',
           'Con "Recordarles por WhatsApp" se arma el mensaje con los nombres de los que faltan. Cada jugador ve en el partido si ya figura como pagado.',
+          'Además, al día siguiente del partido (entre 20 y 30 horas después de terminado), a los que jugaron y siguen como "Debe" les llega un solo aviso: "Te falta pagar…", con el nombre de quien organiza.',
           'La plata se arregla entre ustedes: birteam solo lleva la cuenta.',
         ],
       },
@@ -648,6 +649,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Recordatorio de pago automático',
+    texto: 'Al día siguiente del partido, a los que todavía no pagaron les llega un aviso. Quien organiza ya no tiene que perseguir a nadie.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#pagos', rotulo: 'Cómo funciona' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Cuánto pone cada uno',
