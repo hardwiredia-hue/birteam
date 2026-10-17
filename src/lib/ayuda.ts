@@ -53,7 +53,7 @@ export const TEMAS: Tema[] = [
         ],
         texto: [
           'Con tu ciudad te mostramos partidos, canchas y jugadores de tu zona.',
-          'En Inicio, "Arrancá en birteam" te muestra lo que falta para sacarle el jugo (deporte, ciudad, foto, un grupo, tu primer partido y los avisos en el celular), cada cosa con su atajo. Se va solo cuando está todo, o con "Ahora no".',
+          'En Inicio, "Arrancá en birteam" te muestra lo que falta para sacarle el jugo (deporte, ciudad, cuándo podés jugar, foto, un grupo, tu primer partido y los avisos en el celular), cada cosa con su atajo. Se va solo cuando está todo, o con "Ahora no".',
         ],
         enlace: { href: '/registro', rotulo: 'Crear cuenta' },
       },

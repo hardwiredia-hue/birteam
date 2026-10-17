@@ -10,6 +10,7 @@ import { AvisoNovedad } from '@/components/aviso-novedad';
 import { PuestaAPunto } from '@/components/puesta-a-punto';
 import { pasosDelJugador } from '@/lib/puesta-a-punto';
 import { encuestasSinMiVoto } from '@/lib/encuestas';
+import { leerDisponibilidad } from '@/lib/disponibilidad';
 import { NOVEDADES } from '@/lib/ayuda';
 import { cuandoEmpieza, ofertasVigentes, proximosDias, rotuloDia } from '@/lib/reservas';
 import { agendaDelDia } from '@/lib/agenda';
@@ -72,6 +73,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
       grupos,
       partidos,
       avisosEnElCelular: celulares > 0,
+      disponibilidad: leerDisponibilidad(usuario.disponibilidad).length > 0,
     });
   };
 

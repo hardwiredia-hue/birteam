@@ -129,6 +129,8 @@ export function pasosDelJugador(datos: {
   grupos: number;
   partidos: number;
   avisosEnElCelular: boolean;
+  /** Marcó cuándo puede jugar. */
+  disponibilidad: boolean;
 }): Paso[] {
   return [
     {
@@ -146,6 +148,14 @@ export function pasosDelJugador(datos: {
       hecho: Boolean(datos.ciudad),
       href: '/perfil/editar',
       accion: 'Elegir',
+    },
+    {
+      clave: 'disponibilidad',
+      titulo: 'Decí cuándo podés jugar',
+      detalle: 'Así te avisamos de partidos en los horarios que te sirven.',
+      hecho: datos.disponibilidad,
+      href: '/perfil/deportes',
+      accion: 'Marcar',
     },
     {
       clave: 'foto',

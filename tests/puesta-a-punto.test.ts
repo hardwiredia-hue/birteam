@@ -43,9 +43,9 @@ test('puesta a punto: con todo cargado, todos los pasos hechos', () => {
 
 test('primeros pasos del jugador: salen de sus datos', async () => {
   const { pasosDelJugador } = await import('../src/lib/puesta-a-punto');
-  const nuevo = pasosDelJugador({ deportes: 0, ciudad: null, avatarUrl: null, grupos: 0, partidos: 0, avisosEnElCelular: false });
+  const nuevo = pasosDelJugador({ deportes: 0, ciudad: null, avatarUrl: null, grupos: 0, partidos: 0, avisosEnElCelular: false, disponibilidad: false });
   assert.equal(nuevo.filter((p) => p.hecho).length, 0);
   assert.equal(nuevo[0].href, '/perfil/deportes');
-  const completo = pasosDelJugador({ deportes: 1, ciudad: 'Rosario', avatarUrl: '/a.jpg', grupos: 2, partidos: 5, avisosEnElCelular: true });
+  const completo = pasosDelJugador({ deportes: 1, ciudad: 'Rosario', avatarUrl: '/a.jpg', grupos: 2, partidos: 5, avisosEnElCelular: true, disponibilidad: true });
   assert.ok(completo.every((p) => p.hecho));
 });
