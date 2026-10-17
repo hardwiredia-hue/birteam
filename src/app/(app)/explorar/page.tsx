@@ -17,6 +17,13 @@ import { calcularRanking } from '@/lib/estadisticas';
 import { BotonSumarme } from '@/components/sumarse-grupo';
 import { Avatar } from '@/components/avatar';
 import { Mapa, type PuntoMapa } from '@/components/mapa';
+import { filtrarPartidos } from '@/lib/filtros-partidos';
+
+/** Filtros de Explorar → Partidos. */
+const FILTROS_PARTIDO = [
+  { valor: 'nivel', rotulo: 'Para mi nivel' },
+  { valor: 'faltan', rotulo: 'Les faltan jugadores' },
+];
 
 /** Los servicios por los que se puede filtrar en Explorar → Canchas. */
 const FILTROS_SERVICIO = [
@@ -42,14 +49,22 @@ export default async function Explorar({
     radio?: string;
     techada?: string;
     con?: string;
+    solo?: string;
   }>;
 }) {
-  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda, con: conCrudo } = await searchParams;
+  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda, con: conCrudo, solo: soloCrudo } = await searchParams;
   // "Solo techadas" y "con iluminación…" (solapa Canchas): se mantienen al
   // cambiar de deporte, vista o distancia.
   const techada = tab === 'canchas' && techadaCruda === '1' ? '1' : undefined;
   const servicios = tab === 'canchas' ? FILTROS_SERVICIO.filter((f) => (conCrudo ?? '').split(',').includes(f.valor)).map((f) => f.valor) : [];
   const con = servicios.length > 0 ? servicios.join(',') : undefined;
+  // Solapa Partidos: "Para mi nivel" y "Les faltan jugadores".
+  const filtrosPartido = tab === 'partidos' ? FILTROS_PARTIDO.filter((f) => (soloCrudo ?? '').split(',').includes(f.valor)).map((f) => f.valor) : [];
+  const solo = filtrosPartido.length > 0 ? filtrosPartido.join(',') : undefined;
+  const alternarFiltroPartido = (valor: string) => {
+    const nuevos = filtrosPartido.includes(valor) ? filtrosPartido.filter((v) => v !== valor) : [...filtrosPartido, valor];
+    return nuevos.length > 0 ? nuevos.join(',') : undefined;
+  };
   const alternarServicio = (valor: string) => {
     const nuevos = servicios.includes(valor) ? servicios.filter((v) => v !== valor) : [...servicios, valor];
     return nuevos.length > 0 ? nuevos.join(',') : undefined;
@@ -65,7 +80,7 @@ export default async function Explorar({
       ciudad={usuario.ciudad}
       radio={radio}
       href={(km) =>
-        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada, con })
+        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada, con, solo })
       }
     />
   );
@@ -87,6 +102,7 @@ export default async function Explorar({
         {r ? <input type="hidden" name="radio" value={r} /> : null}
         {techada ? <input type="hidden" name="techada" value="1" /> : null}
         {con ? <input type="hidden" name="con" value={con} /> : null}
+        {solo ? <input type="hidden" name="solo" value={solo} /> : null}
         <input
           id="buscador"
           name="q"
@@ -214,16 +230,36 @@ export default async function Explorar({
         </>
       ) : (
         <>
-          <AlternarVista deporte={deporte} q={q} vista={vista} radio={r} />
+          <AlternarVista deporte={deporte} q={q} vista={vista} radio={r} solo={solo} />
           <ChipsDeportes
             deportes={deportes}
             activo={deporte}
             conTodos={false}
             envolver
-            href={(clave) => armarUrl({ deporte: clave ?? undefined, q, vista, radio: r })}
+            href={(clave) => armarUrl({ deporte: clave ?? undefined, q, vista, radio: r, solo })}
           />
+          <div className="flex flex-wrap gap-2">
+            {FILTROS_PARTIDO.map((filtro) => (
+              <Link
+                key={filtro.valor}
+                href={armarUrl({ deporte, q, vista, radio: r, solo: alternarFiltroPartido(filtro.valor) })}
+                aria-pressed={filtrosPartido.includes(filtro.valor)}
+                className={filtrosPartido.includes(filtro.valor) ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+              >
+                {filtro.rotulo}
+              </Link>
+            ))}
+          </div>
           {cercania}
-          <Partidos deporteSlugs={slugsFiltro} q={q} vista={vista} ubicacion={ubicacion} radio={radio} />
+          <Partidos
+            deporteSlugs={slugsFiltro}
+            q={q}
+            vista={vista}
+            ubicacion={ubicacion}
+            radio={radio}
+            paraMiNivel={filtrosPartido.includes('nivel') ? new Map(usuario.deportes.map((d) => [d.deporteId, d.nivel])) : null}
+            soloConLugar={filtrosPartido.includes('faltan')}
+          />
         </>
       )}
     </div>
@@ -247,6 +283,7 @@ function AlternarVista({
   radio,
   techada,
   con,
+  solo,
 }: {
   tab?: string;
   deporte?: string;
@@ -255,17 +292,18 @@ function AlternarVista({
   radio?: string;
   techada?: string;
   con?: string;
+  solo?: string;
 }) {
   return (
     <div className="flex gap-2">
       <Link
-        href={armarUrl({ tab, deporte, q, radio, techada, con })}
+        href={armarUrl({ tab, deporte, q, radio, techada, con, solo })}
         className={vista !== 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Lista
       </Link>
       <Link
-        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada, con })}
+        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada, con, solo })}
         className={vista === 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Mapa
@@ -295,12 +333,18 @@ async function Partidos({
   vista,
   ubicacion,
   radio,
+  paraMiNivel,
+  soloConLugar,
 }: {
   deporteSlugs?: string[] | null;
   q?: string;
   vista?: string;
   ubicacion: Ubicacion | null;
   radio: number | null;
+  /** Mi nivel por deporte: deja los partidos sin nivel o del mío (sin nivel cargado, todos). */
+  paraMiNivel: Map<string, string | null> | null;
+  /** Solo los que todavía tienen lugar. */
+  soloConLugar: boolean;
 }) {
   const partidos = await prisma.partido.findMany({
     where: {
@@ -320,7 +364,7 @@ async function Partidos({
 
   // Filtro de texto sin tildes, y distancia si hay desde dónde medir.
   const buscado = q ? normalizar(q) : null;
-  const lista = partidos
+  const lista = filtrarPartidos(partidos, { paraMiNivel, soloConLugar })
     .filter((p) =>
       !buscado
         ? true
@@ -335,6 +379,7 @@ async function Partidos({
       <div className="tarjeta p-5">
         <p className="text-sm text-tinta-2">
           No hay partidos abiertos{' '}
+          {paraMiNivel || soloConLugar ? 'con esos filtros ' : ''}
           {radio ? `a menos de ${radio} km` : buscado ? 'con esa búsqueda' : 'por ahora'}. Armá el tuyo y
           compartilo: aparece acá para los jugadores de tu zona.
         </p>

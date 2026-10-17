@@ -90,6 +90,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'En Explorar (partidos, canchas y grupos), Buscar turno y el Radar todo se ordena por distancia y cada lugar muestra a cuántos km está.',
           'En Inicio, "Cerca tuyo" te muestra los partidos abiertos de tus deportes que quedan más cerca y a los que todavía no te sumaste.',
+          'En Explorar → Partidos, "Para mi nivel" deja los partidos sin nivel sugerido o del nivel que cargaste en ese deporte, y "Les faltan jugadores" los que todavía tienen lugar. Se combinan con el deporte y la distancia.',
           'Se mide desde el centro de la ciudad de tu perfil. Para medir desde donde estás, tocá "Usar mi ubicación" y aceptá el permiso del navegador. Eligiendo 2, 5, 15, 30 o 50 km ves solo lo que queda dentro de esa distancia.',
           'Tu ubicación queda solo en tu navegador, redondeada a unos 100 m, durante 6 horas: no se guarda en tu cuenta ni se muestra a nadie. Con "Usar mi ciudad" la dejás de usar, y se borra al salir de tu cuenta.',
           'En cada cancha, cada partido y cada turno de Reservas, "Cómo llegar" abre el mapa del celular con el destino cargado y te dice a cuántos km está.',
@@ -628,6 +629,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Partidos para tu nivel',
+    texto: 'En Explorar, filtrá los partidos de tu nivel y los que todavía buscan jugadores.',
+    para: 'jugadores',
+    enlace: { href: '/explorar?solo=nivel,faltan', rotulo: 'Probalo' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Torneos con avisos',
