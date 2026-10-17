@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { resumenDisponibilidad } from '@/lib/disponibilidad';
 import { DatosJugador } from '@/components/datos-jugador';
 import { vecesFigura } from '@/lib/figura';
 import { prisma } from '@/lib/db';
@@ -121,6 +122,14 @@ export default async function Perfil() {
             Contá qué jugás, en qué posición y a qué nivel: así te invitan a partidos parejos.
           </Link>
         )}
+        <p className="mt-2 text-sm text-tinta-2">
+          <span className="t-rotulo mr-2">Suelo poder</span>
+          {resumenDisponibilidad(usuario.disponibilidad) ?? (
+            <Link href="/perfil/deportes" className="font-semibold text-verde-txt">
+              Marcá cuándo podés jugar
+            </Link>
+          )}
+        </p>
       </section>
 
       {historial.length > 0 ? (
