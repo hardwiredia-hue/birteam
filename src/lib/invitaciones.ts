@@ -1,5 +1,7 @@
 import { prisma } from './db';
 import { enviarPush } from './push';
+import { RADIO_MAXIMO_AVISOS_KM, posiblesVecinos, vecinosDe } from './cercania';
+import { puedeJugar } from './disponibilidad';
 
 /**
  * Invitar a alguien a un partido que ya está armado (desde su perfil).
@@ -87,4 +89,61 @@ export async function invitarAPartido(yo: { id: string; nombre: string }, partid
   await prisma.notificacion.create({ data: { usuarioId: invitadoId, tipo: 'INVITACION', ...aviso } });
   await enviarPush(invitadoId, aviso);
   return null;
+}
+
+/**
+ * "Pueden venir": jugadores de ese deporte, cerca del partido, que marcaron
+ * que pueden ese día y franja. Para que el organizador complete la lista
+ * invitando de un toque. Sin los que ya están anotados o invitados, ni
+ * bloqueados ni cuentas cerradas. Los más cerca primero.
+ */
+export async function sugeridosParaPartido(partidoId: string, limite = 6) {
+  const partido = await prisma.partido.findUnique({
+    where: { id: partidoId },
+    select: {
+      id: true,
+      deporteId: true,
+      organizadorId: true,
+      fecha: true,
+      ciudad: true,
+      latitud: true,
+      longitud: true,
+      participaciones: { select: { usuarioId: true } },
+    },
+  });
+  if (!partido) return [];
+  const zona = posiblesVecinos(partido);
+  if (!zona) return [];
+  const [bloqueos, invitados] = await Promise.all([
+    prisma.bloqueo.findMany({
+      where: { OR: [{ bloqueadorId: partido.organizadorId }, { bloqueadoId: partido.organizadorId }] },
+      select: { bloqueadorId: true, bloqueadoId: true },
+    }),
+    prisma.notificacion.findMany({
+      where: { tipo: 'INVITACION', url: `/partidos/${partido.id}` },
+      select: { usuarioId: true },
+    }),
+  ]);
+  const excluidos = [
+    partido.organizadorId,
+    ...partido.participaciones.map((p) => p.usuarioId),
+    ...bloqueos.flatMap((b) => [b.bloqueadorId, b.bloqueadoId]),
+    ...invitados.map((n) => n.usuarioId),
+  ];
+  const candidatos = await prisma.usuario.findMany({
+    where: {
+      id: { notIn: excluidos },
+      eliminadoEn: null,
+      disponibilidad: { not: '[]' },
+      deportes: { some: { deporteId: partido.deporteId } },
+      ...zona,
+    },
+    select: { id: true, nombre: true, usuario: true, avatarUrl: true, ciudad: true, latitud: true, longitud: true, radioKm: true, disponibilidad: true },
+    take: 300,
+  });
+  return vecinosDe(
+    candidatos.filter((c) => puedeJugar(c.disponibilidad, partido.fecha)).map((c) => ({ ...c, radioKm: RADIO_MAXIMO_AVISOS_KM })),
+    partido,
+    limite
+  ).map(({ id, nombre, usuario, avatarUrl }) => ({ id, nombre, usuario, avatarUrl }));
 }

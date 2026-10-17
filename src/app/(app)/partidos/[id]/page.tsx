@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { SugeridosPartido } from './sugeridos';
+import { sugeridosParaPartido } from '@/lib/invitaciones';
 import { HORAS_CIERRE } from '@/lib/cierre-partidos';
 import { PronosticoPartido } from '@/components/pronostico';
 import { hayPronostico } from '@/lib/pronostico';
@@ -247,6 +249,14 @@ export default async function PaginaPartido({ params }: { params: Promise<{ id: 
             El partido toma ese lugar y horario y les avisamos a los anotados.
           </p>
         </section>
+      ) : null}
+
+      {organizo && !yaPaso && !cerrado && !partido.listaCerrada && voy.length < partido.cupo ? (
+        <SugeridosPartido
+          partidoId={partido.id}
+          faltan={partido.cupo - voy.length}
+          sugeridos={await sugeridosParaPartido(partido.id)}
+        />
       ) : null}
 
       {turnosSugeridos.length > 0 ? (
