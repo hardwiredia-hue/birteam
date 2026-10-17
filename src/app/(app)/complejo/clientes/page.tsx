@@ -33,7 +33,14 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
         <p className="mt-1 text-xs text-tinta-3">
           Los que reservaron en los últimos {DIAS_CLIENTES / 30} meses: cuánto vienen, cuándo fue la última vez y faltas.
         </p>
-        <EnlaceAyuda tema="complejos" articulo="clientes" className="mt-1.5" />
+        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+          <EnlaceAyuda tema="complejos" articulo="clientes" />
+          {todos.length > 0 ? (
+            <a href="/api/complejo/clientes" className="text-[13px] font-semibold text-verde-txt" download>
+              Descargar la lista (Excel)
+            </a>
+          ) : null}
+        </div>
       </header>
 
       <Form action="/complejo/clientes" className="flex gap-2">

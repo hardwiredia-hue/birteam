@@ -1,16 +1,9 @@
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { ROTULOS_ESTADO } from '@/lib/reservas';
+import { respuestaCsv } from '@/lib/csv';
 
 const ZONA = 'America/Argentina/Buenos_Aires';
-
-/** Una celda CSV segura (comillas, y sin fórmulas que una planilla pueda ejecutar). */
-function celda(valor: string | number | null | undefined) {
-  if (valor == null) return '';
-  let texto = String(valor);
-  if (/^[=+\-@]/.test(texto)) texto = `'${texto}`;
-  return /[";\n,]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
-}
 
 /**
  * Informe de actividad del complejo en CSV (se abre con Excel o Google
@@ -70,13 +63,5 @@ export async function GET(request: Request) {
     ];
   });
 
-  // BOM para que Excel abra bien los acentos; separador ";" como usa Excel en es-AR.
-  const contenido = '﻿' + [encabezado, ...filas].map((fila) => fila.map(celda).join(';')).join('\r\n');
-  return new Response(contenido, {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="birteam-reservas-${desde}-a-${hasta}.csv"`,
-      'Cache-Control': 'no-store',
-    },
-  });
+  return respuestaCsv([encabezado, ...filas], `birteam-reservas-${desde}-a-${hasta}.csv`);
 }

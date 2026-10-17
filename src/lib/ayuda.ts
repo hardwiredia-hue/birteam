@@ -430,6 +430,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'En Mi complejo → "Tus clientes" ves a todos los que reservaron en los últimos 6 meses: cuántos turnos jugaron, cuánto sumaron, faltas, si tienen turno reservado o fijo y cuándo vinieron por última vez. Se busca por nombre y tiene el WhatsApp de cada uno.',
           '"Hace rato que no vienen" junta a los que vinieron al menos 2 veces, no vuelven hace más de 30 días y no tienen turno: un mensaje a tiempo los trae de vuelta.',
+          'Con "Descargar la lista (Excel)" te llevás todo en una planilla que abre Excel o Google Sheets.',
           'Lo ve solo el dueño (tus empleados no ven lo que gastó cada cliente).',
         ],
         enlace: { href: '/complejo/clientes', rotulo: 'Ver mis clientes' },
