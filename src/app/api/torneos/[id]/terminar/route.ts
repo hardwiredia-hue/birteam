@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { avisarCampeon, campeonDeLiga } from '@/lib/avisos-torneo';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 
@@ -25,5 +26,7 @@ export async function POST(_request: Request, contexto: { params: Promise<{ id: 
   }
 
   await prisma.torneo.update({ where: { id }, data: { estado: 'TERMINADO' } });
+  const campeon = await campeonDeLiga(id);
+  if (campeon) await avisarCampeon(id, campeon);
   return NextResponse.json({ listo: true });
 }

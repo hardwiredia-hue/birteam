@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { avisarResultado } from '@/lib/avisos-torneo';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaResultado, erroresDeZod } from '@/lib/validacion';
@@ -61,6 +62,7 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   });
 
   // Copa: completa la ronda, se arma la siguiente; con la final jugada, hay campeón.
+  let campeon: string | null = null;
   if (torneo.formato === 'COPA' && torneo.cuadro) {
     const partidos = await prisma.partidoTorneo.findMany({ where: { torneoId: id } });
     const { crear, campeonId } = avanzarCopa(JSON.parse(torneo.cuadro), partidos);
@@ -68,7 +70,10 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
       await prisma.partidoTorneo.createMany({ data: crear.map((cruce) => ({ torneoId: id, ...cruce })) });
     }
     if (campeonId) await prisma.torneo.update({ where: { id }, data: { estado: 'TERMINADO' } });
+    campeon = campeonId;
   }
+  // Un resultado corregido no vuelve a avisar.
+  if (!partido.jugadoEn) await avisarResultado(id, partido.id, campeon);
 
   return NextResponse.json({ listo: true });
 }

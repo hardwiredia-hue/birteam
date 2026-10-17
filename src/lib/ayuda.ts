@@ -518,6 +518,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'Al arrancar se genera el fixture (liga) o se sortea el cuadro (copa; si no da justo, algunos pasan directo a la segunda ronda).',
           'Quien organiza carga los resultados. En copa, si empatan, se cargan los penales; cada ronda se arma sola y con la final hay campeón.',
+          'Avisos: a quien organiza, cada equipo que se anota (y cuando se llena el cupo); a los capitanes, cuando arranca, cada resultado de su equipo y el campeón.',
         ],
       },
       {
@@ -627,6 +628,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Torneos con avisos',
+    texto: 'Te avisamos cuando se anota un equipo, cuando arranca el torneo, cada resultado de tu equipo y quién salió campeón.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/torneos#jugar-torneo', rotulo: 'Ver más' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Tabla del grupo',

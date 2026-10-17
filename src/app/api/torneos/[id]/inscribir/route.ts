@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { avisarInscripcion } from '@/lib/avisos-torneo';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { esquemaEquipoTorneo, erroresDeZod } from '@/lib/validacion';
@@ -43,5 +44,6 @@ export async function POST(request: Request, contexto: { params: Promise<{ id: s
   const equipo = await prisma.equipoTorneo.create({
     data: { torneoId: id, nombre: datos.data.nombre, capitanId: usuario.id },
   });
+  await avisarInscripcion(id, equipo.nombre, usuario.id);
   return NextResponse.json({ id: equipo.id }, { status: 201 });
 }

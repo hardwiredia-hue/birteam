@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { avisarArranque } from '@/lib/avisos-torneo';
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { avanzarCopa, fixtureLiga, sortearCuadro } from '@/lib/torneos';
@@ -28,6 +29,7 @@ export async function POST(_request: Request, contexto: { params: Promise<{ id: 
       prisma.partidoTorneo.createMany({ data: crear.map((cruce) => ({ torneoId: id, ...cruce })) }),
       prisma.torneo.update({ where: { id }, data: { estado: 'EN_JUEGO', cuadro: JSON.stringify(cuadro) } }),
     ]);
+    await avisarArranque(id);
     return NextResponse.json({ partidos: crear.length });
   }
 
@@ -38,6 +40,7 @@ export async function POST(_request: Request, contexto: { params: Promise<{ id: 
     }),
     prisma.torneo.update({ where: { id }, data: { estado: 'EN_JUEGO' } }),
   ]);
+  await avisarArranque(id);
 
   return NextResponse.json({ partidos: fixture.length });
 }
