@@ -77,6 +77,18 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     });
   };
 
+  // Pedidos de turno fijo sin responder en los complejos que gestiono.
+  const contarPedidosFijo = async () => {
+    const duenos = await duenosQueGestiono(usuario.id, usuario.tipoCuenta);
+    if (duenos.length === 0) return null;
+    const pedidos = await prisma.pedidoFijo.findMany({
+      where: { estado: 'PENDIENTE', cancha: { duenoId: { in: duenos } } },
+      select: { canchaId: true },
+      orderBy: { creadoEn: 'asc' },
+    });
+    return pedidos.length > 0 ? { cantidad: pedidos.length, canchaId: pedidos[0].canchaId } : null;
+  };
+
   // Radar (de tu deporte) y Cerca tuyo (partidos abiertos de tus deportes en
   // tu radio, a los que no te sumaste): los dos miden desde tu ubicación.
   const cargarCercanos = async () => {
@@ -158,6 +170,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     invitaciones,
     primerosPasos,
     encuestas,
+    pedidosFijo,
   ] = await Promise.all([
     cargarAgenda(),
     // Tu próximo partido: el más cercano en el que estás anotado u organizás.
@@ -227,6 +240,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     cargarInvitaciones(),
     cargarPrimerosPasos(),
     encuestasSinMiVoto(usuario.id, hoy),
+    contarPedidosFijo(),
   ]);
   const cuando = (fecha: Date) =>
     `${DIAS[diaDeLaSemana(fecha)]} ${fecha.toLocaleTimeString('es-AR', {
@@ -385,6 +399,22 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
               {pedidosSinResponder === 1
                 ? 'Tenés 1 pedido esperando que lo confirmes'
                 : `Tenés ${pedidosSinResponder} pedidos esperando que los confirmes`}
+            </p>
+          </div>
+          <span className="t-display text-[16px] text-naranja-txt">→</span>
+        </Link>
+      ) : null}
+
+      {pedidosFijo ? (
+        <Link
+          href={`/canchas/${pedidosFijo.canchaId}#fijos`}
+          className="tarjeta flex items-center justify-between gap-3 p-4"
+          style={{ borderColor: 'var(--naranja-txt)' }}
+        >
+          <div>
+            <p className="t-rotulo text-naranja-txt">Turnos fijos</p>
+            <p className="mt-0.5 text-sm font-semibold">
+              {pedidosFijo.cantidad === 1 ? 'Te piden 1 turno fijo' : `Te piden ${pedidosFijo.cantidad} turnos fijos`}
             </p>
           </div>
           <span className="t-display text-[16px] text-naranja-txt">→</span>
