@@ -2,6 +2,7 @@ import { prisma } from './db';
 import { normalizar } from './normalizar';
 import { kmHasta, type Punto } from './ubicacion';
 import { infoDeporte } from './deportes';
+import type { PreciosCancha } from './precios';
 
 /**
  * Los deportes donde se puede jugar uno dado: su familia (Fútbol 7 se puede
@@ -31,6 +32,8 @@ export interface CanchaParaElegir {
   deporte: string;
   diasDisponibles: number[];
   km: number | null;
+  /** Para sugerir el costo por jugador al armar el partido. */
+  precios?: PreciosCancha | null;
 }
 
 const MAXIMO = 6;
@@ -75,6 +78,11 @@ export async function buscarDonde(opciones: {
       longitud: true,
       diasDisponibles: true,
       deporteId: true,
+      precioPorHora: true,
+      precioPico: true,
+      picoDesdeHora: true,
+      picoFinDeSemana: true,
+      duracionTurno: true,
       deporte: { select: { nombre: true } },
     },
     take: 500,
@@ -94,6 +102,13 @@ export async function buscarDonde(opciones: {
         deporte: c.deporte.nombre,
         diasDisponibles: dias(c.diasDisponibles),
         km: kmHasta(opciones.desde, c),
+        precios: {
+          precioPorHora: c.precioPorHora,
+          precioPico: c.precioPico,
+          picoDesdeHora: c.picoDesdeHora,
+          picoFinDeSemana: c.picoFinDeSemana,
+          duracionTurno: c.duracionTurno,
+        },
       }))
       // Sin texto, solo lo cercano: a 50 km o en la misma ciudad.
       .filter((c) => conTexto || (c.km != null ? c.km <= 50 : enCiudad(c.ciudad)))

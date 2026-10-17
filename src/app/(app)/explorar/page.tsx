@@ -51,9 +51,12 @@ export default async function Explorar({
     techada?: string;
     con?: string;
     solo?: string;
+    orden?: string;
   }>;
 }) {
-  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda, con: conCrudo, solo: soloCrudo } = await searchParams;
+  const { tab = 'partidos', deporte, q, ambito, vista, radio: radioCrudo, techada: techadaCruda, con: conCrudo, solo: soloCrudo, orden: ordenCrudo } = await searchParams;
+  // Solapa Canchas: "Más baratas primero" (si no, por cercanía).
+  const orden = tab === 'canchas' && ordenCrudo === 'precio' ? 'precio' : undefined;
   // "Solo techadas" y "con iluminación…" (solapa Canchas): se mantienen al
   // cambiar de deporte, vista o distancia.
   const techada = tab === 'canchas' && techadaCruda === '1' ? '1' : undefined;
@@ -81,7 +84,7 @@ export default async function Explorar({
       ciudad={usuario.ciudad}
       radio={radio}
       href={(km) =>
-        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada, con, solo })
+        armarUrl({ tab: tab === 'partidos' ? undefined : tab, deporte, q, vista, radio: km ? String(km) : undefined, techada, con, solo, orden })
       }
     />
   );
@@ -104,6 +107,7 @@ export default async function Explorar({
         {techada ? <input type="hidden" name="techada" value="1" /> : null}
         {con ? <input type="hidden" name="con" value={con} /> : null}
         {solo ? <input type="hidden" name="solo" value={solo} /> : null}
+        {orden ? <input type="hidden" name="orden" value={orden} /> : null}
         <input
           id="buscador"
           name="q"
@@ -185,7 +189,7 @@ export default async function Explorar({
         </>
       ) : tab === 'canchas' ? (
         <>
-          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} techada={techada} con={con} />
+          <AlternarVista tab="canchas" deporte={deporte} q={q} vista={vista} radio={r} techada={techada} con={con} orden={orden} />
           <div className="flex gap-2">
             <Link href={deporte ? `/radar?deporte=${deporte}` : '/radar'} className="tarjeta flex flex-1 items-center justify-between gap-2 p-3">
               <span>
@@ -207,11 +211,11 @@ export default async function Explorar({
             activo={deporte}
             conTodos={false}
             envolver
-            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r, techada, con })}
+            href={(clave) => armarUrl({ tab: 'canchas', deporte: clave ?? undefined, q, vista, radio: r, techada, con, orden })}
           />
           <div className="flex flex-wrap gap-2">
             <Link
-              href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada: techada ? undefined : '1', con })}
+              href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada: techada ? undefined : '1', con, orden })}
               aria-pressed={Boolean(techada)}
               className={techada ? 'chip-sel chip-sel-activo' : 'chip-sel'}
             >
@@ -220,13 +224,20 @@ export default async function Explorar({
             {FILTROS_SERVICIO.map((filtro) => (
               <Link
                 key={filtro.valor}
-                href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada, con: alternarServicio(filtro.valor) })}
+                href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada, con: alternarServicio(filtro.valor), orden })}
                 aria-pressed={servicios.includes(filtro.valor)}
                 className={servicios.includes(filtro.valor) ? 'chip-sel chip-sel-activo' : 'chip-sel'}
               >
                 {filtro.rotulo}
               </Link>
             ))}
+            <Link
+              href={armarUrl({ tab: 'canchas', deporte, q, vista, radio: r, techada, con, orden: orden ? undefined : 'precio' })}
+              aria-pressed={Boolean(orden)}
+              className={orden ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+            >
+              Más baratas primero
+            </Link>
           </div>
           {cercania}
           <Canchas
@@ -238,6 +249,7 @@ export default async function Explorar({
             radio={radio}
             soloTechadas={Boolean(techada)}
             servicios={servicios}
+            porPrecio={orden === 'precio'}
           />
         </>
       ) : (
@@ -296,6 +308,7 @@ function AlternarVista({
   techada,
   con,
   solo,
+  orden,
 }: {
   tab?: string;
   deporte?: string;
@@ -305,17 +318,18 @@ function AlternarVista({
   techada?: string;
   con?: string;
   solo?: string;
+  orden?: string;
 }) {
   return (
     <div className="flex gap-2">
       <Link
-        href={armarUrl({ tab, deporte, q, radio, techada, con, solo })}
+        href={armarUrl({ tab, deporte, q, radio, techada, con, solo, orden })}
         className={vista !== 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Lista
       </Link>
       <Link
-        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada, con, solo })}
+        href={armarUrl({ tab, deporte, q, vista: 'mapa', radio, techada, con, solo, orden })}
         className={vista === 'mapa' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
       >
         Mapa
@@ -488,6 +502,7 @@ async function Canchas({
   radio,
   soloTechadas,
   servicios,
+  porPrecio,
 }: {
   deporteSlugs?: string[] | null;
   q?: string;
@@ -497,6 +512,7 @@ async function Canchas({
   radio: number | null;
   soloTechadas: boolean;
   servicios: string[];
+  porPrecio: boolean;
 }) {
   const canchas = await prisma.cancha.findMany({
     where: {
@@ -524,7 +540,12 @@ async function Canchas({
     )
     .map((c) => ({ ...c, km: kmHasta(ubicacion, c) }))
     .filter((c) => dentroDelRadio(c.km, radio))
-    .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity))
+    // Por precio (las sin precio, al final) o por cercanía; a igual precio, la más cerca.
+    .sort((a, b) =>
+      porPrecio
+        ? (a.precioPorHora ?? Infinity) - (b.precioPorHora ?? Infinity) || (a.km ?? Infinity) - (b.km ?? Infinity)
+        : (a.km ?? Infinity) - (b.km ?? Infinity)
+    )
     .slice(0, 30);
   const puntajes = await puntajesDeCanchas(lista.map((c) => c.id));
 

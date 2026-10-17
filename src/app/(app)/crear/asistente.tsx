@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { PasoDonde, type CanchaElegible } from '@/components/elegir-cancha';
+import { precioDelTurnoEn } from '@/lib/precios';
 import { NIVELES, ROTULOS_NIVEL } from '@/lib/constantes';
 import { SelectorDeporte } from '@/components/selector-deporte';
 import { Interruptor } from '@/components/interruptor';
@@ -249,6 +250,10 @@ export function Asistente({
   const [minimo, setMinimo] = useState(() => sugeridoPara(deporteId).minimo);
   const [cupoTocado, setCupoTocado] = useState(false);
   const [costo, setCosto] = useState('');
+  // Lo que sale el turno: el reservado, o el de la cancha elegida ese día y hora (con pico).
+  const precioDelTurnoElegido =
+    turnoInicial?.precio ??
+    (canchaElegida?.precios && dia && hora ? precioDelTurnoEn(canchaElegida.precios, dia, hora) : null);
   const [nivel, setNivel] = useState<string | null>(null);
   const [visibilidad, setVisibilidad] = useState<'GRUPO' | 'ABIERTO'>('ABIERTO');
   const [error, setError] = useState<string | null>(null);
@@ -603,14 +608,14 @@ export function Asistente({
               onChange={(evento) => setCosto(evento.target.value)}
             />
           </div>
-          {turnoInicial?.precio && cupo > 0 ? (
+          {precioDelTurnoElegido && cupo > 0 ? (
             <button
               type="button"
               className="chip-sel self-start"
-              onClick={() => setCosto(String(Math.ceil(turnoInicial.precio! / cupo / 100) * 100))}
+              onClick={() => setCosto(String(Math.ceil(precioDelTurnoElegido / cupo / 100) * 100))}
             >
-              El turno sale ${turnoInicial.precio.toLocaleString('es-AR')}: dividir entre {cupo} → $
-              {(Math.ceil(turnoInicial.precio / cupo / 100) * 100).toLocaleString('es-AR')} c/u
+              El turno sale ${precioDelTurnoElegido.toLocaleString('es-AR')}: dividir entre {cupo} → $
+              {(Math.ceil(precioDelTurnoElegido / cupo / 100) * 100).toLocaleString('es-AR')} c/u
             </button>
           ) : null}
           <p className="text-sm text-tinta-3">

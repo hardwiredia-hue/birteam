@@ -126,7 +126,7 @@ export const TEMAS: Tema[] = [
           'Elegí dónde: buscá la cancha entre las publicadas para ese deporte (te mostramos las que están cerca). Si no está, escribí dónde juegan.',
           'Elegí día y hora; podés hacer que se repita todas las semanas.',
           'Cupo y mínimo: te sugerimos según el deporte (Fútbol 7 → 14).',
-          'Costo por jugador (opcional) y si es abierto o solo para tu grupo.',
+          'Costo por jugador (opcional) y si es abierto o solo para tu grupo. Si elegiste una cancha publicada con precio, te sugerimos cuánto pone cada uno: lo que sale el turno ese día a esa hora (con el precio pico si corresponde) dividido el cupo.',
           'Invitá gente: primero te mostramos con quiénes más jugás, después tus seguidores; o buscá a cualquiera por nombre.',
         ],
         texto: [
@@ -302,7 +302,7 @@ export const TEMAS: Tema[] = [
         titulo: 'Cómo es la cancha: techada, superficie y servicios',
         texto: [
           'En la ficha de cada cancha, "Cómo es" dice si es techada, la superficie (césped sintético, cemento, parquet, polvo de ladrillo…) y los servicios: iluminación, vestuarios, duchas, estacionamiento, buffet y más. Lo carga el complejo.',
-          'En Explorar → Canchas, "Solo techadas" deja las que se pueden jugar con lluvia, y también filtrás por iluminación, vestuarios o estacionamiento (se pueden combinar).',
+          'En Explorar → Canchas, "Solo techadas" deja las que se pueden jugar con lluvia, y también filtrás por iluminación, vestuarios o estacionamiento (se pueden combinar). Con "Más baratas primero" se ordenan por precio por hora.',
         ],
         enlace: { href: '/explorar?tab=canchas&techada=1', rotulo: 'Ver canchas techadas' },
       },
@@ -648,6 +648,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Cuánto pone cada uno',
+    texto: 'Al armar un partido en una cancha publicada te sugerimos el costo por jugador según lo que sale el turno. Y en Explorar podés ver las canchas más baratas primero.',
+    para: 'jugadores',
+    enlace: { href: '/ayuda/partidos#crear-partido', rotulo: 'Ver más' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Completá tu partido',
