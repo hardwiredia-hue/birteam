@@ -8,6 +8,7 @@ import { avisarReserva, liberarVencidas, rotuloDia } from '@/lib/reservas';
 import { repetirSemanales } from '@/lib/repetir';
 import { pedirResenas } from '@/lib/resenas';
 import { cerrarPartidosSinLista, recordarPasarLista } from '@/lib/cierre-partidos';
+import { resumenDeLaManana } from '@/lib/resumen-complejo';
 
 /**
  * Tareas programadas (las corre el cron del servidor cada 10 minutos, ver
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
     pedidosDeResena: 0,
     recordatoriosLista: 0,
     partidosCerrados: 0,
+    resumenesComplejo: 0,
   };
 
   // ---- 1. Invitaciones vencidas ----
@@ -184,6 +186,7 @@ export async function POST(request: Request) {
   resumen.pedidosDeResena = await pedirResenas(ahora);
   resumen.recordatoriosLista = await recordarPasarLista(ahora);
   resumen.partidosCerrados = await cerrarPartidosSinLista(ahora);
+  resumen.resumenesComplejo = await resumenDeLaManana(ahora);
 
   // ---- 5. Partidos abiertos a los que les faltan jugadores ----
   // Una sola vez por partido, a quienes juegan ese deporte cerca (dentro del

@@ -389,6 +389,7 @@ export const TEMAS: Tema[] = [
         id: 'agenda',
         titulo: 'La agenda del día',
         texto: [
+          'Cada mañana (entre las 8 y las 11) te llega "Tu día en el complejo": cuántos turnos confirmados hay hoy y cuántos pedidos esperan respuesta. Solo si hay algo para contar.',
           'Arriba de Mi complejo está la agenda de hoy (y la de mañana): todos los turnos tomados de tus canchas por hora, con quién juega, en qué cancha y el estado (confirmado, turno fijo, pedido sin responder, esperando pago o bloqueado).',
           'Cada turno dice cuánto falta cobrar en el complejo (descontando lo que se pagó online) y tiene el WhatsApp del jugador. Arriba ves el total a cobrar del día, contando solo lo confirmado. Lo que ya pasó queda apagado.',
           'Si hay pedidos sin responder, te avisa: tocá "Responder" para confirmarlo o rechazarlo antes de que se venza.',
@@ -643,6 +644,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Tu día, a primera hora',
+    texto: 'Cada mañana te avisamos cuántos turnos confirmados tenés hoy y cuántos pedidos esperan tu respuesta.',
+    para: 'complejos',
+    enlace: { href: '/ayuda/complejos#agenda', rotulo: 'Ver más' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Aumentos de una',
