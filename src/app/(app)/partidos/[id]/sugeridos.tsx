@@ -1,5 +1,6 @@
 'use client';
 
+import { EnlaceAyuda } from '@/components/ayuda';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Avatar } from '@/components/avatar';
@@ -43,6 +44,7 @@ export function SugeridosPartido({
       <div>
         <p className="t-rotulo text-verde-txt">Pueden venir · faltan {faltan}</p>
         <p className="mt-0.5 text-xs text-tinta-3">Juegan este deporte, están cerca y marcaron que pueden ese día a esa hora.</p>
+        <EnlaceAyuda tema="partidos" articulo="invitar" className="mt-1" />
       </div>
       <ul className="flex flex-col">
         {sugeridos.map((persona) => {

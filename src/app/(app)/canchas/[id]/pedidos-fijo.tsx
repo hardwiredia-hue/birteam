@@ -1,5 +1,6 @@
 'use client';
 
+import { EnlaceAyuda } from '@/components/ayuda';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
@@ -78,6 +79,7 @@ export function PedirFijo({
         <div>
           <p className="text-sm font-semibold">¿Juegan siempre el mismo día?</p>
           <p className="text-xs text-tinta-3">Pedí un turno fijo: el mismo día y hora todas las semanas, sin reservar cada vez.</p>
+          <EnlaceAyuda tema="canchas-y-turnos" articulo="turno-fijo-jugador" className="mt-1" />
         </div>
         {!abierto ? (
           <button type="button" className="btn btn-secundario btn-sm shrink-0" onClick={() => setAbierto(true)}>

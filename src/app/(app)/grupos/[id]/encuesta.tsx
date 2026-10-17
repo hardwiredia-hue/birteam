@@ -1,5 +1,6 @@
 'use client';
 
+import { EnlaceAyuda } from '@/components/ayuda';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -177,6 +178,7 @@ export function EncuestaGrupo({
         <div>
           <p className="text-sm font-semibold">¿Cuándo jugamos?</p>
           <p className="text-xs text-tinta-3">Proponé horarios, el grupo marca los que puede y armás el partido con el más votado.</p>
+          <EnlaceAyuda tema="grupos" articulo="cuando-jugamos" className="mt-1" />
         </div>
         {!proponiendo ? (
           <button type="button" className="btn btn-secundario btn-sm shrink-0" onClick={() => setProponiendo(true)}>

@@ -1,5 +1,6 @@
 'use client';
 
+import { EnlaceAyuda } from '@/components/ayuda';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { PORCENTAJE_MAXIMO, PORCENTAJE_MINIMO, REDONDEOS, nuevoPrecio } from '@/lib/precios';
@@ -53,6 +54,7 @@ export function ActualizarPrecios({
         <div>
           <p className="text-sm font-semibold">Actualizar precios</p>
           <p className="text-xs text-tinta-3">Un aumento para todas las canchas de una, con redondeo.</p>
+          <EnlaceAyuda tema="complejos" articulo="actualizar-precios" className="mt-1" />
         </div>
         {!abierto ? (
           <button type="button" className="btn btn-secundario btn-sm shrink-0" onClick={() => { setAbierto(true); setMensaje(null); }}>

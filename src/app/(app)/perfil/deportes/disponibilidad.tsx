@@ -1,5 +1,6 @@
 'use client';
 
+import { EnlaceAyuda } from '@/components/ayuda';
 import { useState } from 'react';
 import { DIAS_DISPONIBILIDAD, FRANJAS, clave } from '@/lib/disponibilidad';
 
@@ -37,6 +38,7 @@ export function EditorDisponibilidad({ inicial }: { inicial: string[] }) {
         <p className="text-xs text-tinta-3">
           Los avisos de partidos que buscan jugadores te llegan en estos horarios. Si no marcás nada, te llegan todos.
         </p>
+        <EnlaceAyuda tema="primeros-pasos" articulo="perfil-deportivo" className="mt-1" />
       </div>
       <table className="w-full text-sm">
         <thead>

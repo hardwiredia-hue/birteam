@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { FRECUENTES, NOVEDADES, TEMAS, buscarArticulo } from '../src/lib/ayuda';
 
@@ -55,4 +55,26 @@ test('ayuda: novedades ordenadas y con links que existen', () => {
       );
     }
   }
+});
+
+test('ayuda: cada "¿Cómo funciona?" de la app lleva a un artículo que existe', () => {
+  const archivos: string[] = [];
+  const recorrer = (carpeta: string) => {
+    for (const nombre of readdirSync(carpeta)) {
+      const ruta = path.join(carpeta, nombre);
+      if (statSync(ruta).isDirectory()) recorrer(ruta);
+      else if (ruta.endsWith('.tsx')) archivos.push(ruta);
+    }
+  };
+  recorrer(path.join(__dirname, '..', 'src'));
+  let enlaces = 0;
+  for (const archivo of archivos) {
+    const texto = readFileSync(archivo, 'utf8');
+    for (const [, tema, articulo] of texto.matchAll(/<EnlaceAyuda\s+tema="([^"]+)"(?:\s+articulo="([^"]+)")?/g)) {
+      enlaces++;
+      if (articulo) assert.ok(buscarArticulo(tema, articulo), `${path.basename(archivo)} → ${tema}#${articulo}`);
+      else assert.ok(TEMAS.some((t) => t.slug === tema), `${path.basename(archivo)} → ${tema}`);
+    }
+  }
+  assert.ok(enlaces >= 10, `encontró ${enlaces} enlaces`);
 });
