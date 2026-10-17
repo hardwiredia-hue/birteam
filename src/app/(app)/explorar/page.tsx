@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { leerDisponibilidad, puedeJugar } from '@/lib/disponibilidad';
 import { LogoEquipo } from '@/components/logo-equipo';
 import Form from 'next/form';
 import { prisma } from '@/lib/db';
@@ -158,7 +159,18 @@ export default async function Explorar({
           />
         </>
       ) : tab === 'jugadores' ? (
-        <Jugadores q={q} miId={usuario.id} />
+        <>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={soloCrudo === 'hoy' ? `/explorar?tab=jugadores${q ? `&q=${encodeURIComponent(q)}` : ''}` : `/explorar?tab=jugadores&solo=hoy${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+              aria-pressed={soloCrudo === 'hoy'}
+              className={soloCrudo === 'hoy' ? 'chip-sel chip-sel-activo' : 'chip-sel'}
+            >
+              Pueden hoy a esta hora
+            </Link>
+          </div>
+          <Jugadores q={q} miId={usuario.id} disponiblesAhora={soloCrudo === 'hoy'} />
+        </>
       ) : tab === 'grupos' ? (
         <>
           <Link href="/desafios" className="tarjeta flex items-center justify-between gap-2 p-3">
@@ -765,7 +777,7 @@ async function GruposAbiertos({
   );
 }
 
-async function Jugadores({ q, miId }: { q?: string; miId: string }) {
+async function Jugadores({ q, miId, disponiblesAhora }: { q?: string; miId: string; disponiblesAhora: boolean }) {
   const filtro = q?.trim();
   const ocultos = await idsBloqueados(miId);
   const jugadores = await prisma.usuario.findMany({
@@ -784,20 +796,29 @@ async function Jugadores({ q, miId }: { q?: string; miId: string }) {
     },
     include: { deportes: { include: { deporte: true }, orderBy: { principal: 'desc' } } },
     orderBy: { creadoEn: 'desc' },
-    take: 25,
+    take: disponiblesAhora ? 200 : 25,
   });
+  // "Pueden hoy a esta hora": solo los que lo marcaron (sin cargar, no se sabe).
+  const ahora = new Date();
+  const lista = disponiblesAhora
+    ? jugadores.filter((j) => leerDisponibilidad(j.disponibilidad).length > 0 && puedeJugar(j.disponibilidad, ahora)).slice(0, 25)
+    : jugadores;
 
-  if (jugadores.length === 0) {
+  if (lista.length === 0) {
     return (
       <div className="tarjeta p-5">
-        <p className="text-sm text-tinta-2">No encontramos jugadores con esa búsqueda.</p>
+        <p className="text-sm text-tinta-2">
+          {disponiblesAhora
+            ? 'Nadie marcó que puede jugar ahora. Cada uno lo carga en Perfil → Mis deportes.'
+            : 'No encontramos jugadores con esa búsqueda.'}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col">
-      {jugadores.map((jugador) => (
+      {lista.map((jugador) => (
         <Link
           key={jugador.id}
           href={`/jugadores/${jugador.usuario}`}

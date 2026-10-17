@@ -9,6 +9,7 @@ import { repetirSemanales } from '@/lib/repetir';
 import { pedirResenas } from '@/lib/resenas';
 import { cerrarPartidosSinLista, recordarPasarLista } from '@/lib/cierre-partidos';
 import { resumenDeLaManana } from '@/lib/resumen-complejo';
+import { puedeJugar } from '@/lib/disponibilidad';
 
 /**
  * Tareas programadas (las corre el cron del servidor cada 10 minutos, ver
@@ -224,7 +225,7 @@ export async function POST(request: Request) {
       ...bloqueos.flatMap((b) => [b.bloqueadorId, b.bloqueadoId]),
     ];
     const candidatos = vecinosDe(
-      await prisma.usuario.findMany({
+      (await prisma.usuario.findMany({
         where: {
           id: { notIn: excluidos },
           eliminadoEn: null,
@@ -233,9 +234,9 @@ export async function POST(request: Request) {
           notificaciones: { none: { tipo: 'FALTAN_JUGADORES', creadoEn: { gte: hace24h } } },
           ...zona,
         },
-        select: { id: true, ciudad: true, latitud: true, longitud: true, radioKm: true },
+        select: { id: true, ciudad: true, latitud: true, longitud: true, radioKm: true, disponibilidad: true },
         take: 300,
-      }),
+      })).filter((c) => puedeJugar(c.disponibilidad, partido.fecha)),
       partido,
       30
     );

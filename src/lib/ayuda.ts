@@ -63,6 +63,7 @@ export const TEMAS: Tema[] = [
         texto: [
           'En Perfil → Mis deportes cargás tu nivel (inicial, intermedio, avanzado o competitivo) y tu posición en cada deporte.',
           'El nivel se usa para sugerirte partidos y para armar equipos parejos.',
+          'Ahí mismo, "¿Cuándo podés jugar?": marcá los días y franjas (mañana de 6 a 12, tarde de 12 a 18, noche desde las 18) en que solés poder. Los avisos de partidos que buscan jugadores te llegan solo en esos horarios; si no marcás nada, te llegan todos. En tu perfil lo ven los demás, y en Explorar → Jugadores se puede buscar a los que pueden hoy a esa hora.',
           'En el perfil de otro jugador ves cuántas veces jugaron juntos (partidos ya jugados donde fueron los dos).',
         ],
         enlace: { href: '/perfil/deportes', rotulo: 'Mis deportes' },
@@ -646,6 +647,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Decí cuándo podés jugar',
+    texto: 'Marcá tus días y horarios en Mis deportes: los avisos de partidos que buscan jugadores te llegan cuando podés ir.',
+    para: 'jugadores',
+    enlace: { href: '/perfil/deportes', rotulo: 'Marcar mis horarios' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Pedí tu turno fijo',

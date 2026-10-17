@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { resumenDisponibilidad } from '@/lib/disponibilidad';
 import { jugaronJuntos } from '@/lib/tabla-grupo';
 import { DatosJugador } from '@/components/datos-jugador';
 import { vecesFigura } from '@/lib/figura';
@@ -108,6 +109,13 @@ export default async function PerfilAjeno({ params }: { params: Promise<{ usuari
       </div>
 
       {jugador.bio ? <p className="text-sm text-tinta-2">{jugador.bio}</p> : null}
+
+      {resumenDisponibilidad(jugador.disponibilidad) ? (
+        <p className="text-sm text-tinta-2">
+          <span className="t-rotulo mr-2">Suele poder</span>
+          {resumenDisponibilidad(jugador.disponibilidad)}
+        </p>
+      ) : null}
 
       {jugador.deportes.length > 0 ? (
         <section>

@@ -32,6 +32,9 @@ model Usuario {
   latitud       Float?
   longitud      Float?
   radioKm       Int      @default(15)
+  // Cuándo suele poder jugar: JSON de claves "día-franja" ("2-noche").
+  // Vacío = no lo cargó (le llegan todos los avisos, como antes).
+  disponibilidad String  @default("[]")
   // Link secreto del calendario (todos sus partidos y turnos, se actualiza
   // solo en Google/Apple Calendar). Nulo hasta que lo pide.
   tokenCalendario String? @unique

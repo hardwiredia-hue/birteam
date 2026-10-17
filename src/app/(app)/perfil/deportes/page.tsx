@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db';
 import { usuarioActual } from '@/lib/auth';
 import { EditorDeportes } from './editor';
+import { EditorDisponibilidad } from './disponibilidad';
+import { leerDisponibilidad } from '@/lib/disponibilidad';
 
 export const metadata = { title: 'Perfil deportivo' };
 export const dynamic = 'force-dynamic';
@@ -30,6 +32,7 @@ export default async function PerfilDeportivo() {
           nivel: relacion.nivel,
         }))}
       />
+      <EditorDisponibilidad inicial={leerDisponibilidad(usuario.disponibilidad)} />
     </div>
   );
 }
