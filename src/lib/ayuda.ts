@@ -418,6 +418,19 @@ export const TEMAS: Tema[] = [
         enlace: { href: '/canchas/nueva', rotulo: 'Publicar cancha' },
       },
       {
+        id: 'actualizar-precios',
+        titulo: 'Actualizar los precios de todas las canchas',
+        pasos: [
+          'Mi complejo → "Actualizar precios" → "Actualizar".',
+          'Elegí el aumento (5, 10, 15 o 20%, u otro número; negativo para bajar) y a qué redondear ($100, $500 o $1.000).',
+          'Mirá cómo queda cada cancha y tocá "Aplicar".',
+        ],
+        texto: [
+          'Cambia el precio por hora y el de horario pico de todas tus canchas. Los turnos ya reservados mantienen el precio con el que se pidieron.',
+        ],
+        enlace: { href: '/complejo', rotulo: 'Mi complejo' },
+      },
+      {
         id: 'gestionar-turnos',
         titulo: 'La grilla: confirmar, bloquear y cancelar',
         texto: [
@@ -629,6 +642,13 @@ export interface Novedad {
 }
 
 export const NOVEDADES: Novedad[] = [
+  {
+    fecha: '2026-10-17',
+    titulo: 'Aumentos de una',
+    texto: 'Desde Mi complejo actualizás el precio de todas las canchas con un porcentaje y redondeo, viendo cómo queda cada una antes de aplicarlo.',
+    para: 'complejos',
+    enlace: { href: '/ayuda/complejos#actualizar-precios', rotulo: 'Cómo se hace' },
+  },
   {
     fecha: '2026-10-17',
     titulo: 'Partidos para tu nivel',

@@ -41,7 +41,9 @@ test('ayuda: novedades ordenadas y con links que existen', () => {
   for (const novedad of NOVEDADES) {
     assert.match(novedad.fecha, /^\d{4}-\d{2}-\d{2}$/);
     if (!novedad.enlace) continue;
-    const [ruta, ancla] = novedad.enlace.href.split('#');
+    const [conConsulta, ancla] = novedad.enlace.href.split('#');
+    // La consulta (?tab=…) no cambia qué página es.
+    const ruta = conConsulta.split('?')[0];
     const ayuda = ruta.match(/^\/ayuda\/([^/]+)$/);
     if (ayuda && ancla) {
       assert.ok(buscarArticulo(ayuda[1], ancla), `${novedad.titulo} → ${novedad.enlace.href}`);

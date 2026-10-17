@@ -8,6 +8,7 @@ import { suscripcionActiva } from '@/lib/suscripcion';
 import { cobroOnlineHabilitado, comisionPorcentaje, pagosSimulados } from '@/lib/mercadopago';
 import { DesconectarMercadoPago } from './mercadopago';
 import { EquipoComplejo } from './equipo';
+import { ActualizarPrecios } from './actualizar-precios';
 import { MapaOcupacion } from './ocupacion';
 import { PuestaAPunto } from '@/components/puesta-a-punto';
 import { Agenda } from '@/components/agenda';
@@ -277,6 +278,10 @@ export default async function MiComplejo({
           </section>
 
           <MapaOcupacion semanas={SEMANAS} {...ocupacion} />
+
+          <ActualizarPrecios
+            canchas={canchas.map((c) => ({ id: c.id, nombre: c.nombre, precioPorHora: c.precioPorHora, precioPico: c.precioPico }))}
+          />
 
           <Link href="/complejo/clientes" className="tarjeta flex items-center justify-between gap-3 p-4">
             <span>
